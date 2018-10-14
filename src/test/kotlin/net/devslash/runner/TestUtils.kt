@@ -1,8 +1,7 @@
 package net.devslash.runner
 
-import net.devslash.Call
+import net.devslash.CallBuilder
 import net.devslash.HttpBody
-import net.devslash.HttpMethod
 
 fun requestDataFromList(listOf: List<String>? = null): RequestData {
   return object : RequestData {
@@ -18,5 +17,6 @@ fun requestDataFromList(listOf: List<String>? = null): RequestData {
   }
 }
 
-//fun getCall(sup: HttpBody? = null, url: String = "http://google.com") = Call(url, null, null, null,
-//    null, null, HttpMethod.GET, null, sup, false, listOf(), preProcessors)
+fun getCall(sup: HttpBody? = null, url: String = "http://google.com") = CallBuilder(url).apply {
+  body = sup
+}.build()

@@ -35,7 +35,7 @@ class FileBasedDataSupplier(private val inFile: InputFile) : RequestDataSupplier
   override fun hasNext(): Boolean {
     val lineNum = line.get()
     // Check if we're either at the end of the file, or the second last line and it's an empty line
-    return lineNum < sourceFile.size && (sourceFile[lineNum].isNotEmpty() && lineNum == sourceFile.size - 1)
+    return lineNum < sourceFile.size && !(sourceFile[lineNum].isEmpty() && lineNum == sourceFile.size - 1)
   }
 
 }

@@ -28,7 +28,7 @@ open class CallBuilder(private val url: String) {
   private var cookieJar: String? = null
   private var output: Output? = null
   var dataSupplier: DataSupplier? = null
-  private var body: HttpBody? = null
+  var body: HttpBody? = null
   var type: HttpMethod = HttpMethod.GET
   var headers: List<Pair<String, ReplaceableValue<String, RequestData>>>? = null
   var skipRequestIfOutputExists: Boolean = false
@@ -65,7 +65,7 @@ open class CallBuilder(private val url: String) {
 
 @SessionDsl
 class BodyBuilder {
-  private var value: String? = null
+  var value: String? = null
   var formParams: List<Pair<String, String>>? = null
 
   fun build(): HttpBody = HttpBody(value, formParams)

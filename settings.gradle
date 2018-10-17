@@ -11,5 +11,8 @@ pluginManagement {
     }
   }
 }
+
+include("api", "service", "extensions")
+
 rootProject.name = 'fetshdsl'
 

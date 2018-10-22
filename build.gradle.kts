@@ -1,7 +1,9 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-  kotlin("jvm") version "1.3.0-rc-116"
+  base
+  kotlin("jvm") version "1.3.0-rc-116" apply false
+  id("maven-publish")
 }
 
 repositories {
@@ -17,18 +19,30 @@ buildscript {
 
 allprojects {
   group = "net.devslash.fetchdsl"
-  version = "1.0"
+  version = "0.1-SNAPSHOT"
 
   repositories {
     jcenter()
   }
+
 }
 
 subprojects {
+  apply {
+    plugin("maven-publish")
+  }
+
   tasks.withType<KotlinCompile>().configureEach {
     println("Configuring $name in project ${project.name}...")
     kotlinOptions {
       suppressWarnings = false
+    }
+  }
+
+  configure<PublishingExtension> {
+    publications {
+      register(project.name, MavenPublication::class) {
+      }
     }
   }
 }

@@ -2,7 +2,7 @@ package net.devslash
 
 import java.util.function.Consumer
 
-data class Session(val calls: List<Call>, val concurrency: Int = 1)
+data class Session(val calls: List<Call>, val concurrency: Int = 100)
 data class Call(val url: String,
                 val headers: List<Pair<String, ReplaceableValue<String, RequestData>>>?,
                 val cookieJar: String?,

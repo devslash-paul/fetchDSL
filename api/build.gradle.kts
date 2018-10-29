@@ -9,7 +9,7 @@ repositories {
 }
 
 dependencies {
-  compile(kotlin("stdlib", "1.3.0-rc-116"))
+  compile(kotlin("stdlib", "1.3.0-rc-190"))
 
   compile("org.jetbrains.kotlin:kotlin-stdlib")
   compile("com.github.kittinunf.fuel:fuel:1.15.0")

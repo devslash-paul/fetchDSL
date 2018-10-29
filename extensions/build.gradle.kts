@@ -10,7 +10,7 @@ repositories {
 
 
 dependencies {
-  compile(kotlin("stdlib", "1.3.0-rc-116"))
+  compile(kotlin("stdlib", "1.3.0-rc-190"))
   compile(project(":api"))
   compile(project(":service"))
 

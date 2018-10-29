@@ -1,25 +1,29 @@
 package net.devslash
 
+import awaitByteArrayResponse
 import com.github.kittinunf.fuel.core.FuelError
 import com.github.kittinunf.fuel.core.FuelManager
 import com.github.kittinunf.fuel.core.Method
 import com.github.kittinunf.fuel.core.Response
 import com.github.kittinunf.result.Result
 import com.github.kittinunf.result.getOrElse
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.async
+import kotlinx.coroutines.*
 import java.util.concurrent.Semaphore
-import kotlin.coroutines.coroutineContext
+import kotlin.coroutines.CoroutineContext
 
-class HttpSessionManager(private val session: Session) : SessionManager {
+class HttpSessionManager(private val session: Session,
+                         override val coroutineContext: CoroutineContext) : SessionManager, CoroutineScope {
 
   private val manager = FuelManager()
   private val semaphore = Semaphore(0)
+  lateinit private var sessionManager: SessionManager
 
-  suspend fun run() {
+  suspend fun run(): List<List<Job>> {
+    sessionManager = this
     semaphore.release(session.concurrency)
-    session.calls.forEach { call(it, CookieJar()) }
+//    manager.addRequestInterceptor(cUrlLoggingRequestInterceptor())
+    println("There are ${semaphore.availablePermits()}")
+    return session.calls.map { call(it, CookieJar()) }
   }
 
   override suspend fun call(call: Call): MutableList<Job> = call(call, CookieJar())
@@ -50,18 +54,20 @@ class HttpSessionManager(private val session: Session) : SessionManager {
       if (shouldSkip) {
         continue
       }
-
       preRequest.forEach {
         when (it) {
           is SimplePreHook -> it.accept(req, data)
-          is SessionPersistingPreHook -> it.accept(this, jar, req, data)
+          is SessionPersistingPreHook -> it.accept(sessionManager, jar, req, data)
         }
       }
       // Take out later
       call.headers?.forEach { req.addHeader(it.first, it.second.get(data)) }
 
-      semaphore.acquire()
-      requests.add(CoroutineScope(coroutineContext).async {
+      while(!semaphore.tryAcquire()) {
+        delay(100)
+      }
+
+      requests.add(async {
         try {
           val request = makeRequest(req)
           val resp = mapResponse(request)
@@ -97,12 +103,12 @@ class HttpSessionManager(private val session: Session) : SessionManager {
     }
   }
 
-  private fun makeRequest(modelRequest: HttpRequest): Pair<Response, Result<ByteArray, FuelError>> {
+  private suspend fun makeRequest(modelRequest: HttpRequest): Pair<Response, Result<ByteArray, FuelError>> {
     val req = manager.request(modelRequest.type, modelRequest.url).allowRedirects(false)
     req.header(modelRequest.headers)
     req.body(modelRequest.body)
 
-    val (_, response, result) = req.response()
+    val (_, response, result) = req.awaitByteArrayResponse()
     return Pair(response, result)
   }
 }

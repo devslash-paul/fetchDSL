@@ -8,11 +8,10 @@ plugins {
 
 repositories {
   jcenter()
-  maven("http://dl.bintray.com/kotlin/kotlin-eap")
 }
 
 dependencies {
-  compile(kotlin("stdlib", "1.3.0-rc-190"))
+  compile(kotlin("stdlib", "1.3.0"))
   compile(project(":api"))
 
 

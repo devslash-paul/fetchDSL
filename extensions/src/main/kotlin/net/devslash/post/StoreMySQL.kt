@@ -10,11 +10,6 @@ import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.statements.InsertStatement
 import org.jetbrains.exposed.sql.transactions.transaction
 
-object Result : Table("result") {
-  val id = integer("id").autoIncrement().primaryKey() // Column<Int>
-  val media = varchar("media", 50)
-  val result = blob("result")
-}
 
 open class BaseMySQLSettings {
   var url = ""

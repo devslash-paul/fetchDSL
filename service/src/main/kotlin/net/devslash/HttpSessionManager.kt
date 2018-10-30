@@ -5,6 +5,7 @@ import com.github.kittinunf.fuel.core.FuelError
 import com.github.kittinunf.fuel.core.FuelManager
 import com.github.kittinunf.fuel.core.Method
 import com.github.kittinunf.fuel.core.Response
+import com.github.kittinunf.fuel.core.interceptors.cUrlLoggingRequestInterceptor
 import com.github.kittinunf.result.Result
 import com.github.kittinunf.result.getOrElse
 import kotlinx.coroutines.*
@@ -16,7 +17,7 @@ class HttpSessionManager(private val session: Session,
 
   private val manager = FuelManager()
   private val semaphore = Semaphore(0)
-  lateinit private var sessionManager: SessionManager
+  private lateinit var sessionManager: SessionManager
 
   suspend fun run(): List<List<Job>> {
     sessionManager = this
@@ -67,7 +68,7 @@ class HttpSessionManager(private val session: Session,
         delay(100)
       }
 
-      requests.add(async {
+      requests.add(GlobalScope.async {
         try {
           val request = makeRequest(req)
           val resp = mapResponse(request)
@@ -108,7 +109,9 @@ class HttpSessionManager(private val session: Session,
     req.header(modelRequest.headers)
     req.body(modelRequest.body)
 
-    val (_, response, result) = req.awaitByteArrayResponse()
+//    val (_, response, result) = req.awaitByteArrayResponse()
+    val (_, response, result) = req.response()
+//    result.fold({}, {it ->println(it) })
     return Pair(response, result)
   }
 }

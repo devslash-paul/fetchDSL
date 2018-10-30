@@ -1,6 +1,5 @@
 package net.devslash.it
 
-import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.runBlocking
 import net.devslash.HttpMethod
 import net.devslash.asReplaceableValue
@@ -14,16 +13,18 @@ import java.net.InetSocketAddress
 import java.util.function.Predicate
 
 class HttpBounceTest {
-  @get:Rule val mockServerRule: MockServerRule = MockServerRule(this)
+  @get:Rule
+  val mockServerRule: MockServerRule = MockServerRule(this)
 
-  @Test fun testBasicStep() {
+  @Test
+  fun testBasicStep() {
     val client = mockServerRule.client
     val address = client.remoteAddress()
 
     runBlocking {
       runHttp {
         call(getAddress(address) + "/testPath")
-      }.joinAll()
+      }
     }
 
     client.verify(request().withPath("/testPath"))

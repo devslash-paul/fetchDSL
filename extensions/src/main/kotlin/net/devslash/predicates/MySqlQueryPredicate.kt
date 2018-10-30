@@ -15,11 +15,6 @@ data class PredicateMySQLSettings<T : Table>(val url: String,
                                              val table: T,
                                              val op: (RequestData) -> Query)
 
-object OtherResults : IntIdTable("result") {
-  val media = varchar("media", 50)
-  val result = blob("result")
-}
-
 class SelectAndCheck<T : Table> : BaseMySQLSettings() {
   var op: ((RequestData) -> Query)? = null
   var table: T? = null

@@ -1,11 +1,9 @@
 package net.devslash
 
-import awaitByteArrayResponse
 import com.github.kittinunf.fuel.core.FuelError
 import com.github.kittinunf.fuel.core.FuelManager
 import com.github.kittinunf.fuel.core.Method
 import com.github.kittinunf.fuel.core.Response
-import com.github.kittinunf.fuel.core.interceptors.cUrlLoggingRequestInterceptor
 import com.github.kittinunf.result.Result
 import com.github.kittinunf.result.getOrElse
 import kotlinx.coroutines.*

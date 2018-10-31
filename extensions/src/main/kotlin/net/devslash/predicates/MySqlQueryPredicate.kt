@@ -2,7 +2,6 @@ package net.devslash.predicates
 
 import net.devslash.RequestData
 import net.devslash.post.BaseMySQLSettings
-import org.jetbrains.exposed.dao.IntIdTable
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.Query
 import org.jetbrains.exposed.sql.Table

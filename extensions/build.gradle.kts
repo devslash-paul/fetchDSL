@@ -24,11 +24,3 @@ dependencies {
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.1.0")
   testCompile("org.mock-server:mockserver-netty:5.4.1")
 }
-
-publishing {
-  publications {
-    register("mavenJava", MavenPublication::class) {
-      from(components["java"])
-    }
-  }
-}

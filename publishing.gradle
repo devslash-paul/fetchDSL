@@ -1,0 +1,7 @@
+publishing {
+  publications {
+    Publication(MavenPublication) {
+      from components.java
+    }
+  }
+}

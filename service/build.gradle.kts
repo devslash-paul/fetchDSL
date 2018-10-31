@@ -24,10 +24,3 @@ dependencies {
   implementation("com.beust:klaxon:3.0.1")
 }
 
-publishing {
-  publications {
-    register("mavenJava", MavenPublication::class) {
-      from(components["java"])
-    }
-  }
-}

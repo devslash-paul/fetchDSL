@@ -21,7 +21,6 @@ class HttpSessionManager(private val session: Session,
     sessionManager = this
     semaphore.release(session.concurrency)
 //    manager.addRequestInterceptor(cUrlLoggingRequestInterceptor())
-    println("There are ${semaphore.availablePermits()}")
     return session.calls.map { call(it, CookieJar()) }
   }
 

@@ -30,3 +30,7 @@ steps:
     publishJUnitResults: true
     testResultsFiles: '**/TEST-*.xml'
     tasks: 'test'
+
+- task: PublishBuildArtifacts@1
+  inputs:
+    pathtoPublish: '.'

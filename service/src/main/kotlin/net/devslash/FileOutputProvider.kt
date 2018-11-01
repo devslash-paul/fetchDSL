@@ -6,7 +6,7 @@ class FileOutputProvider(private val filename: String,
                          private val append: Boolean,
                          private val binary: Boolean) : OutputHandler {
   override fun output(resp: HttpResponse, data: RequestData) {
-    val file = File(replace(filename, data))
+    val file = File(filename.asReplaceableValue().get(data))
 
     when {
       binary -> {
@@ -22,6 +22,6 @@ class FileOutputProvider(private val filename: String,
   }
 
   override fun suspectedOutput(data: RequestData): String? {
-    return (replace(filename, data))
+    return filename.asReplaceableValue().get(data)
   }
 }

@@ -1,7 +1,5 @@
 package net.devslash
 
-import java.util.function.Consumer
-
 @DslMarker
 annotation class SessionDsl
 
@@ -9,7 +7,7 @@ enum class HttpMethod {
   GET, POST
 }
 
-class HookBuilder<T> {
+class UnaryAddBuilder<T> {
 
   private var hooks = mutableListOf<T>()
 
@@ -25,7 +23,7 @@ class HookBuilder<T> {
 @SessionDsl
 open class CallBuilder(private val url: String) {
   private var cookieJar: String? = null
-  private var output: Output? = null
+  private var output: List<Output> = mutableListOf()
   private var dataSupplier: DataSupplier? = null
   var body: HttpBody? = null
   var type: HttpMethod = HttpMethod.GET
@@ -36,16 +34,16 @@ open class CallBuilder(private val url: String) {
   private var preHooksList = mutableListOf<PreHook>()
   private var postHooksList = mutableListOf<PostHook>()
 
-  fun preHook(block: HookBuilder<PreHook>.() -> Unit) {
-    preHooksList = HookBuilder<PreHook>().apply(block).build()
+  fun preHook(block: UnaryAddBuilder<PreHook>.() -> Unit) {
+    preHooksList = UnaryAddBuilder<PreHook>().apply(block).build()
   }
 
-  fun postHook(block: HookBuilder<PostHook>.() -> Unit) {
-    postHooksList = HookBuilder<PostHook>().apply(block).build()
+  fun postHook(block: UnaryAddBuilder<PostHook>.() -> Unit) {
+    postHooksList = UnaryAddBuilder<PostHook>().apply(block).build()
   }
 
-  fun output(block: OutputBuilder.() -> Unit) {
-    output = OutputBuilder().apply(block).build()
+  fun output(block: UnaryAddBuilder<Output>.() -> Unit) {
+    output = UnaryAddBuilder<Output>().apply(block).build()
   }
 
   fun data(block: DataSupplierBuilder.() -> Unit) {
@@ -73,12 +71,13 @@ class BodyBuilder {
 @SessionDsl
 class DataSupplierBuilder {
   private var file: InputFile? = null
+  var from : RequestDataSupplier? = null
 
   fun file(block: InputFileBuilder.() -> Unit) {
     file = InputFileBuilder().apply(block).build()
   }
 
-  fun build(): DataSupplier = DataSupplier(file)
+  fun build(): DataSupplier = DataSupplier(file, from)
 }
 
 
@@ -92,20 +91,6 @@ class SessionBuilder {
   }
 
   fun build(): Session = Session(calls, concurrency)
-}
-
-@SessionDsl
-class OutputBuilder {
-  var file: OutputFile? = null
-  var consumer: Consumer<String>? = null
-  var pprintJson: Boolean = true
-  var binary: Boolean = false
-
-  fun file(block: FileBuilder.() -> Unit) {
-    file = FileBuilder().apply(block).build()
-  }
-
-  fun build(): Output = Output(file, consumer, pprintJson, binary)
 }
 
 @SessionDsl

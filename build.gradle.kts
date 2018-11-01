@@ -14,7 +14,7 @@ repositories {
 
 allprojects {
   group = "net.devslash.fetchdsl"
-  version = "0.1"
+  version = "0.1.1-SNAPSHOT"
 
   repositories {
     jcenter()
@@ -37,13 +37,6 @@ subprojects {
       suppressWarnings = false
     }
   }
-
-//  configure<PublishingExtension> {
-//    publications {
-//      register(project.name, MavenPublication::class) {
-//      }
-//    }
-//  }
 
   configure<BintrayExtension> {
     user = project.findProperty("bintrayUser") as String? ?: System.getenv("BINTRAY_USER")

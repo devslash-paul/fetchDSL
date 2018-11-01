@@ -1,10 +1,10 @@
 package net.devslash.it
 
 import kotlinx.coroutines.runBlocking
-import net.devslash.HttpMethod
-import net.devslash.asReplaceableValue
+import net.devslash.*
+import net.devslash.outputs.Pipe
+import net.devslash.outputs.StdOut
 import net.devslash.pre.SkipIf
-import net.devslash.runHttp
 import org.junit.Rule
 import org.junit.Test
 import org.mockserver.junit.MockServerRule
@@ -23,14 +23,23 @@ class HttpBounceTest {
 
     runBlocking {
       runHttp {
-        call(getAddress(address) + "/testPath")
+        call(getAddress(address) + "/testPath") {
+          output {
+            +StdOut()
+            +object : BasicOutput {
+              override fun accept(resp: HttpResponse, data: RequestData) {
+              }
+            }
+          }
+        }
       }
     }
 
     client.verify(request().withPath("/testPath"))
   }
 
-  @Test fun testWithBodyParams() {
+  @Test
+  fun testWithBodyParams() {
     val client = mockServerRule.client
     val address = client.remoteAddress()
 
@@ -49,7 +58,8 @@ class HttpBounceTest {
     client.verify(request().withBody("TestBody").withHeader("A", "B"))
   }
 
-  @Test fun testPredicateSkipsRequest() {
+  @Test
+  fun testPredicateSkipsRequest() {
     val client = mockServerRule.client
     val address = client.remoteAddress()
 
@@ -67,5 +77,5 @@ class HttpBounceTest {
   }
 
 
- private fun getAddress(address: InetSocketAddress) = "http://" + address.hostString + ":" + address.port
+  private fun getAddress(address: InetSocketAddress) = "http://" + address.hostString + ":" + address.port
 }

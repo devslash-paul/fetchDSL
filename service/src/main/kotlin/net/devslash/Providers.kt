@@ -20,21 +20,21 @@ class SystemOutputProvider : OutputHandler {
 }
 
 fun getOutputHandler(call: Call): OutputHandler {
-  if (call.output != null) {
-    val output = call.output!!
-    if (output.file != null) {
-      val file = output.file!!
-      return FileOutputProvider(file.name, file.append, output.binary)
-    }
-    if (call.output!!.consumer != null) {
-      return object: OutputHandler {
-        override fun output(resp: HttpResponse, data: RequestData) {
-          call.output!!.consumer!!.accept(String(resp.body))
-        }
-      }
-    }
-    return SystemOutputProvider()
-  }
+//  if (call.output != null) {
+//    val output = call.output!!
+//    if (output.file != null) {
+//      val file = output.file!!
+//      return FileOutputProvider(file.name, file.append, output.binary)
+//    }
+//    if (call.output!!.consumer != null) {
+//      return object: OutputHandler {
+//        override fun output(resp: HttpResponse, data: RequestData) {
+//          call.output!!.consumer!!.accept(String(resp.body))
+//        }
+//      }
+//    }
+//    return SystemOutputProvider()
+//  }
   return object : OutputHandler {
     override fun output(resp: HttpResponse,
                         data: RequestData) = Unit
@@ -42,6 +42,9 @@ fun getOutputHandler(call: Call): OutputHandler {
 }
 
 fun getCallDataSupplier(data: DataSupplier?): RequestDataSupplier {
+  if (data?.rds != null) {
+    return data.rds!!
+  }
   if (data?.requestFile != null) {
     return FileBasedDataSupplier(data.requestFile!!)
   }

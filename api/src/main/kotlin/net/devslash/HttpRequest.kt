@@ -2,13 +2,11 @@ package net.devslash
 
 import com.github.kittinunf.fuel.core.Method
 import java.net.URL
-import java.net.URLEncoder
 
 interface RequestDecorator {
-  suspend fun accept(httpSession: SessionManager,
-                     cookie: CookieJar,
-                     req: HttpRequest,
-                     data: RequestData) {
+  suspend fun accept(
+    httpSession: SessionManager, cookie: CookieJar, req: HttpRequest, data: RequestData
+  ) {
     accept(req, data)
   }
 
@@ -26,12 +24,31 @@ class HttpRequest(val type: Method, val url: String, var body: String) {
   fun addHeader(name: String, value: String) {
     headers[name] = value
   }
-
-  fun addFormParameter(name: String, value: String) {
-    // Lets just randomly add it ay
-    body = body + "&" + name + "=" + URLEncoder.encode(value, "UTF-8")
-  }
 }
 
-data class HttpResponse(var url: URL, val statusCode: Int, val headers: Map<String, List<String>>, var body: ByteArray)
+data class HttpResponse(
+  var url: URL, val statusCode: Int, val headers: Map<String, List<String>>, var body: ByteArray
+) {
+  override fun equals(other: Any?): Boolean {
+    if (this === other) return true
+    if (javaClass != other?.javaClass) return false
+
+    other as HttpResponse
+
+    if (url != other.url) return false
+    if (statusCode != other.statusCode) return false
+    if (headers != other.headers) return false
+    if (!body.contentEquals(other.body)) return false
+
+    return true
+  }
+
+  override fun hashCode(): Int {
+    var result = url.hashCode()
+    result = 31 * result + statusCode
+    result = 31 * result + headers.hashCode()
+    result = 31 * result + body.contentHashCode()
+    return result
+  }
+}
 

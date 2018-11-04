@@ -1,6 +1,7 @@
 package net.devslash
 
 import kotlinx.coroutines.runBlocking
+import net.devslash.data.FileDataSupplier
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -62,11 +63,7 @@ internal class HttpSessionManagerTest {
             }
           }
         }
-        data {
-          file {
-            name = path
-          }
-        }
+        data = FileDataSupplier(name = path)
       }
     }
   }

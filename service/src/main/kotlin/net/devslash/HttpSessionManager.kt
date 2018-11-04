@@ -8,7 +8,6 @@ import com.github.kittinunf.fuel.core.Response
 import com.github.kittinunf.result.Result
 import com.github.kittinunf.result.getOrElse
 import kotlinx.coroutines.*
-import java.util.concurrent.Executors
 import java.util.concurrent.Semaphore
 
 class HttpSessionManager(private val session: Session) : SessionManager {
@@ -29,7 +28,6 @@ class HttpSessionManager(private val session: Session) : SessionManager {
     val requests = mutableListOf<Job>()
     runBlocking {
       // Call the prerequesites
-      val ctx = Executors.newFixedThreadPool(session.concurrency).asCoroutineDispatcher()
       val dataSupplier = getCallDataSupplier(call.dataSupplier)
       val preRequest = call.preHooks.toMutableList()
       preRequest.add(jar)
@@ -38,34 +36,33 @@ class HttpSessionManager(private val session: Session) : SessionManager {
 
       do {
         val data = dataSupplier.getDataForRequest()
-        val body = getBodyProvider(call, data)
-        val url = getUrlProvider(call, data)
+        requests.add(launch(Dispatchers.IO) {
+          val url = getUrlProvider(call, data)
+          val body = getBodyProvider(call, data)
+          val currentUrl = url.get()
+          val currentBody = body.get()
+          val type = call.type
 
-        val currentUrl = url.get()
-        val currentBody = body.get()
-        val type = call.type
-
-        val req = HttpRequest(mapType(type), currentUrl, currentBody)
-        val shouldSkip =
+          val req = HttpRequest(mapType(type), currentUrl, currentBody)
+          val shouldSkip =
             preRequest.filter { it is SkipPreHook }.any { (it as SkipPreHook).skip(data) }
 
-        if (shouldSkip) {
-          continue
-        }
-        preRequest.forEach {
-          when (it) {
-            is SimplePreHook -> it.accept(req, data)
-            is SessionPersistingPreHook -> it.accept(sessionManager, jar, req, data)
+          if (shouldSkip) {
+            return@launch
           }
-        }
-        // Take out later
-        call.headers?.forEach { req.addHeader(it.first, it.second.get(data)) }
+          preRequest.forEach {
+            when (it) {
+              is SimplePreHook -> it.accept(req, data)
+              is SessionPersistingPreHook -> it.accept(sessionManager, jar, req, data)
+            }
+          }
+          // Take out later
+          call.headers?.forEach { req.addHeader(it.first, it.second.get(data)) }
 
-        while (!semaphore.tryAcquire()) {
-          delay(100)
-        }
+          while (!semaphore.tryAcquire()) {
+            delay(100)
+          }
 
-        requests.add(async(ctx) {
           try {
             val request = makeRequest(req)
             val resp = mapResponse(request)
@@ -98,8 +95,9 @@ class HttpSessionManager(private val session: Session) : SessionManager {
     val (resp, res) = makeRequest
     res.fold({}, { error ->
       // If we have an error, for soe reason the details show up here
-      return HttpResponse(error.response.url, error.response.statusCode, error.response.headers,
-          error.response.data)
+      return HttpResponse(
+        error.response.url, error.response.statusCode, error.response.headers, error.response.data
+      )
     })
     return HttpResponse(resp.url, resp.statusCode, resp.headers, res.getOrElse(byteArrayOf()))
   }
@@ -117,8 +115,6 @@ class HttpSessionManager(private val session: Session) : SessionManager {
     req.body(modelRequest.body)
 
     val (_, response, result) = req.awaitByteArrayResponse()
-//    val (_, response, result) = req.response()
-//    result.fold({}, {it ->println(it) })
     return Pair(response, result)
   }
 }

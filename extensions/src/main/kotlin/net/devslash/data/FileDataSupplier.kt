@@ -1,28 +1,17 @@
-package net.devslash
+package net.devslash.data
 
+import net.devslash.RequestData
+import net.devslash.RequestDataSupplier
 import java.io.File
 import java.util.concurrent.atomic.AtomicInteger
 
-interface RequestDataSupplier {
-  /**
-   * Request data should be a closure that is safe to call on a per-request basis
-   */
-  fun getDataForRequest(): RequestData
-
-  fun hasNext(): Boolean
-}
-
-interface RequestData {
-  fun getReplacements(): Map<String, String>
-}
-
-class FileBasedDataSupplier(private val inFile: InputFile) : RequestDataSupplier {
-  val sourceFile = File(inFile.name).readLines()
+class FileDataSupplier(val name: String, val split: String = " ") : RequestDataSupplier {
+  val sourceFile = File(name).readLines()
   val line = AtomicInteger(0)
 
   override fun getDataForRequest(): RequestData {
     return object : RequestData {
-      val ourLine = sourceFile[line.getAndIncrement()].split(inFile.split)
+      val ourLine = sourceFile[line.getAndIncrement()].split(split)
       override fun getReplacements(): Map<String, String> {
         return ourLine.mapIndexed { index, string ->
           "!" + (index + 1) + "!" to string

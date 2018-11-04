@@ -1,13 +1,14 @@
 package net.devslash
 
+import net.devslash.data.FileDataSupplier
 import org.junit.Test
 import org.junit.jupiter.api.Assertions.assertEquals
 
 internal class FileBasedDataSupplierTest {
 
   @Test fun testBasicFile() {
-    val path = FileBasedDataSupplier::class.java.getResource("/test.log").path
-    val dataSupplier = FileBasedDataSupplier(InputFile(path, " "))
+    val path = FileDataSupplier::class.java.getResource("/test.log").path
+    val dataSupplier = FileDataSupplier(path, " ")
 
     val expected = listOf("a", "b", "c", "d")
 
@@ -19,8 +20,8 @@ internal class FileBasedDataSupplierTest {
   }
 
   @Test fun testFileWithMultipleWords() {
-    val path = FileBasedDataSupplier::class.java.getResource("/twowords.log").path
-    val dataSupplier = FileBasedDataSupplier(InputFile(path, " "))
+    val path = FileDataSupplier::class.java.getResource("/twowords.log").path
+    val dataSupplier = FileDataSupplier(path, " ")
 
     val expected = listOf(Pair("a", "b"), Pair("c", "d"))
 
@@ -33,8 +34,8 @@ internal class FileBasedDataSupplierTest {
   }
 
   @Test fun testWithTabSeparator() {
-    val path = FileBasedDataSupplier::class.java.getResource("/tabspaced.log").path
-    val dataSupplier = FileBasedDataSupplier(InputFile(path, "-"))
+    val path = FileDataSupplier::class.java.getResource("/tabspaced.log").path
+    val dataSupplier = FileDataSupplier(path, "-")
 
     val expected = listOf(Pair("a", "b"), Pair("c", "d"))
 

@@ -2,7 +2,6 @@ package net.devslash.it
 
 import kotlinx.coroutines.runBlocking
 import net.devslash.*
-import net.devslash.outputs.Pipe
 import net.devslash.outputs.StdOut
 import net.devslash.pre.SkipIf
 import org.junit.Rule

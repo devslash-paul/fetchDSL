@@ -1,4 +1,4 @@
-package net.devslash.outputs
+package net.devslash.pipes
 
 import net.devslash.BasicOutput
 import net.devslash.HttpResponse
@@ -6,11 +6,15 @@ import net.devslash.RequestData
 import net.devslash.RequestDataSupplier
 import java.util.*
 
-class Pipe(val acceptor: (HttpResponse, RequestData) -> List<String>, val split: String) : BasicOutput, RequestDataSupplier {
+class Pipe(val acceptor: (HttpResponse, RequestData) -> List<String>, val split: String? = null) : BasicOutput, RequestDataSupplier {
   private val storage = ArrayDeque<String>()
 
   override fun getDataForRequest(): RequestData {
-    val line = storage.pop().split(split)
+    val currentValue = storage.pop()
+    val line = if (split != null) {
+      currentValue.split(split)
+    } else listOf(currentValue)
+
     return object : RequestData {
       override fun getReplacements(): Map<String, String> {
         return line.mapIndexed { index, string ->

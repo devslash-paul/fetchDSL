@@ -1,11 +1,12 @@
 package net.devslash.outputs
 
+import net.devslash.BasicOutput
 import net.devslash.HttpResponse
 import net.devslash.RequestData
-import net.devslash.BasicOutput
+import java.io.PrintStream
 
-class StdOut : BasicOutput {
+class StdOut(val output: PrintStream = System.out) : BasicOutput {
   override fun accept(resp: HttpResponse, data: RequestData) {
-    println(String(resp.body))
+    output.println(String(resp.body))
   }
 }

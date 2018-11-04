@@ -4,6 +4,7 @@ import net.devslash.*
 import java.util.concurrent.atomic.AtomicBoolean
 
 class Once(private val pre: PreHook) : SessionPersistingPreHook {
+
   private val flag = AtomicBoolean(false)
 
   override suspend fun accept(sessionManager: SessionManager,

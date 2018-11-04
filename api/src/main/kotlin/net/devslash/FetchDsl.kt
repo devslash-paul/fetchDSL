@@ -24,7 +24,7 @@ class UnaryAddBuilder<T> {
 open class CallBuilder(private val url: String) {
   private var cookieJar: String? = null
   private var output: List<Output> = mutableListOf()
-  private var dataSupplier: DataSupplier? = null
+  var data: RequestDataSupplier? = null
   var body: HttpBody? = null
   var type: HttpMethod = HttpMethod.GET
   var headers: List<Pair<String, ReplaceableValue<String, RequestData>>>? = null
@@ -46,16 +46,12 @@ open class CallBuilder(private val url: String) {
     output = UnaryAddBuilder<Output>().apply(block).build()
   }
 
-  fun data(block: DataSupplierBuilder.() -> Unit) {
-    dataSupplier = DataSupplierBuilder().apply(block).build()
-  }
-
   fun body(block: BodyBuilder.() -> Unit) {
     body = BodyBuilder().apply(block).build()
   }
 
   fun build(): Call {
-    return Call(url, headers, cookieJar, output, type, dataSupplier, body,
+    return Call(url, headers, cookieJar, output, type, data, body,
         skipRequestIfOutputExists, preHooksList, postHooksList)
   }
 }
@@ -69,19 +65,6 @@ class BodyBuilder {
 }
 
 @SessionDsl
-class DataSupplierBuilder {
-  private var file: InputFile? = null
-  var from : RequestDataSupplier? = null
-
-  fun file(block: InputFileBuilder.() -> Unit) {
-    file = InputFileBuilder().apply(block).build()
-  }
-
-  fun build(): DataSupplier = DataSupplier(file, from)
-}
-
-
-@SessionDsl
 class SessionBuilder {
   private var calls = mutableListOf<Call>()
   var concurrency = 20
@@ -91,23 +74,5 @@ class SessionBuilder {
   }
 
   fun build(): Session = Session(calls, concurrency)
-}
-
-@SessionDsl
-class InputFileBuilder {
-  var name: String? = null
-  var split: String = " "
-
-  fun build(): InputFile = InputFile(name!!, split)
-}
-
-@SessionDsl
-class FileBuilder {
-  var name: String? = null
-  var append: Boolean = false
-  var perLine: Boolean = false
-  var split: String = " "
-
-  fun build(): OutputFile = OutputFile(name!!, append, split, perLine)
 }
 

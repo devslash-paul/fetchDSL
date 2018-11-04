@@ -36,33 +36,35 @@ class HttpSessionManager(private val session: Session) : SessionManager {
 
       do {
         val data = dataSupplier.getDataForRequest()
+        val req = getHttpRequest(call, data)
+
+        val shouldSkip =
+          preRequest.filter { it is SkipPreHook }.any { (it as SkipPreHook).skip(data) }
+
+        if (shouldSkip) {
+          continue
+        }
+        preRequest.forEach {
+          when (it) {
+            is SimplePreHook -> it.accept(req, data)
+            is SessionPersistingPreHook -> it.accept(sessionManager, jar, req, data)
+          }
+        }
+        // Take out later
+        call.headers?.forEach { req.addHeader(it.first, it.second.get(data)) }
+
+        while (!semaphore.tryAcquire()) {
+          delay(10)
+        }
+
+        /*
+         * This works because at this point because a request can't be added until there's been a
+         * semaphore release.
+         *
+         * That said, what's bad about this is that it'd be better if we had a queue of things that
+         * were ready to go straight away. As in the request was alll ready.
+         */
         requests.add(launch(Dispatchers.IO) {
-          val url = getUrlProvider(call, data)
-          val body = getBodyProvider(call, data)
-          val currentUrl = url.get()
-          val currentBody = body.get()
-          val type = call.type
-
-          val req = HttpRequest(mapType(type), currentUrl, currentBody)
-          val shouldSkip =
-            preRequest.filter { it is SkipPreHook }.any { (it as SkipPreHook).skip(data) }
-
-          if (shouldSkip) {
-            return@launch
-          }
-          preRequest.forEach {
-            when (it) {
-              is SimplePreHook -> it.accept(req, data)
-              is SessionPersistingPreHook -> it.accept(sessionManager, jar, req, data)
-            }
-          }
-          // Take out later
-          call.headers?.forEach { req.addHeader(it.first, it.second.get(data)) }
-
-          while (!semaphore.tryAcquire()) {
-            delay(100)
-          }
-
           try {
             val request = makeRequest(req)
             val resp = mapResponse(request)
@@ -89,6 +91,19 @@ class HttpSessionManager(private val session: Session) : SessionManager {
     }
 
     return requests
+  }
+
+  private fun getHttpRequest(
+    call: Call, data: RequestData
+  ): HttpRequest {
+    val url = getUrlProvider(call, data)
+    val body = getBodyProvider(call, data)
+    val currentUrl = url.get()
+    val currentBody = body.get()
+    val type = call.type
+
+    val req = HttpRequest(mapType(type), currentUrl, currentBody)
+    return req
   }
 
   private fun mapResponse(makeRequest: Pair<Response, Result<ByteArray, FuelError>>): HttpResponse {

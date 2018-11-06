@@ -21,6 +21,7 @@ class SystemOutputProvider : OutputHandler {
 
 fun getCallDataSupplier(data: RequestDataSupplier?): RequestDataSupplier {
   if (data != null) {
+    data.init()
     return data
   }
   return object : RequestDataSupplier {

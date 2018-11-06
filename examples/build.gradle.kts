@@ -18,7 +18,7 @@ dependencies {
   compile("mysql:mysql-connector-java:8.0.12")
 
   implementation("com.google.code.gson:gson:2.3.1")
-  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:0.30.0-eap13")
+  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.0.0")
 
   testImplementation("org.junit.jupiter:junit-jupiter-api:5.1.0")
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.1.0")

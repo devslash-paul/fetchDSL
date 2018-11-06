@@ -21,6 +21,11 @@ interface RequestDataSupplier {
   fun getDataForRequest(): RequestData
 
   fun hasNext(): Boolean
+
+  fun init() {
+    // By default this is empty, but implementors can be assured that on a per-call basis, this
+    // will be called
+  }
 }
 
 interface OutputFormat {

@@ -10,5 +10,5 @@ dependencies {
   compile("org.jetbrains.kotlin:kotlin-stdlib")
   compile("com.github.kittinunf.fuel:fuel:1.15.0")
   compile("com.github.kittinunf.fuel:fuel-coroutines:1.15.0")
-  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:0.30.0-eap13")
+  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.0.0")
 }

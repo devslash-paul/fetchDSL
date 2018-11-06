@@ -21,6 +21,4 @@ class ListBasedRequestData(private val parts: List<String> = listOf()) : Request
   override fun hashCode(): Int {
     return parts.hashCode()
   }
-
-
 }

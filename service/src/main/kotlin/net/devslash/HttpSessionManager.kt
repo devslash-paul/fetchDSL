@@ -23,74 +23,72 @@ class HttpSessionManager(private val session: Session) : SessionManager {
   }
 
   override fun call(call: Call): MutableList<Job> = call(call, CookieJar())
-  override fun call(call: Call, jar: CookieJar): MutableList<Job> {
+  override fun call(call: Call, jar: CookieJar): MutableList<Job> = runBlocking {
     // Okay, so in here we're going to do the one to many calls we have to to get this to run.
     val requests = mutableListOf<Job>()
-    runBlocking {
-      // Call the prerequesites
-      val dataSupplier = getCallDataSupplier(call.dataSupplier)
-      val preRequest = call.preHooks.toMutableList()
-      preRequest.add(jar)
-      val postRequest: MutableList<PostHook> = mutableListOf(jar)
-      postRequest.addAll(call.postHooks)
+    // Call the prerequesites
+    val dataSupplier = getCallDataSupplier(call.dataSupplier)
+    val preRequest = call.preHooks.toMutableList()
+    preRequest.add(jar)
+    val postRequest: MutableList<PostHook> = mutableListOf(jar)
+    postRequest.addAll(call.postHooks)
 
-      do {
-        val data = dataSupplier.getDataForRequest()
-        val req = getHttpRequest(call, data)
+    do {
+      val data = dataSupplier.getDataForRequest()
+      val req = getHttpRequest(call, data)
 
-        val shouldSkip =
-          preRequest.filter { it is SkipPreHook }.any { (it as SkipPreHook).skip(data) }
+      val shouldSkip =
+        preRequest.filter { it is SkipPreHook }.any { (it as SkipPreHook).skip(data) }
 
-        if (shouldSkip) {
-          continue
+      if (shouldSkip) {
+        continue
+      }
+      preRequest.forEach {
+        when (it) {
+          is SimplePreHook -> it.accept(req, data)
+          is SessionPersistingPreHook -> it.accept(sessionManager, jar, req, data)
         }
-        preRequest.forEach {
-          when (it) {
-            is SimplePreHook -> it.accept(req, data)
-            is SessionPersistingPreHook -> it.accept(sessionManager, jar, req, data)
-          }
-        }
-        // Take out later
-        call.headers?.forEach { req.addHeader(it.first, it.second.get(data)) }
+      }
+      // Take out later
+      call.headers?.forEach { req.addHeader(it.first, it.second.get(data)) }
 
-        while (!semaphore.tryAcquire()) {
-          delay(10)
-        }
+      while (!semaphore.tryAcquire()) {
+        delay(10)
+      }
 
-        /*
-         * This works because at this point because a request can't be added until there's been a
-         * semaphore release.
-         *
-         * That said, what's bad about this is that it'd be better if we had a queue of things that
-         * were ready to go straight away. As in the request was alll ready.
-         */
-        requests.add(launch(Dispatchers.IO) {
-          try {
-            val request = makeRequest(req)
-            val resp = mapResponse(request)
-            postRequest.forEach {
-              when (it) {
-                is SimplePostHook -> it.accept(resp.copy())
-                is ChainReceivingResponseHook -> it.accept(resp)
-                is FullDataPostHook -> it.accept(req, resp, data)
-              }
+      /*
+       * This works because at this point because a request can't be added until there's been a
+       * semaphore release.
+       *
+       * That said, what's bad about this is that it'd be better if we had a queue of things that
+       * were ready to go straight away. As in the request was alll ready.
+       */
+      requests.add(launch(Dispatchers.IO) {
+        try {
+          val request = makeRequest(req)
+          val resp = mapResponse(request)
+          postRequest.forEach {
+            when (it) {
+              is SimplePostHook -> it.accept(resp.copy())
+              is ChainReceivingResponseHook -> it.accept(resp)
+              is FullDataPostHook -> it.accept(req, resp, data)
             }
-
-            call.output.forEach {
-              when (it) {
-                is BasicOutput -> it.accept(resp, data)
-              }
-            }
-          } catch (e: Exception) {
-            println(e)
-          } finally {
-            semaphore.release()
           }
-        })
-      } while (dataSupplier.hasNext())
-    }
 
-    return requests
+          call.output.forEach {
+            when (it) {
+              is BasicOutput -> it.accept(resp, data)
+            }
+          }
+        } catch (e: Exception) {
+          println(e)
+        } finally {
+          semaphore.release()
+        }
+      })
+    } while (dataSupplier.hasNext())
+
+    requests
   }
 
   private fun getHttpRequest(

@@ -1,7 +1,6 @@
 package net.devslash.pipes
 
 import net.devslash.*
-import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
@@ -12,7 +11,7 @@ import java.util.concurrent.atomic.AtomicInteger
 class ResettablePipe(val acceptor: (HttpResponse, RequestData) -> List<String>, val split: String? = null) : BasicOutput, RequestDataSupplier {
 
   private val index = AtomicInteger(0)
-  private val storage = Collections.synchronizedList(mutableListOf<String>())
+  private val storage = mutableListOf<String>()
 
   override fun getDataForRequest(): RequestData {
     val currentValue = storage[index.getAndIncrement()]

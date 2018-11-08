@@ -23,14 +23,14 @@ class SelectAndCheck<T : Table> : BaseMySQLSettings() {
   }
 }
 
-class MySqlQueryPredicate<T : Table>(block: SelectAndCheck<T>.() -> Unit) : Predicate<RequestData> {
+class MySqlQueryPredicate<T : Table>(block: SelectAndCheck<T>.() -> Unit) : (RequestData) -> Boolean {
   private val settings = SelectAndCheck<T>().apply(block).build()
 
   init {
     Database.connect(settings.url, "com.mysql.jdbc.Driver", settings.username, settings.password)
   }
 
-  override fun test(t: RequestData): Boolean {
+  override fun invoke(t: RequestData): Boolean {
     return transaction {
       val x = settings.op(t)
       if(x.count() >0) {

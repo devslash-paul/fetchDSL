@@ -3,6 +3,7 @@ package net.devslash.it
 import kotlinx.coroutines.runBlocking
 import net.devslash.*
 import net.devslash.outputs.StdOut
+import net.devslash.post.LogResponse
 import net.devslash.pre.SkipIf
 import org.junit.Rule
 import org.junit.Test
@@ -22,6 +23,9 @@ class HttpBounceTest {
     runBlocking {
       runHttp {
         call(getAddress(address) + "/testPath") {
+          postHook {
+            +LogResponse()
+          }
           output {
             +StdOut()
             +object : BasicOutput {

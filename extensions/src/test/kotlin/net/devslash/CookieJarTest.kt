@@ -1,6 +1,7 @@
 package net.devslash
 
 import com.github.kittinunf.fuel.core.Method
+import net.devslash.util.requestDataFromList
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.core.IsEqual.equalTo
 import org.junit.Before

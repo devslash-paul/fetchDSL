@@ -75,7 +75,7 @@ interface SessionPersistingPreHook : PreHook {
 }
 
 interface SkipPreHook : PreHook {
-  suspend fun skip(requestData: RequestData): Boolean
+  fun skip(requestData: RequestData): Boolean
 }
 
 interface SimplePreHook : PreHook {

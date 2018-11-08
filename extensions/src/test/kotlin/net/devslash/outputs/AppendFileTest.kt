@@ -1,7 +1,7 @@
 package net.devslash.outputs
 
 import net.devslash.ListBasedRequestData
-import net.devslash.getResponseWithBody
+import net.devslash.util.getResponseWithBody
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.jupiter.api.Test

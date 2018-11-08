@@ -1,7 +1,7 @@
 package net.devslash.pipes
 
 import net.devslash.HttpResponse
-import net.devslash.requestDataFromList
+import net.devslash.util.requestDataFromList
 import org.hamcrest.CoreMatchers.*
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Test
@@ -11,17 +11,19 @@ internal class ResettablePipeTest {
 
   @Test
   fun testPipeStartsEmpty() {
-    val pipe = ResettablePipe({ r, d -> listOf("A", "B") }, null)
+    val pipe = ResettablePipe({ _, _ -> listOf("A", "B") }, null)
 
     assertThat(pipe.hasNext(), equalTo(false))
   }
 
   @Test
   fun testPipeSingleCase() {
-    val pipe = ResettablePipe({ r, d -> listOf(String(r.body)) }, null)
+    val pipe = ResettablePipe({ r, _ -> listOf(String(r.body)) }, null)
 
     pipe.accept(
-        HttpResponse(URL("http://"), 200, mapOf(), "result".toByteArray()), requestDataFromList(listOf()))
+        HttpResponse(URL("http://"), 200, mapOf(), "result".toByteArray()),
+      requestDataFromList(listOf())
+    )
 
     assertThat(pipe.hasNext(), equalTo(true))
     val data = pipe.getDataForRequest()
@@ -39,9 +41,11 @@ internal class ResettablePipeTest {
   @Test
   fun testPipeCanReturnMultipleResults() {
     val vals = listOf("a", "b", "c")
-    val pipe = Pipe({ r, d -> vals }, " ")
+    val pipe = Pipe({ _, _ -> vals }, " ")
     pipe.accept(
-        HttpResponse(URL("http://"), 200, mapOf(), byteArrayOf()), requestDataFromList(listOf()))
+        HttpResponse(URL("http://"), 200, mapOf(), byteArrayOf()),
+      requestDataFromList(listOf())
+    )
 
     vals.forEach {
       assertThat(pipe.hasNext(), equalTo(true))
@@ -51,13 +55,19 @@ internal class ResettablePipeTest {
 
   @Test
   fun testPipeAcceptsMultipleAndReturnsInOrder() {
-    val pipe = Pipe({ r, d -> listOf(String(r.body)) }, " ")
+    val pipe = Pipe({ r, _ -> listOf(String(r.body)) }, " ")
     pipe.accept(
-        HttpResponse(URL("http://"), 200, mapOf(), "a".toByteArray()), requestDataFromList(listOf()))
+        HttpResponse(URL("http://"), 200, mapOf(), "a".toByteArray()),
+      requestDataFromList(listOf())
+    )
     pipe.accept(
-        HttpResponse(URL("http://"), 200, mapOf(), "b".toByteArray()), requestDataFromList(listOf()))
+        HttpResponse(URL("http://"), 200, mapOf(), "b".toByteArray()),
+      requestDataFromList(listOf())
+    )
     pipe.accept(
-        HttpResponse(URL("http://"), 200, mapOf(), "c".toByteArray()), requestDataFromList(listOf()))
+        HttpResponse(URL("http://"), 200, mapOf(), "c".toByteArray()),
+      requestDataFromList(listOf())
+    )
 
     val values = listOf("a", "b", "c")
     values.forEach {

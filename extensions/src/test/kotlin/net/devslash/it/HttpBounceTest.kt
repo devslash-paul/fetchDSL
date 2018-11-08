@@ -9,7 +9,6 @@ import org.junit.Test
 import org.mockserver.junit.MockServerRule
 import org.mockserver.model.HttpRequest.request
 import java.net.InetSocketAddress
-import java.util.function.Predicate
 
 class HttpBounceTest {
   @get:Rule
@@ -66,7 +65,7 @@ class HttpBounceTest {
       runHttp {
         call(getAddress(address)) {
           preHook {
-            +SkipIf(Predicate { true })
+            +SkipIf { true }
           }
         }
       }

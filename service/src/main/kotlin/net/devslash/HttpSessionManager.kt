@@ -8,6 +8,7 @@ import com.github.kittinunf.fuel.core.Response
 import com.github.kittinunf.result.Result
 import com.github.kittinunf.result.getOrElse
 import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.Channel
 import java.util.concurrent.Semaphore
 
 class HttpSessionManager(private val session: Session) : SessionManager {
@@ -16,79 +17,72 @@ class HttpSessionManager(private val session: Session) : SessionManager {
   private val semaphore = Semaphore(0)
   private lateinit var sessionManager: SessionManager
 
-  fun run(): List<List<Job>> {
+  fun run() {
     sessionManager = this
     semaphore.release(session.concurrency)
-    return session.calls.map { call(it, CookieJar()) }
+    session.calls.map { call(it, CookieJar()) }
   }
 
-  override fun call(call: Call): MutableList<Job> = call(call, CookieJar())
-  override fun call(call: Call, jar: CookieJar): MutableList<Job> = runBlocking {
-    // Okay, so in here we're going to do the one to many calls we have to to get this to run.
-    val requests = mutableListOf<Job>()
-    // Call the prerequesites
+  @ExperimentalCoroutinesApi
+  suspend fun CoroutineScope.produceHttp(
+    call: Call, jar: CookieJar, channel: Channel<Pair<HttpRequest, RequestData>>
+  ) {
     val dataSupplier = getCallDataSupplier(call.dataSupplier)
-    val preRequest = call.preHooks.toMutableList()
-    preRequest.add(jar)
-    val postRequest: MutableList<PostHook> = mutableListOf(jar)
-    postRequest.addAll(call.postHooks)
-
     do {
       val data = dataSupplier.getDataForRequest()
       val req = getHttpRequest(call, data)
+      // Call the prerequesites
+      val preRequest = call.preHooks.toMutableList()
+      preRequest.add(jar)
 
       val shouldSkip =
         preRequest.filter { it is SkipPreHook }.any { (it as SkipPreHook).skip(data) }
+      if (shouldSkip) continue
 
-      if (shouldSkip) {
-        continue
-      }
       preRequest.forEach {
         when (it) {
           is SimplePreHook -> it.accept(req, data)
           is SessionPersistingPreHook -> it.accept(sessionManager, jar, req, data)
         }
       }
-      // Take out later
       call.headers?.forEach { req.addHeader(it.first, it.second.get(data)) }
 
-      while (!semaphore.tryAcquire()) {
-        delay(10)
-      }
+      channel.send(Pair(req, data))
+    } while (dataSupplier.hasNext())
+    channel.close()
+  }
 
-      /*
-       * This works because at this point because a request can't be added until there's been a
-       * semaphore release.
-       *
-       * That said, what's bad about this is that it'd be better if we had a queue of things that
-       * were ready to go straight away. As in the request was alll ready.
-       */
-      requests.add(launch(Dispatchers.IO) {
-        try {
-          val request = makeRequest(req)
+  override fun call(call: Call) = call(call, CookieJar())
+
+  @ExperimentalCoroutinesApi
+  override fun call(call: Call, jar: CookieJar) = runBlocking {
+    // Okay, so in here we're going to do the one to many calls we have to to get this to run.
+    val channel: Channel<Pair<HttpRequest, RequestData>> = Channel()
+    launch { produceHttp(call, jar, channel) }
+
+    val postRequest: MutableList<PostHook> = mutableListOf(jar)
+    postRequest.addAll(call.postHooks)
+
+    while (!(channel.isClosedForReceive)) {
+      for (next in channel) {
+        launch(Dispatchers.IO) {
+          val request = makeRequest(next.first)
           val resp = mapResponse(request)
           postRequest.forEach {
             when (it) {
               is SimplePostHook -> it.accept(resp.copy())
               is ChainReceivingResponseHook -> it.accept(resp)
-              is FullDataPostHook -> it.accept(req, resp, data)
+              is FullDataPostHook -> it.accept(next.first, resp, next.second)
             }
           }
-
           call.output.forEach {
             when (it) {
-              is BasicOutput -> it.accept(resp, data)
+              is BasicOutput -> it.accept(resp, next.second)
             }
           }
-        } catch (e: Exception) {
-          println(e)
-        } finally {
-          semaphore.release()
         }
-      })
-    } while (dataSupplier.hasNext())
-
-    requests
+      }
+    }
   }
 
   private fun getHttpRequest(

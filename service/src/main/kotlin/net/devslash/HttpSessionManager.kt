@@ -24,7 +24,7 @@ class HttpSessionManager(private val session: Session) : SessionManager {
   }
 
   @ExperimentalCoroutinesApi
-  suspend fun CoroutineScope.produceHttp(
+  suspend fun produceHttp(
     call: Call, jar: CookieJar, channel: Channel<Pair<HttpRequest, RequestData>>
   ) {
     val dataSupplier = getCallDataSupplier(call.dataSupplier)
@@ -57,7 +57,7 @@ class HttpSessionManager(private val session: Session) : SessionManager {
   @ExperimentalCoroutinesApi
   override fun call(call: Call, jar: CookieJar) = runBlocking {
     // Okay, so in here we're going to do the one to many calls we have to to get this to run.
-    val channel: Channel<Pair<HttpRequest, RequestData>> = Channel()
+    val channel: Channel<Pair<HttpRequest, RequestData>> = Channel(session.concurrency)
     launch { produceHttp(call, jar, channel) }
 
     val postRequest: MutableList<PostHook> = mutableListOf(jar)
@@ -65,21 +65,29 @@ class HttpSessionManager(private val session: Session) : SessionManager {
 
     while (!(channel.isClosedForReceive)) {
       for (next in channel) {
-        launch(Dispatchers.IO) {
-          val request = makeRequest(next.first)
-          val resp = mapResponse(request)
-          postRequest.forEach {
-            when (it) {
-              is SimplePostHook -> it.accept(resp.copy())
-              is ChainReceivingResponseHook -> it.accept(resp)
-              is FullDataPostHook -> it.accept(next.first, resp, next.second)
+        try {
+          while (!semaphore.tryAcquire()) {
+            delay(10)
+          }
+
+          launch(Dispatchers.IO) {
+            val request = makeRequest(next.first)
+            val resp = mapResponse(request)
+            postRequest.forEach {
+              when (it) {
+                is SimplePostHook -> it.accept(resp.copy())
+                is ChainReceivingResponseHook -> it.accept(resp)
+                is FullDataPostHook -> it.accept(next.first, resp, next.second)
+              }
+            }
+            call.output.forEach {
+              when (it) {
+                is BasicOutput -> it.accept(resp, next.second)
+              }
             }
           }
-          call.output.forEach {
-            when (it) {
-              is BasicOutput -> it.accept(resp, next.second)
-            }
-          }
+        } finally {
+          semaphore.release()
         }
       }
     }

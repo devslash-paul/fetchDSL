@@ -14,7 +14,7 @@ repositories {
 
 allprojects {
   group = "net.devslash.fetchdsl"
-  version = "0.3.1"
+  version = "0.3.2"
 
   repositories {
     jcenter()

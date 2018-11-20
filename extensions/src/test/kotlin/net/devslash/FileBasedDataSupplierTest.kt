@@ -1,12 +1,13 @@
 package net.devslash
 
 import net.devslash.data.FileDataSupplier
-import org.junit.Test
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Test
 
 internal class FileBasedDataSupplierTest {
 
-  @Test fun testBasicFile() {
+  @Test
+  fun testBasicFile() {
     val path = FileDataSupplier::class.java.getResource("/test.log").path
     val dataSupplier = FileDataSupplier(path, " ")
 

@@ -1,5 +1,6 @@
 package net.devslash.examples
 
+import net.devslash.EchoServer
 import net.devslash.HttpMethod
 import net.devslash.outputs.DebugOutput
 import net.devslash.outputs.StdOut

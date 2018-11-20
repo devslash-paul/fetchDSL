@@ -14,7 +14,7 @@ pluginManagement {
 
 enableFeaturePreview("STABLE_PUBLISHING")
 
-include("api", "service", "extensions", "examples")
+include("api", "service", "extensions", "examples", "benchmarks")
 
 rootProject.name = "fetshdsl"
 

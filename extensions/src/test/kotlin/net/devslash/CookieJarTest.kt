@@ -1,28 +1,22 @@
 package net.devslash
 
-import com.github.kittinunf.fuel.core.Method
 import net.devslash.util.requestDataFromList
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.core.IsEqual.equalTo
-import org.junit.Before
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import java.net.URL
 
 internal class CookieJarTest {
 
-  private lateinit var jar: CookieJar
-  private lateinit var request: HttpRequest
+  private val jar: CookieJar = CookieJar()
+  private val request = HttpRequest(HttpMethod.GET, "", "")
 
-  @Before fun setup() {
-    jar = CookieJar()
-    request = HttpRequest(Method.GET, "", "")
-  }
-
-  @Test fun testSingleCookieSet() {
+  @Test
+  fun testSingleCookieSet() {
     jar.accept(responseWithHeaders(mapOf("Set-Cookie" to listOf("A=B"))))
     jar.accept(request, requestDataFromList(listOf()))
 
-    assertThat(request.headers, equalTo(mutableMapOf("Cookie" to "A=B")))
+    assertThat(request.headers["Cookie"], equalTo(listOf("A=B")))
   }
 
   @Test fun testMultipleCaseCookieSet() {
@@ -31,7 +25,7 @@ internal class CookieJarTest {
     jar.accept(request, requestDataFromList(listOf()))
 
 
-    assertThat(request.headers, equalTo(mutableMapOf("Cookie" to "A=B; C=D")))
+    assertThat(request.headers["Cookie"], equalTo(listOf("A=B; C=D")))
   }
 
   @Test fun testSetMultipleOfTheSameKey() {
@@ -40,7 +34,7 @@ internal class CookieJarTest {
     jar.accept(request, requestDataFromList(listOf()))
 
 
-    assertThat(request.headers, equalTo(mutableMapOf("Cookie" to "A=D")))
+    assertThat(request.headers["Cookie"], equalTo(listOf("A=D")))
   }
 
   private fun responseWithHeaders(headers: Map<String, List<String>>) = HttpResponse(

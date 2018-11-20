@@ -1,6 +1,5 @@
 package net.devslash
 
-import com.github.kittinunf.fuel.core.Method
 import java.net.URL
 
 interface RequestDecorator {
@@ -18,11 +17,15 @@ interface ResponseConsumer {
 }
 
 
-class HttpRequest(val type: Method, val url: String, var body: String) {
-  val headers = mutableMapOf<String, String>()
+class HttpRequest(val type: HttpMethod, val url: String, var body: String) {
+  val headers = mutableMapOf<String, MutableList<String>>()
 
   fun addHeader(name: String, value: String) {
-    headers[name] = value
+    if (headers[name] == null) {
+      headers[name] = mutableListOf()
+    }
+
+    headers[name]!!.add(value)
   }
 }
 

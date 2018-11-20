@@ -38,6 +38,10 @@ subprojects {
     }
   }
 
+  val test by tasks.getting(Test::class) {
+    useJUnitPlatform()
+  }
+
   configure<BintrayExtension> {
     user = project.findProperty("bintrayUser") as String? ?: System.getenv("BINTRAY_USER")
     key = project.findProperty("bintrayApiKey") as String? ?: System.getenv("BINTRAY_API_KEY")

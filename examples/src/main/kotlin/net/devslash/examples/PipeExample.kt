@@ -1,5 +1,6 @@
 package net.devslash.examples
 
+import net.devslash.EchoServer
 import net.devslash.data.FileDataSupplier
 import net.devslash.outputs.FileOut
 import net.devslash.pipes.ResettablePipe

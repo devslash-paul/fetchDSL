@@ -1,30 +1,34 @@
 package net.devslash
 
-import awaitByteArrayResponse
-import com.github.kittinunf.fuel.core.FuelError
-import com.github.kittinunf.fuel.core.FuelManager
-import com.github.kittinunf.fuel.core.Method
-import com.github.kittinunf.fuel.core.Response
-import com.github.kittinunf.result.Result
-import com.github.kittinunf.result.getOrElse
+import io.ktor.client.HttpClient
+import io.ktor.client.call.call
+import io.ktor.client.engine.HttpClientEngine
+import io.ktor.http.Headers
+import io.ktor.http.headersOf
+import io.ktor.util.cio.toByteArray
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
+import java.net.URL
+import java.util.concurrent.Executors
 import java.util.concurrent.Semaphore
 
-class HttpSessionManager(private val session: Session) : SessionManager {
+class HttpSessionManager(private val engine: HttpClientEngine, private val session: Session) :
+  SessionManager {
 
-  private val manager = FuelManager()
   private val semaphore = Semaphore(0)
   private lateinit var sessionManager: SessionManager
+  private val client = HttpClient(engine) {
+    followRedirects = false
+  }
 
   fun run() {
     sessionManager = this
-    semaphore.release(session.concurrency)
     session.calls.map { call(it, CookieJar()) }
+
+    client.close()
   }
 
-  @ExperimentalCoroutinesApi
-  suspend fun produceHttp(
+  private suspend fun produceHttp(
     call: Call, jar: CookieJar, channel: Channel<Pair<HttpRequest, RequestData>>
   ) {
     val dataSupplier = getCallDataSupplier(call.dataSupplier)
@@ -57,20 +61,24 @@ class HttpSessionManager(private val session: Session) : SessionManager {
   @ExperimentalCoroutinesApi
   override fun call(call: Call, jar: CookieJar) = runBlocking {
     // Okay, so in here we're going to do the one to many calls we have to to get this to run.
-    val channel: Channel<Pair<HttpRequest, RequestData>> = Channel(session.concurrency)
-    launch { produceHttp(call, jar, channel) }
+    val channel: Channel<Pair<HttpRequest, RequestData>> = Channel(session.concurrency * 2)
 
+    val x = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
+    launch(x) { produceHttp(call, jar, channel) }
+
+    val ex = Executors.newFixedThreadPool(8 * 2).asCoroutineDispatcher()
     val postRequest: MutableList<PostHook> = mutableListOf(jar)
     postRequest.addAll(call.postHooks)
 
+    semaphore.release(session.concurrency)
+
     while (!(channel.isClosedForReceive)) {
       for (next in channel) {
-        try {
-          while (!semaphore.tryAcquire()) {
-            delay(10)
-          }
-
-          launch(Dispatchers.IO) {
+        while (!semaphore.tryAcquire()) {
+          delay(10)
+        }
+        launch(ex) {
+          try {
             val request = makeRequest(next.first)
             val resp = mapResponse(request)
             postRequest.forEach {
@@ -85,12 +93,16 @@ class HttpSessionManager(private val session: Session) : SessionManager {
                 is BasicOutput -> it.accept(resp, next.second)
               }
             }
+
+          } finally {
+            semaphore.release()
           }
-        } finally {
-          semaphore.release()
         }
       }
     }
+
+    ex.close()
+    x.close()
   }
 
   private fun getHttpRequest(
@@ -102,34 +114,42 @@ class HttpSessionManager(private val session: Session) : SessionManager {
     val currentBody = body.get()
     val type = call.type
 
-    val req = HttpRequest(mapType(type), currentUrl, currentBody)
+    val req = HttpRequest(type, currentUrl, currentBody)
     return req
   }
 
-  private fun mapResponse(makeRequest: Pair<Response, Result<ByteArray, FuelError>>): HttpResponse {
-    val (resp, res) = makeRequest
-    res.fold({}, { error ->
-      // If we have an error, for soe reason the details show up here
-      return HttpResponse(
-        error.response.url, error.response.statusCode, error.response.headers, error.response.data
-      )
-    })
-    return HttpResponse(resp.url, resp.statusCode, resp.headers, res.getOrElse(byteArrayOf()))
+  private suspend fun mapResponse(request: io.ktor.client.response.HttpResponse): HttpResponse {
+    val response = request.call.response
+    return HttpResponse(
+      URL(request.call.request.url.toString()),
+      response.status.value,
+      mapHeaders(response.headers),
+      response.content.toByteArray()
+    )
   }
 
-  private fun mapType(type: HttpMethod): Method {
+  private fun mapHeaders(headers: Headers): Map<String, List<String>> {
+    val map = mutableMapOf<String, List<String>>()
+    headers.forEach { key, value -> map[key] = value }
+
+    return map
+  }
+
+  private fun mapType(type: HttpMethod): io.ktor.http.HttpMethod {
     return when (type) {
-      HttpMethod.GET -> Method.GET
-      HttpMethod.POST -> Method.POST
+      HttpMethod.GET -> io.ktor.http.HttpMethod.Get
+      HttpMethod.POST -> io.ktor.http.HttpMethod.Post
     }
   }
 
-  private suspend fun makeRequest(modelRequest: HttpRequest): Pair<Response, Result<ByteArray, FuelError>> {
-    val req = manager.request(modelRequest.type, modelRequest.url).allowRedirects(false)
-    req.header(modelRequest.headers)
-    req.body(modelRequest.body)
+  private suspend fun makeRequest(modelRequest: HttpRequest): io.ktor.client.response.HttpResponse {
+    val req = client.call(modelRequest.url) {
+      method = mapType(modelRequest.type)
+      headersOf(*modelRequest.headers.map { Pair(it.key, it.value) }.toTypedArray())
+      body = modelRequest.body
+    }
 
-    val (_, response, result) = req.awaitByteArrayResponse()
-    return Pair(response, result)
+    val resp = req.response
+    return resp
   }
 }

@@ -1,7 +1,6 @@
 plugins {
   kotlin("jvm")
   `maven-publish`
-  id("me.champeau.gradle.jmh") version "0.4.7"
 }
 
 repositories {
@@ -24,10 +23,8 @@ dependencies {
   testImplementation("org.junit.jupiter:junit-jupiter-api:5.3.1")
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.3.1")
 
-  jmh("org.openjdk.jmh:jmh-core:1.21")
-  jmh("org.openjdk.jmh:jmh-generator-annprocess:1.21")
-
-  testCompile("org.mock-server:mockserver-netty:5.4.1")
   testCompile("org.hamcrest:hamcrest-core:1.3")
+  testCompile("io.ktor:ktor-client-mock:1.0.0")
+  testCompile("io.ktor:ktor-server-netty:1.0.0")
   testCompile("org.junit-pioneer:junit-pioneer:0.3.0")
 }

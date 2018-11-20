@@ -1,53 +1,62 @@
 package net.devslash.it
 
+import io.ktor.application.call
+import io.ktor.request.receiveText
+import io.ktor.response.respondText
+import io.ktor.routing.get
+import io.ktor.routing.post
+import io.ktor.routing.routing
+import io.ktor.server.engine.ApplicationEngine
 import kotlinx.coroutines.runBlocking
 import net.devslash.*
-import net.devslash.outputs.StdOut
 import net.devslash.post.LogResponse
 import net.devslash.pre.SkipIf
-import org.junit.Rule
-import org.junit.Test
-import org.mockserver.junit.MockServerRule
-import org.mockserver.model.HttpRequest.request
-import java.net.InetSocketAddress
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Test
 
-class HttpBounceTest {
-  @get:Rule
-  val mockServerRule: MockServerRule = MockServerRule(this)
+class HttpBounceTest : ServerTest() {
+  override lateinit var appEngine: ApplicationEngine
 
   @Test
   fun testBasicStep() {
-    val client = mockServerRule.client
-    val address = client.remoteAddress()
+    runWith {
+      routing {
+        get("/testPath") {
+          call.respondText("RESULT")
+        }
+      }
+    }
+
+    var bodyResult = ""
 
     runBlocking {
       runHttp {
-        call(getAddress(address) + "/testPath") {
+        call("$address/testPath") {
           postHook {
-            +LogResponse()
-          }
-          output {
-            +StdOut()
-            +object : BasicOutput {
-              override fun accept(resp: HttpResponse, data: RequestData) {
-              }
-            }
+            +{ resp: HttpResponse -> bodyResult = String(resp.body) }.toPostHook()
           }
         }
       }
     }
 
-    client.verify(request().withPath("/testPath"))
+    assertEquals("RESULT", bodyResult)
   }
 
   @Test
   fun testWithBodyParams() {
-    val client = mockServerRule.client
-    val address = client.remoteAddress()
+    var sentBody = ""
+    runWith {
+       routing {
+         post("/") {
+           sentBody = call.receiveText()
+         }
+       }
+    }
 
     runBlocking {
       runHttp {
-        call(getAddress(address)) {
+        call(address) {
           type = HttpMethod.POST
           headers = listOf("A" to "B".asReplaceableValue())
           body {
@@ -57,27 +66,28 @@ class HttpBounceTest {
       }
     }
 
-    client.verify(request().withBody("TestBody").withHeader("A", "B"))
+    assertEquals("TestBody", sentBody)
   }
 
   @Test
   fun testPredicateSkipsRequest() {
-    val client = mockServerRule.client
-    val address = client.remoteAddress()
-
+    var called = false
+    runWith {
+      routing {
+        get("/") {
+          called = true
+        }
+      }
+    }
     runBlocking {
       runHttp {
-        call(getAddress(address)) {
+        call(address) {
           preHook {
             +SkipIf { true }
           }
         }
       }
     }
-
-    client.verifyZeroInteractions()
+    assertFalse(called)
   }
-
-
-  private fun getAddress(address: InetSocketAddress) = "http://" + address.hostString + ":" + address.port
 }

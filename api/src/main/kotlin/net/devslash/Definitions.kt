@@ -87,6 +87,18 @@ interface SimplePostHook : PostHook {
   fun accept(resp: HttpResponse)
 }
 
+fun (() -> Any).toPostHook(): PostHook = object : SimplePostHook {
+  override fun accept(resp: HttpResponse) {
+    this@toPostHook()
+  }
+}
+
+fun ((HttpResponse) -> Any).toPostHook(): PostHook = object: SimplePostHook {
+  override fun accept(resp: HttpResponse) {
+    this@toPostHook(resp)
+  }
+}
+
 interface ChainReceivingResponseHook : PostHook {
   fun accept(resp: HttpResponse)
 }

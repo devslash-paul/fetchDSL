@@ -1,7 +1,7 @@
 package net.devslash.pre
 
-import junit.framework.Assert.assertTrue
 import net.devslash.ListBasedRequestData
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 internal class SkipIfTest {

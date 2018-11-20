@@ -1,22 +1,38 @@
 package net.devslash.examples
 
-import net.devslash.EchoServer
+import io.ktor.application.call
+import io.ktor.http.HttpStatusCode
+import io.ktor.response.respond
+import io.ktor.routing.post
+import io.ktor.routing.routing
+import io.ktor.server.engine.embeddedServer
+import io.ktor.server.netty.Netty
 import net.devslash.HttpMethod
 import net.devslash.outputs.DebugOutput
 import net.devslash.outputs.StdOut
 import net.devslash.runHttp
+import java.net.ServerSocket
 
 fun main() {
-  EchoServer().use {
-    runHttp {
-      call(it.address) {
-        type = HttpMethod.POST
-        body {
-          formParams = listOf("Hi" to "ho")
-        }
-        output {
-          +StdOut(format = DebugOutput())
-        }
+  val port = ServerSocket(0).use { it.localPort }
+  val server = embeddedServer(Netty, port) {
+    routing {
+      post("/") {
+        call.respond(HttpStatusCode.OK, "Response Body Text")
+      }
+    }
+  }
+  server.start()
+  val address = "http://localhost:$port/"
+
+  runHttp {
+    call(address) {
+      type = HttpMethod.POST
+      body {
+        formParams = listOf("Hi" to "ho")
+      }
+      output {
+        +StdOut(format = DebugOutput())
       }
     }
   }

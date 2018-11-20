@@ -13,15 +13,8 @@ dependencies {
   compile(project(":api"))
   compile(project(":extensions"))
   compile(project(":service"))
-
-  compile("org.jetbrains.exposed:exposed:0.10.5")
-  compile("mysql:mysql-connector-java:8.0.12")
+  compile("io.ktor:ktor-server-netty:1.0.0")
 
   implementation("com.google.code.gson:gson:2.3.1")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.0.0")
-
-  testImplementation("org.junit.jupiter:junit-jupiter-api:5.1.0")
-  testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.1.0")
-  testCompile("org.mock-server:mockserver-netty:5.4.1")
-  testCompile("org.hamcrest:hamcrest-core:1.3")
 }

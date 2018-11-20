@@ -9,8 +9,7 @@ internal class BodyProviderTest {
 
   @Test fun testEmpty() {
     val provider = getBodyProvider(
-      getCall(),
-      requestDataFromList(listOf("b", "d"))
+      getCall(), requestDataFromList(listOf("b", "d"))
     )
 
     assertEquals("", provider.get())
@@ -19,8 +18,7 @@ internal class BodyProviderTest {
 
   @Test fun testWithBody() {
     val provider = getBodyProvider(
-      getCall(HttpBody(null, listOf("a" to "b", "c" to "d"))),
-      requestDataFromList()
+      getCall(HttpBody(null, listOf("a" to "b", "c" to "d"))), requestDataFromList()
     )
 
     assertEquals("a=b&c=d", provider.get())
@@ -28,8 +26,7 @@ internal class BodyProviderTest {
 
   @Test fun testBodyWithReplaceableValues() {
     val provider = getBodyProvider(
-      getCall(HttpBody("a=!1!&c=!2!", null)),
-      requestDataFromList(listOf("b", "d"))
+      getCall(HttpBody("a=!1!&c=!2!", null)), requestDataFromList(listOf("b", "d"))
     )
     assertEquals("a=b&c=d", provider.get())
   }

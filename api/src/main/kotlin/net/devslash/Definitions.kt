@@ -1,5 +1,6 @@
 package net.devslash
 
+interface BodyProvider
 data class Session(val calls: List<Call>, val concurrency: Int = 100)
 data class Call(
   val url: String,

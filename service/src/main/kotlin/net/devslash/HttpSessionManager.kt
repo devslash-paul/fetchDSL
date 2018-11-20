@@ -3,8 +3,12 @@ package net.devslash
 import io.ktor.client.HttpClient
 import io.ktor.client.call.call
 import io.ktor.client.engine.HttpClientEngine
+import io.ktor.client.request.forms.FormDataContent
 import io.ktor.client.request.headers
-import io.ktor.http.*
+import io.ktor.content.ByteArrayContent
+import io.ktor.http.Headers
+import io.ktor.http.Parameters
+import io.ktor.http.headersOf
 import io.ktor.util.cio.toByteArray
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
@@ -12,7 +16,7 @@ import java.net.URL
 import java.util.concurrent.Executors
 import java.util.concurrent.Semaphore
 
-class HttpSessionManager(private val engine: HttpClientEngine, private val session: Session) :
+class HttpSessionManager(engine: HttpClientEngine, private val session: Session) :
   SessionManager {
 
   private val semaphore = Semaphore(0)
@@ -111,10 +115,9 @@ class HttpSessionManager(private val engine: HttpClientEngine, private val sessi
     val url = getUrlProvider(call, data)
     val body = getBodyProvider(call, data)
     val currentUrl = url.get()
-    val currentBody = body.get()
     val type = call.type
 
-    val req = HttpRequest(type, currentUrl, currentBody)
+    val req = HttpRequest(type, currentUrl, body)
     return req
   }
 
@@ -153,10 +156,16 @@ class HttpSessionManager(private val engine: HttpClientEngine, private val sessi
           }
         }
       }
-      body = modelRequest.body
+      when (modelRequest.body) {
+        is BasicBodyProvider -> {
+          body = ByteArrayContent((modelRequest.body as BasicBodyProvider).get().toByteArray())
+        }
+        is MapBodyProvider -> body = FormDataContent(Parameters.build {
+          val prov = modelRequest.body as MapBodyProvider
+          prov.get().forEach { key, value -> append(key, value) }
+        })
+      }
     }
-
-    val resp = req.response
-    return resp
+    return req.response
   }
 }

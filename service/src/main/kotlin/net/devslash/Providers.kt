@@ -4,10 +4,6 @@ interface URLProvider {
   fun get(): String
 }
 
-interface BodyProvider {
-  fun get(): String
-}
-
 interface OutputHandler {
   fun output(resp: HttpResponse, data: RequestData)
   fun suspectedOutput(data: RequestData): String? = null

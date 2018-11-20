@@ -17,7 +17,7 @@ interface ResponseConsumer {
 }
 
 
-class HttpRequest(val type: HttpMethod, val url: String, var body: String) {
+class HttpRequest(val type: HttpMethod, val url: String, val body: BodyProvider) {
   val headers = mutableMapOf<String, MutableList<String>>()
 
   fun addHeader(name: String, value: String) {

@@ -1,6 +1,7 @@
 package net.devslash.it
 
 import io.ktor.application.call
+import io.ktor.http.Headers
 import io.ktor.request.receiveText
 import io.ktor.response.respondText
 import io.ktor.routing.get
@@ -67,6 +68,28 @@ class HttpBounceTest : ServerTest() {
     }
 
     assertEquals("TestBody", sentBody)
+  }
+
+  @Test
+  fun testCanGetMultipleHeaders() {
+    var headers: Headers? = null
+
+    runWith {
+      routing {
+        get("/") {
+          headers = call.request.headers
+        }
+      }
+    }
+
+    runHttp {
+      call(address) {
+        this.headers = listOf("A" to "B".asReplaceableValue(), "C" to "D".asReplaceableValue())
+      }
+    }
+
+    assertEquals("B", headers!!["A"])
+    assertEquals("D", headers!!["C"])
   }
 
   @Test

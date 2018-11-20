@@ -3,8 +3,8 @@ package net.devslash
 import io.ktor.client.HttpClient
 import io.ktor.client.call.call
 import io.ktor.client.engine.HttpClientEngine
-import io.ktor.http.Headers
-import io.ktor.http.headersOf
+import io.ktor.client.request.headers
+import io.ktor.http.*
 import io.ktor.util.cio.toByteArray
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
@@ -146,6 +146,13 @@ class HttpSessionManager(private val engine: HttpClientEngine, private val sessi
     val req = client.call(modelRequest.url) {
       method = mapType(modelRequest.type)
       headersOf(*modelRequest.headers.map { Pair(it.key, it.value) }.toTypedArray())
+      headers {
+        modelRequest.headers.forEach {
+          it.value.forEach { kVal ->
+            append(it.key, kVal)
+          }
+        }
+      }
       body = modelRequest.body
     }
 

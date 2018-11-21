@@ -9,7 +9,7 @@ import java.net.URL
 internal class CookieJarTest {
 
   private val jar: CookieJar = CookieJar()
-  private val request = HttpRequest(HttpMethod.GET, "", "")
+  private val request = HttpRequest(HttpMethod.GET, "", EmptyBodyProvider())
 
   @Test
   fun testSingleCookieSet() {

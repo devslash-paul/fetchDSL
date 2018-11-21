@@ -24,7 +24,7 @@ fun getResponseWithBody(body: ByteArray) : HttpResponse {
   return HttpResponse(URL("http://example.com"), 200, mapOf(), body)
 }
 
-fun getCall(sup: HttpBody? = null, url: String = "http://google.com") = CallBuilder(
+fun getCall(sup: HttpBody? = null, url: String = "https://example.com") = CallBuilder(
   url
 ).apply {
   body = sup

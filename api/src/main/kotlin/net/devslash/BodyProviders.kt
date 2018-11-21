@@ -9,30 +9,31 @@ class BasicBodyProvider(private val body: String, val data: RequestData) : BodyP
   }
 }
 
-class MapBodyProvider(
-  private val body: List<Pair<String, String>>, private val data: RequestData
+class FormBody(
+  private val body: Map<String, List<String>>, private val data: RequestData
 ) : BodyProvider {
-  fun get(): Map<String, String> {
+  fun get(): Map<String, List<String>> {
     return body.map {
-      it.first to it.second.asReplaceableValue().get(data)
+      val entries = it.value.map { it.asReplaceableValue().get(data) }
+      it.key to entries
     }.toMap()
   }
 }
 
 fun getBodyProvider(call: Call, data: RequestData): BodyProvider {
   if (call.body == null) {
-    return EmptyBodyProvider()
+    return EmptyBodyProvider
   }
 
-  if (call.body.bodyParams != null) {
-    return MapBodyProvider(call.body.bodyParams, data)
+  if (call.body.formData != null) {
+    return FormBody(call.body.formData, data)
   }
 
   if (call.body.value != null) {
     return BasicBodyProvider(call.body.value, data)
   }
 
-  return EmptyBodyProvider()
+  return EmptyBodyProvider
 }
 
-class EmptyBodyProvider : BodyProvider
+object EmptyBodyProvider : BodyProvider

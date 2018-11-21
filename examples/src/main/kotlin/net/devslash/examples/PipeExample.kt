@@ -14,7 +14,7 @@ import java.net.ServerSocket
 import java.util.concurrent.TimeUnit
 
 fun main() {
-  val pipe = ResettablePipe({ r, d -> listOf(String(r.body)) })
+  val pipe = ResettablePipe({ r, _ -> listOf(String(r.body)) })
   val port = ServerSocket(0).use { it.localPort }
   val server = embeddedServer(Netty, port) {
     routing {

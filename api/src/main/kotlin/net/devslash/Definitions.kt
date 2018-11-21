@@ -4,7 +4,7 @@ interface BodyProvider
 data class Session(val calls: List<Call>, val concurrency: Int = 100)
 data class Call(
   val url: String,
-  val headers: List<Pair<String, ReplaceableValue<String, RequestData>>>?,
+  val headers: Map<String, List<String>>?,
   val cookieJar: String?,
   val output: List<Output>,
   val type: HttpMethod,
@@ -46,7 +46,7 @@ data class OutputFile(
   val name: String, val append: Boolean, val split: String, val perLine: Boolean
 )
 
-data class HttpBody(val value: String?, val bodyParams: List<Pair<String, String>>?)
+data class HttpBody(val value: String?, val formData: Map<String, List<String>>?)
 
 interface ReplaceableValue<T, V> {
   fun get(data: V): T

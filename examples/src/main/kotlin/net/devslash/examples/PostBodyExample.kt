@@ -29,7 +29,7 @@ fun main() {
     call(address) {
       type = HttpMethod.POST
       body {
-        formParams = listOf("Hi" to "ho")
+        formParams = mapOf("Hi" to listOf("ho"))
       }
       output {
         +StdOut(format = DebugOutput())

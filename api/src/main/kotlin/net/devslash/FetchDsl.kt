@@ -27,7 +27,7 @@ open class CallBuilder(private val url: String) {
   var data: RequestDataSupplier? = null
   var body: HttpBody? = null
   var type: HttpMethod = HttpMethod.GET
-  var headers: List<Pair<String, ReplaceableValue<String, RequestData>>>? = null
+  var headers: Map<String, List<String>>? = null
   private var skipRequestIfOutputExists: Boolean = false
 
   // new style
@@ -59,7 +59,7 @@ open class CallBuilder(private val url: String) {
 @SessionDsl
 class BodyBuilder {
   var value: String? = null
-  var formParams: List<Pair<String, String>>? = null
+  var formParams: Map<String, List<String>>? = null
 
   fun build(): HttpBody = HttpBody(value, formParams)
 }

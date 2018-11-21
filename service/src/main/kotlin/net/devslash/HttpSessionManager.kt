@@ -53,7 +53,11 @@ class HttpSessionManager(engine: HttpClientEngine, private val session: Session)
           is SessionPersistingPreHook -> it.accept(sessionManager, jar, req, data)
         }
       }
-      call.headers?.forEach { req.addHeader(it.first, it.second.get(data)) }
+      call.headers?.forEach { entry ->
+        entry.value.forEach {
+          req.addHeader(entry.key, it)
+        }
+      }
 
       channel.send(Pair(req, data))
     } while (dataSupplier.hasNext())
@@ -83,7 +87,8 @@ class HttpSessionManager(engine: HttpClientEngine, private val session: Session)
         }
         launch(ex) {
           try {
-            val request = makeRequest(next.first)
+            val request =
+              makeRequest(next.first)
             val resp = mapResponse(request)
             postRequest.forEach {
               when (it) {
@@ -148,7 +153,6 @@ class HttpSessionManager(engine: HttpClientEngine, private val session: Session)
   private suspend fun makeRequest(modelRequest: HttpRequest): io.ktor.client.response.HttpResponse {
     val req = client.call(modelRequest.url) {
       method = mapType(modelRequest.type)
-      headersOf(*modelRequest.headers.map { Pair(it.key, it.value) }.toTypedArray())
       headers {
         modelRequest.headers.forEach {
           it.value.forEach { kVal ->
@@ -160,9 +164,13 @@ class HttpSessionManager(engine: HttpClientEngine, private val session: Session)
         is BasicBodyProvider -> {
           body = ByteArrayContent((modelRequest.body as BasicBodyProvider).get().toByteArray())
         }
-        is MapBodyProvider -> body = FormDataContent(Parameters.build {
-          val prov = modelRequest.body as MapBodyProvider
-          prov.get().forEach { key, value -> append(key, value) }
+        is FormBody -> body = FormDataContent(Parameters.build {
+          val prov = modelRequest.body as FormBody
+          prov.get().forEach { key, value ->
+            value.forEach {
+              append(key, it)
+            }
+          }
         })
       }
     }

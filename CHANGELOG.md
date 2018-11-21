@@ -1,3 +1,7 @@
+next
+====
+* Update header API to only require String. Bringing ReplaceableValue internally
+
 0.4.1
 =====
 * Fix headers not being applied correctly.

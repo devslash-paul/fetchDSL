@@ -1,17 +1,19 @@
 package net.devslash
 
+sealed class Value
+data class StrValue(val value: String) : Value()
+data class ProvidedValue(val lambda: (RequestData) -> String) : Value()
+
 interface BodyProvider
 data class Session(val calls: List<Call>, val concurrency: Int = 100)
-data class Call(
-    val url: String,
-    val headers: Map<String, List<String>>?,
-    val cookieJar: String?,
-    val type: HttpMethod,
-    val dataSupplier: RequestDataSupplier?,
-    val body: HttpBody?,
-    val skipRequestIfOutputExists: Boolean,
-    val beforeHooks: List<BeforeHook>,
-    val afterHooks: List<AfterHook>
+data class Call(val url: String, val headers: Map<String, List<Value>>?,
+                val cookieJar: String?,
+                val type: HttpMethod,
+                val dataSupplier: RequestDataSupplier?,
+                val body: HttpBody?,
+                val skipRequestIfOutputExists: Boolean,
+                val beforeHooks: List<BeforeHook>,
+                val afterHooks: List<AfterHook>
 )
 
 interface RequestDataSupplier {

@@ -26,7 +26,7 @@ open class CallBuilder(private val url: String) {
   var data: RequestDataSupplier? = null
   var body: HttpBody? = null
   var type: HttpMethod = HttpMethod.GET
-  var headers: Map<String, List<String>>? = null
+  var headers: Map<String, List<Any>>? = null
   private var skipRequestIfOutputExists: Boolean = false
 
   // new style
@@ -45,8 +45,22 @@ open class CallBuilder(private val url: String) {
     body = BodyBuilder().apply(block).build()
   }
 
+  fun mapHeaders(m: Map<String, List<Any>>?) : Map<String, List<Value>>? {
+    return m?.let { map ->
+      map.map { entry ->
+        entry.key to entry.value.map { value ->
+          when (value) {
+            is String -> StrValue(value)
+            is Value  -> value
+            else      -> throw RuntimeException()
+          }
+        }
+      }.toMap()
+    }
+  }
+
   fun build(): Call {
-    return Call(url, headers, cookieJar, type, data, body,
+    return Call(url, mapHeaders(headers), cookieJar, type, data, body,
         skipRequestIfOutputExists, preHooksList, postHooksList)
   }
 }

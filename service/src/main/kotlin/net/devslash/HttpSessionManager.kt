@@ -54,7 +54,11 @@ class HttpSessionManager(engine: HttpClientEngine, private val session: Session)
       }
       call.headers?.forEach { entry ->
         entry.value.forEach {
-          req.addHeader(entry.key, it)
+          val s = when(it) {
+            is StrValue -> it.value
+            is ProvidedValue -> it.lambda(data)
+          }
+          req.addHeader(entry.key, s)
         }
       }
 

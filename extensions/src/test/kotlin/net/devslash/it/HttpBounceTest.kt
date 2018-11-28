@@ -83,11 +83,15 @@ class HttpBounceTest : ServerTest() {
 
     runHttp {
       call(address) {
-        this.headers = mapOf("A" to listOf("B"), "C" to listOf("D"))
+        this.headers = mapOf("A" to listOf(ProvidedValue { r -> "!1!".asReplaceableValue().get(r) + "."}), "C" to listOf("D"))
+        data = object: RequestDataSupplier {
+          override fun hasNext(): Boolean = false
+          override fun getDataForRequest(): RequestData = ListBasedRequestData(listOf("Hi"))
+        }
       }
     }
 
-    assertEquals("B", headers!!["A"])
+    assertEquals("Hi.", headers!!["A"])
     assertEquals("D", headers!!["C"])
   }
 

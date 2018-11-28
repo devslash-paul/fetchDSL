@@ -1,6 +1,7 @@
 package net.devslash.pipes
 
 import net.devslash.HttpResponse
+import net.devslash.util.getBasicRequest
 import net.devslash.util.requestDataFromList
 import org.hamcrest.CoreMatchers.*
 import org.hamcrest.MatcherAssert.assertThat
@@ -21,6 +22,7 @@ internal class PipeTest {
     val pipe = Pipe({ r, _ -> listOf(String(r.body)) }, null)
 
     pipe.accept(
+        getBasicRequest(),
         HttpResponse(URL("http://"), 200, mapOf(), "result".toByteArray()),
       requestDataFromList(listOf())
     )
@@ -36,6 +38,7 @@ internal class PipeTest {
   fun testPipeSplitsCorrectly() {
     val pipe = Pipe({ _, _ -> listOf("a b c") }, " ")
     pipe.accept(
+        getBasicRequest(),
         HttpResponse(URL("http://"), 200, mapOf(), byteArrayOf()),
       requestDataFromList(listOf())
     )
@@ -51,6 +54,7 @@ internal class PipeTest {
     val vals = listOf("a", "b", "c")
     val pipe = Pipe({ _, _ -> vals }, " ")
     pipe.accept(
+        getBasicRequest(),
         HttpResponse(URL("http://"), 200, mapOf(), byteArrayOf()),
       requestDataFromList(listOf())
     )
@@ -65,14 +69,17 @@ internal class PipeTest {
   fun testPipeAcceptsMultipleAndReturnsInOrder() {
     val pipe = Pipe({ r, _ -> listOf(String(r.body)) }, " ")
     pipe.accept(
+        getBasicRequest(),
         HttpResponse(URL("http://"), 200, mapOf(), "a".toByteArray()),
       requestDataFromList(listOf())
     )
     pipe.accept(
+        getBasicRequest(),
         HttpResponse(URL("http://"), 200, mapOf(), "b".toByteArray()),
       requestDataFromList(listOf())
     )
     pipe.accept(
+        getBasicRequest(),
         HttpResponse(URL("http://"), 200, mapOf(), "c".toByteArray()),
       requestDataFromList(listOf())
     )

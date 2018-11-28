@@ -3,17 +3,16 @@ package net.devslash
 import io.ktor.client.HttpClient
 import io.ktor.client.call.call
 import io.ktor.client.engine.HttpClientEngine
+import io.ktor.client.engine.apache.Apache
 import io.ktor.client.request.forms.FormDataContent
 import io.ktor.client.request.headers
 import io.ktor.content.ByteArrayContent
 import io.ktor.http.Headers
 import io.ktor.http.Parameters
-import io.ktor.http.headersOf
 import io.ktor.util.cio.toByteArray
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import java.net.URL
-import java.util.concurrent.Executors
 import java.util.concurrent.Semaphore
 
 class HttpSessionManager(engine: HttpClientEngine, private val session: Session) :
@@ -21,7 +20,7 @@ class HttpSessionManager(engine: HttpClientEngine, private val session: Session)
 
   private val semaphore = Semaphore(0)
   private lateinit var sessionManager: SessionManager
-  private val client = HttpClient(engine) {
+  private val client = HttpClient(Apache) {
     followRedirects = false
   }
 
@@ -40,17 +39,17 @@ class HttpSessionManager(engine: HttpClientEngine, private val session: Session)
       val data = dataSupplier.getDataForRequest()
       val req = getHttpRequest(call, data)
       // Call the prerequesites
-      val preRequest = call.preHooks.toMutableList()
+      val preRequest = call.beforeHooks.toMutableList()
       preRequest.add(jar)
 
       val shouldSkip =
-        preRequest.filter { it is SkipPreHook }.any { (it as SkipPreHook).skip(data) }
+        preRequest.filter { it is SkipBeforeHook }.any { (it as SkipBeforeHook).skip(data) }
       if (shouldSkip) continue
 
       preRequest.forEach {
         when (it) {
-          is SimplePreHook -> it.accept(req, data)
-          is SessionPersistingPreHook -> it.accept(sessionManager, jar, req, data)
+          is SimpleBeforeHook            -> it.accept(req, data)
+          is SessionPersistingBeforeHook -> it.accept(sessionManager, jar, req, data)
         }
       }
       call.headers?.forEach { entry ->
@@ -70,13 +69,10 @@ class HttpSessionManager(engine: HttpClientEngine, private val session: Session)
   override fun call(call: Call, jar: CookieJar) = runBlocking {
     // Okay, so in here we're going to do the one to many calls we have to to get this to run.
     val channel: Channel<Pair<HttpRequest, RequestData>> = Channel(session.concurrency * 2)
+    launch(Dispatchers.Default) { produceHttp(call, jar, channel) }
 
-    val x = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
-    launch(x) { produceHttp(call, jar, channel) }
-
-    val ex = Executors.newFixedThreadPool(8 * 2).asCoroutineDispatcher()
-    val postRequest: MutableList<PostHook> = mutableListOf(jar)
-    postRequest.addAll(call.postHooks)
+    val afterRequest: MutableList<AfterHook> = mutableListOf(jar)
+    afterRequest.addAll(call.afterHooks)
 
     semaphore.release(session.concurrency)
 
@@ -85,33 +81,23 @@ class HttpSessionManager(engine: HttpClientEngine, private val session: Session)
         while (!semaphore.tryAcquire()) {
           delay(10)
         }
-        launch(ex) {
+        launch(Dispatchers.IO) {
           try {
-            val request =
-              makeRequest(next.first)
+            val request = makeRequest(next.first)
             val resp = mapResponse(request)
-            postRequest.forEach {
+            afterRequest.forEach {
               when (it) {
-                is SimplePostHook -> it.accept(resp.copy())
+                is SimpleAfterHook            -> it.accept(resp.copy())
                 is ChainReceivingResponseHook -> it.accept(resp)
-                is FullDataPostHook -> it.accept(next.first, resp, next.second)
+                is FullDataAfterHook          -> it.accept(next.first, resp, next.second)
               }
             }
-            call.output.forEach {
-              when (it) {
-                is BasicOutput -> it.accept(resp, next.second)
-              }
-            }
-
           } finally {
             semaphore.release()
           }
         }
       }
     }
-
-    ex.close()
-    x.close()
   }
 
   private fun getHttpRequest(

@@ -35,6 +35,7 @@ subprojects {
     println("Configuring $name in project ${project.name}...")
     kotlinOptions {
       suppressWarnings = false
+      jvmTarget = "1.8"
     }
   }
 

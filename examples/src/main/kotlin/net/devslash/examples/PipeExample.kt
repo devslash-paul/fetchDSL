@@ -7,7 +7,7 @@ import io.ktor.routing.routing
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import net.devslash.data.FileDataSupplier
-import net.devslash.outputs.FileOut
+import net.devslash.outputs.WriteFile
 import net.devslash.pipes.ResettablePipe
 import net.devslash.runHttp
 import java.net.ServerSocket
@@ -28,9 +28,9 @@ fun main() {
   runHttp {
     call(address) {
       data = FileDataSupplier(this.javaClass.getResource("/in.log").path)
-      output {
+      after {
         +pipe
-        +FileOut("!1!")
+        +WriteFile("!1!")
       }
     }
     call(address) {

@@ -28,7 +28,7 @@ class ResettablePipe(val acceptor: (HttpResponse, RequestData) -> List<String>, 
 
   override fun hasNext(): Boolean = index.get() < storage.size
 
-  override fun accept(resp: HttpResponse, data: RequestData) {
+  override fun accept(req: HttpRequest, resp: HttpResponse, data: RequestData) {
     val newResults = acceptor(resp, data)
     storage.addAll(newResults)
   }

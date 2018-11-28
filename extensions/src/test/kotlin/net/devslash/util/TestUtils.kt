@@ -1,9 +1,8 @@
 package net.devslash.util
 
-import net.devslash.CallBuilder
-import net.devslash.HttpBody
-import net.devslash.HttpResponse
-import net.devslash.RequestData
+import io.ktor.client.engine.apache.Apache
+import io.ktor.client.engine.cio.CIO
+import net.devslash.*
 import java.net.URL
 
 fun requestDataFromList(listOf: List<String>? = null): RequestData {
@@ -18,6 +17,22 @@ fun requestDataFromList(listOf: List<String>? = null): RequestData {
       return mapOf()
     }
   }
+}
+
+fun getBasicRequest() : HttpRequest {
+  return HttpRequest(HttpMethod.GET, "https://example.com", EmptyBodyProvider)
+}
+
+fun getCookieJar(): CookieJar {
+  return CookieJar()
+}
+
+fun getSessionManager(): SessionManager {
+  return HttpSessionManager(Apache.create(), getSession())
+}
+
+fun getSession(): Session {
+  return SessionBuilder().build()
 }
 
 fun getResponseWithBody(body: ByteArray) : HttpResponse {

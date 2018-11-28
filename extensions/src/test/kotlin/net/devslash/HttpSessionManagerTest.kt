@@ -39,9 +39,9 @@ internal class HttpSessionManagerTest : ServerTest() {
     runBlocking {
       runHttp {
         call(address) {
-          output {
+          after {
             +object : BasicOutput {
-              override fun accept(resp: net.devslash.HttpResponse, data: RequestData) {
+              override fun accept(req: HttpRequest, resp: HttpResponse, data: RequestData) {
                 cookie = resp.headers["set-cookie"]!![0]
                 body = String(resp.body)
               }
@@ -72,8 +72,8 @@ internal class HttpSessionManagerTest : ServerTest() {
       runHttp {
         concurrency = 15
         call(address) {
-          postHook {
-            +object : SimplePostHook {
+          after {
+            +object : SimpleAfterHook {
               override fun accept(resp: net.devslash.HttpResponse) {
                 countdown.countDown()
                 countdown.await()

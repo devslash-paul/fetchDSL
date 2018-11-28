@@ -31,7 +31,7 @@ fun main() {
       body {
         formParams = mapOf("Hi" to listOf("ho"))
       }
-      output {
+      after {
         +StdOut(format = DebugOutput())
       }
     }

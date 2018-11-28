@@ -1,6 +1,7 @@
 package net.devslash.outputs
 
 import net.devslash.ListBasedRequestData
+import net.devslash.util.getBasicRequest
 import net.devslash.util.getResponseWithBody
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.MatcherAssert.assertThat
@@ -18,8 +19,12 @@ internal class AppendFileTest {
     val file = File(tmpDir.toFile(), "test.log")
     val appender = AppendFile(file.absolutePath)
 
-    appender.accept(getResponseWithBody("abc".toByteArray()), ListBasedRequestData())
-    appender.accept(getResponseWithBody("def".toByteArray()), ListBasedRequestData())
+    appender.accept(getBasicRequest(),
+        getResponseWithBody("abc".toByteArray()),
+        ListBasedRequestData())
+    appender.accept(getBasicRequest(),
+        getResponseWithBody("def".toByteArray()),
+        ListBasedRequestData())
 
     assertThat(file.readText(), equalTo("abc\ndef\n"))
   }

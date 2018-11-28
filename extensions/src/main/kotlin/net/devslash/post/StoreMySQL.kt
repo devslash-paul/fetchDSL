@@ -1,6 +1,6 @@
 package net.devslash.post
 
-import net.devslash.FullDataPostHook
+import net.devslash.FullDataAfterHook
 import net.devslash.HttpRequest
 import net.devslash.HttpResponse
 import net.devslash.RequestData
@@ -33,7 +33,7 @@ data class MySQLSettings<T : Table>(var url: String,
                                     var table: T,
                                     val insertStatement: (HttpRequest, HttpResponse, RequestData) -> (T.(InsertStatement<Number>) -> Unit))
 
-class StoreMySQL<T : Table>(res: MySqlSettingsBuilder<T>.() -> Unit) : FullDataPostHook {
+class StoreMySQL<T : Table>(res: MySqlSettingsBuilder<T>.() -> Unit) : FullDataAfterHook {
 
   private val settings = MySqlSettingsBuilder<T>().apply(res).build()
 

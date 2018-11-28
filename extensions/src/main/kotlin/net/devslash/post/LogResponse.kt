@@ -1,9 +1,9 @@
 package net.devslash.post
 
 import net.devslash.HttpResponse
-import net.devslash.SimplePostHook
+import net.devslash.SimpleAfterHook
 
-class LogResponse : SimplePostHook {
+class LogResponse : SimpleAfterHook {
   override fun accept(resp: HttpResponse) {
     if (resp.statusCode < 200) {
       println("error: " + String(resp.body))

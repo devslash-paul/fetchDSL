@@ -23,7 +23,6 @@ class UnaryAddBuilder<T> {
 @SessionDsl
 open class CallBuilder(private val url: String) {
   private var cookieJar: String? = null
-  private var output: List<Output> = mutableListOf()
   var data: RequestDataSupplier? = null
   var body: HttpBody? = null
   var type: HttpMethod = HttpMethod.GET
@@ -31,19 +30,15 @@ open class CallBuilder(private val url: String) {
   private var skipRequestIfOutputExists: Boolean = false
 
   // new style
-  private var preHooksList = mutableListOf<PreHook>()
-  private var postHooksList = mutableListOf<PostHook>()
+  private var preHooksList = listOf<BeforeHook>()
+  private var postHooksList = listOf<AfterHook>()
 
-  fun preHook(block: UnaryAddBuilder<PreHook>.() -> Unit) {
-    preHooksList = UnaryAddBuilder<PreHook>().apply(block).build()
+  fun before(block: UnaryAddBuilder<BeforeHook>.() -> Unit) {
+    preHooksList = UnaryAddBuilder<BeforeHook>().apply(block).build()
   }
 
-  fun postHook(block: UnaryAddBuilder<PostHook>.() -> Unit) {
-    postHooksList = UnaryAddBuilder<PostHook>().apply(block).build()
-  }
-
-  fun output(block: UnaryAddBuilder<Output>.() -> Unit) {
-    output = UnaryAddBuilder<Output>().apply(block).build()
+  fun after(block: UnaryAddBuilder<AfterHook>.() -> Unit) {
+    postHooksList = UnaryAddBuilder<AfterHook>().apply(block).build()
   }
 
   fun body(block: BodyBuilder.() -> Unit) {
@@ -51,7 +46,7 @@ open class CallBuilder(private val url: String) {
   }
 
   fun build(): Call {
-    return Call(url, headers, cookieJar, output, type, data, body,
+    return Call(url, headers, cookieJar, type, data, body,
         skipRequestIfOutputExists, preHooksList, postHooksList)
   }
 }

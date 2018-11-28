@@ -25,8 +25,8 @@ class BadBench {
       runHttp(engine) {
         concurrency = 100
         call("http://example.com") {
-          preHook {}
-          postHook {
+          before {}
+          after {
             +({
               count++
               println(count)

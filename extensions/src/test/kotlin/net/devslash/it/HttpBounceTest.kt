@@ -10,7 +10,6 @@ import io.ktor.routing.routing
 import io.ktor.server.engine.ApplicationEngine
 import kotlinx.coroutines.runBlocking
 import net.devslash.*
-import net.devslash.post.LogResponse
 import net.devslash.pre.SkipIf
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -34,7 +33,7 @@ class HttpBounceTest : ServerTest() {
     runBlocking {
       runHttp {
         call("$address/testPath") {
-          postHook {
+          after {
             +{ resp: HttpResponse -> bodyResult = String(resp.body) }.toPostHook()
           }
         }
@@ -105,7 +104,7 @@ class HttpBounceTest : ServerTest() {
     runBlocking {
       runHttp {
         call(address) {
-          preHook {
+          before {
             +SkipIf { true }
           }
         }

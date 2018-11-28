@@ -1,6 +1,7 @@
 package net.devslash.pipes
 
 import net.devslash.HttpResponse
+import net.devslash.util.getBasicRequest
 import net.devslash.util.requestDataFromList
 import org.hamcrest.CoreMatchers.*
 import org.hamcrest.MatcherAssert.assertThat
@@ -21,6 +22,7 @@ internal class ResettablePipeTest {
     val pipe = ResettablePipe({ r, _ -> listOf(String(r.body)) }, null)
 
     pipe.accept(
+        getBasicRequest(),
         HttpResponse(URL("http://"), 200, mapOf(), "result".toByteArray()),
       requestDataFromList(listOf())
     )
@@ -43,6 +45,7 @@ internal class ResettablePipeTest {
     val vals = listOf("a", "b", "c")
     val pipe = Pipe({ _, _ -> vals }, " ")
     pipe.accept(
+        getBasicRequest(),
         HttpResponse(URL("http://"), 200, mapOf(), byteArrayOf()),
       requestDataFromList(listOf())
     )
@@ -57,14 +60,17 @@ internal class ResettablePipeTest {
   fun testPipeAcceptsMultipleAndReturnsInOrder() {
     val pipe = Pipe({ r, _ -> listOf(String(r.body)) }, " ")
     pipe.accept(
+        getBasicRequest(),
         HttpResponse(URL("http://"), 200, mapOf(), "a".toByteArray()),
       requestDataFromList(listOf())
     )
     pipe.accept(
+        getBasicRequest(),
         HttpResponse(URL("http://"), 200, mapOf(), "b".toByteArray()),
       requestDataFromList(listOf())
     )
     pipe.accept(
+        getBasicRequest(),
         HttpResponse(URL("http://"), 200, mapOf(), "c".toByteArray()),
       requestDataFromList(listOf())
     )

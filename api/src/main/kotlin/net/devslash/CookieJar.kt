@@ -1,6 +1,6 @@
 package net.devslash
 
-class CookieJar : SimplePreHook, SimplePostHook {
+class CookieJar : SimpleBeforeHook, SimpleAfterHook {
   // always send all cookies
   private val cookies = mutableMapOf<String, String>()
 

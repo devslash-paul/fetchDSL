@@ -1,12 +1,10 @@
 package net.devslash.pipes
 
-import net.devslash.BasicOutput
-import net.devslash.HttpResponse
-import net.devslash.RequestData
-import net.devslash.RequestDataSupplier
+import net.devslash.*
 import java.util.*
 
 class Pipe(val acceptor: (HttpResponse, RequestData) -> List<String>, val split: String? = null) : BasicOutput, RequestDataSupplier {
+
   private val storage = ArrayDeque<String>()
 
   override fun getDataForRequest(): RequestData {
@@ -26,8 +24,7 @@ class Pipe(val acceptor: (HttpResponse, RequestData) -> List<String>, val split:
 
   override fun hasNext(): Boolean = storage.isNotEmpty()
 
-
-  override fun accept(resp: HttpResponse, data: RequestData) {
+  override fun accept(req: HttpRequest, resp: HttpResponse, data: RequestData) {
     val newResults = acceptor(resp, data)
     storage.addAll(newResults)
   }

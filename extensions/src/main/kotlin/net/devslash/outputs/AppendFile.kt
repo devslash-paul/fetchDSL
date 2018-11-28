@@ -5,9 +5,10 @@ import java.io.File
 
 class AppendFile(private val fileName: String, private val out: OutputFormat = DefaultOutput()) :
   BasicOutput {
+
   private val lock = Object()
 
-  override fun accept(resp: HttpResponse, data: RequestData) {
+  override fun accept(req: HttpRequest, resp: HttpResponse, data: RequestData) {
     synchronized(lock) {
       val f = File(fileName.asReplaceableValue().get(data))
       val output = out.accept(resp, data)

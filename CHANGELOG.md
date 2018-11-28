@@ -1,6 +1,9 @@
-next
+0.5.0
 ====
 * Update header API to only require String. Bringing ReplaceableValue internally
+* Change hooks to be before/after
+* Removed output
+* Added experimental hook API that allows for custom hooks to be provided, and injected in
 
 0.4.1
 =====

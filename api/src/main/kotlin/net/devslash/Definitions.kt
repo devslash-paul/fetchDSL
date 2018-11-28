@@ -3,16 +3,15 @@ package net.devslash
 interface BodyProvider
 data class Session(val calls: List<Call>, val concurrency: Int = 100)
 data class Call(
-  val url: String,
-  val headers: Map<String, List<String>>?,
-  val cookieJar: String?,
-  val output: List<Output>,
-  val type: HttpMethod,
-  val dataSupplier: RequestDataSupplier?,
-  val body: HttpBody?,
-  val skipRequestIfOutputExists: Boolean,
-  val preHooks: List<PreHook>,
-  val postHooks: List<PostHook>
+    val url: String,
+    val headers: Map<String, List<String>>?,
+    val cookieJar: String?,
+    val type: HttpMethod,
+    val dataSupplier: RequestDataSupplier?,
+    val body: HttpBody?,
+    val skipRequestIfOutputExists: Boolean,
+    val beforeHooks: List<BeforeHook>,
+    val afterHooks: List<AfterHook>
 )
 
 interface RequestDataSupplier {
@@ -37,14 +36,7 @@ interface RequestData {
   fun getReplacements(): Map<String, String>
 }
 
-interface Output
-interface BasicOutput : Output {
-  fun accept(resp: HttpResponse, data: RequestData)
-}
-
-data class OutputFile(
-  val name: String, val append: Boolean, val split: String, val perLine: Boolean
-)
+interface BasicOutput : FullDataAfterHook
 
 data class HttpBody(val value: String?, val formData: Map<String, List<String>>?)
 
@@ -61,49 +53,49 @@ fun String.asReplaceableValue() = object : ReplaceableValue<String, RequestData>
   }
 }
 
-interface PreHook
+interface BeforeHook
 
-fun (() -> Unit).toPreHook() = object : SimplePreHook {
+fun (() -> Unit).toPreHook() = object : SimpleBeforeHook {
   override fun accept(req: HttpRequest, data: RequestData) {
     this@toPreHook()
   }
 }
 
-interface SessionPersistingPreHook : PreHook {
+interface SessionPersistingBeforeHook : BeforeHook {
   suspend fun accept(
     sessionManager: SessionManager, cookieJar: CookieJar, req: HttpRequest, data: RequestData
   )
 }
 
-interface SkipPreHook : PreHook {
+interface SkipBeforeHook : BeforeHook {
   fun skip(requestData: RequestData): Boolean
 }
 
-interface SimplePreHook : PreHook {
+interface SimpleBeforeHook : BeforeHook {
   fun accept(req: HttpRequest, data: RequestData)
 }
 
-interface PostHook
-interface SimplePostHook : PostHook {
+interface AfterHook
+interface SimpleAfterHook : AfterHook {
   fun accept(resp: HttpResponse)
 }
 
-fun (() -> Any).toPostHook(): PostHook = object : SimplePostHook {
+fun (() -> Any).toPostHook(): AfterHook = object : SimpleAfterHook {
   override fun accept(resp: HttpResponse) {
     this@toPostHook()
   }
 }
 
-fun ((HttpResponse) -> Any).toPostHook(): PostHook = object: SimplePostHook {
+fun ((HttpResponse) -> Any).toPostHook(): AfterHook = object: SimpleAfterHook {
   override fun accept(resp: HttpResponse) {
     this@toPostHook(resp)
   }
 }
 
-interface ChainReceivingResponseHook : PostHook {
+interface ChainReceivingResponseHook : AfterHook {
   fun accept(resp: HttpResponse)
 }
 
-interface FullDataPostHook : PostHook {
+interface FullDataAfterHook : AfterHook {
   fun accept(req: HttpRequest, resp: HttpResponse, data: RequestData)
 }

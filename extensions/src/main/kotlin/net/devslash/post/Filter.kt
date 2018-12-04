@@ -5,7 +5,7 @@ import net.devslash.*
 class FilterBuilder {
   var posts = mutableListOf<AfterHook>()
 
-  operator fun SimpleAfterHook.unaryPlus() {
+  operator fun AfterHook.unaryPlus() {
     posts = (posts + this).toMutableList()
   }
 }
@@ -21,6 +21,7 @@ class Filter(private val pred: (HttpResponse) -> Boolean,
           is SimpleAfterHook            -> it.accept(resp)
           is ChainReceivingResponseHook -> it.accept(resp)
           is FullDataAfterHook          -> it.accept(req, resp, data)
+          is BasicOutput                -> it.accept(req, resp, data)
         }
       }
     }

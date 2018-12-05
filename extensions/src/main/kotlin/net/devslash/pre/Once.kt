@@ -13,14 +13,19 @@ class Once(private val before: BeforeHook) : SessionPersistingBeforeHook {
                               req: HttpRequest,
                               data: RequestData) {
     if (flag.compareAndSet(false, true)) {
+
+      if (before is SessionPersistingBeforeHook) {
+        before.accept(sessionManager, cookieJar, req, data)
+        return
+      }
+
       val methods = before::class.java.methods
       for (method in methods) {
         val parameters = method.parameters
 
         val given = mapOf(SessionManager::class.java to sessionManager,
             CookieJar::class.java to cookieJar,
-            HttpRequest::class.java to req,
-            RequestData::class.java to data)
+            HttpRequest::class.java to req, RequestData::class.java to data)
         val pList = mutableListOf<Any>()
         parameters.forEach { param ->
           given.keys.forEach {

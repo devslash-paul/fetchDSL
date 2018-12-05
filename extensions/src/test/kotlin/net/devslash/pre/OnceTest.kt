@@ -2,8 +2,7 @@ package net.devslash.pre
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
-import net.devslash.BeforeHook
-import net.devslash.SessionManager
+import net.devslash.*
 import net.devslash.util.getBasicRequest
 import net.devslash.util.getCookieJar
 import net.devslash.util.getSessionManager
@@ -48,6 +47,23 @@ internal class OnceTest {
         // ignore
       }
     }
+  }
+
+  @Test
+  fun testWorksWithComplexHook() = runBlocking {
+    var count = 0
+    var o = Once(object: SessionPersistingBeforeHook {
+      override suspend fun accept(sessionManager: SessionManager,
+                                  cookieJar: CookieJar,
+                                  req: HttpRequest,
+                                  data: RequestData) {
+        count++
+      }
+    })
+
+    o.accept(getSessionManager(), getCookieJar(), getBasicRequest(), requestDataFromList(listOf()))
+
+    assertEquals(1, count)
   }
 
 }

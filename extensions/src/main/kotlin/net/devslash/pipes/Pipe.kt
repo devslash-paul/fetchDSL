@@ -3,7 +3,7 @@ package net.devslash.pipes
 import net.devslash.*
 import java.util.*
 
-class Pipe(val acceptor: (HttpResponse, RequestData) -> List<String>, val split: String? = null) : BasicOutput, RequestDataSupplier {
+class Pipe(val acceptor: (HttpResponse, RequestData) -> List<String>, private val split: String? = null) : BasicOutput, RequestDataSupplier {
 
   private val storage = ArrayDeque<String>()
 

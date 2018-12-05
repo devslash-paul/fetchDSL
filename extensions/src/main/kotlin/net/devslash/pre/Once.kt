@@ -1,8 +1,12 @@
 package net.devslash.pre
 
 import net.devslash.*
-import java.lang.reflect.Modifier
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.reflect.KVisibility
+import kotlin.reflect.full.callSuspend
+import kotlin.reflect.full.declaredMemberFunctions
+import kotlin.reflect.full.isSubtypeOf
+import kotlin.reflect.full.starProjectedType
 
 class Once(private val before: BeforeHook) : SessionPersistingBeforeHook {
 
@@ -14,22 +18,20 @@ class Once(private val before: BeforeHook) : SessionPersistingBeforeHook {
                               data: RequestData) {
     if (flag.compareAndSet(false, true)) {
 
-      if (before is SessionPersistingBeforeHook) {
-        before.accept(sessionManager, cookieJar, req, data)
-        return
-      }
-
-      val methods = before::class.java.methods
-      for (method in methods) {
+      val methods = before::class
+      for (method in methods.declaredMemberFunctions) {
         val parameters = method.parameters
 
-        val given = mapOf(SessionManager::class.java to sessionManager,
-            CookieJar::class.java to cookieJar,
-            HttpRequest::class.java to req, RequestData::class.java to data)
+        val given = mapOf(SessionManager::class.starProjectedType to sessionManager,
+            CookieJar::class.starProjectedType to cookieJar,
+            HttpRequest::class.starProjectedType to req,
+            RequestData::class.starProjectedType to data,
+            before::class.starProjectedType to before)
+
         val pList = mutableListOf<Any>()
         parameters.forEach { param ->
           given.keys.forEach {
-            if (param.type.isAssignableFrom(it)) {
+            if (param.type.isSubtypeOf(it)) {
               given[it]?.let { value ->
                 pList.add(value)
               }
@@ -37,8 +39,12 @@ class Once(private val before: BeforeHook) : SessionPersistingBeforeHook {
           }
         }
 
-        if (parameters.size == pList.size && method.declaringClass != Object::class.java && Modifier.isPublic(method.modifiers)) {
-          method.invoke(before, *pList.toTypedArray())
+        if (parameters.size == pList.size && KVisibility.PUBLIC == method.visibility) {
+          if (method.isSuspend) {
+            method.callSuspend(*pList.toTypedArray())
+          } else {
+            method.call(*pList.toTypedArray())
+          }
           return
         }
       }

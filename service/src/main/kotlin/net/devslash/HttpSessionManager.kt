@@ -112,8 +112,7 @@ class HttpSessionManager(engine: HttpClientEngine, private val session: Session)
     val currentUrl = url.get()
     val type = call.type
 
-    val req = HttpRequest(type, currentUrl, body)
-    return req
+    return HttpRequest(type, currentUrl, body)
   }
 
   private suspend fun mapResponse(request: io.ktor.client.response.HttpResponse): HttpResponse {

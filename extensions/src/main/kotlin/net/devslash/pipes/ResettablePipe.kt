@@ -8,7 +8,7 @@ import java.util.concurrent.atomic.AtomicInteger
  * have a call that first populates the pipe. Then in the following calls, a [net.devslash.pre.Once]
  * should be used to reset the pipe.
  */
-class ResettablePipe(val acceptor: (HttpResponse, RequestData) -> List<String>, val split: String? = null) : BasicOutput, RequestDataSupplier {
+class ResettablePipe(val acceptor: (HttpResponse, RequestData) -> List<String>, private val split: String? = null) : BasicOutput, RequestDataSupplier {
 
   private val index = AtomicInteger(0)
   private val storage = mutableListOf<String>()

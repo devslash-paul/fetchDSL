@@ -14,9 +14,6 @@ dependencies {
   compile(project(":api"))
   compile(project(":service"))
 
-  compile("org.jetbrains.exposed:exposed:0.10.5")
-  compile("mysql:mysql-connector-java:8.0.12")
-
   implementation("com.google.code.gson:gson:2.3.1")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.0.0")
 

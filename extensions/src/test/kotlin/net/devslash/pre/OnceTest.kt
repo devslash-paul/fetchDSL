@@ -1,6 +1,5 @@
 package net.devslash.pre
 
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import net.devslash.*
 import net.devslash.util.getBasicRequest
@@ -12,6 +11,16 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.fail
 
 internal class OnceTest {
+
+  @Test
+  fun testLambda() = runBlocking {
+    var count = 0
+    val o = Once({ count++; Unit }.toPreHook())
+
+    o.accept(getSessionManager(), getCookieJar(), getBasicRequest(), requestDataFromList(listOf()))
+
+    assertEquals(1, count)
+  }
 
   @Test
   fun testOnlySingle() = runBlocking {

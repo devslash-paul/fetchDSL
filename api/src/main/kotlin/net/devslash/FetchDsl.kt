@@ -45,7 +45,7 @@ open class CallBuilder(private val url: String) {
     body = BodyBuilder().apply(block).build()
   }
 
-  fun mapHeaders(m: Map<String, List<Any>>?) : Map<String, List<Value>>? {
+  private fun mapHeaders(m: Map<String, List<Any>>?) : Map<String, List<Value>>? {
     return m?.let { map ->
       map.map { entry ->
         entry.key to entry.value.map { value ->

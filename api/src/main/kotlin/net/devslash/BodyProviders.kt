@@ -20,9 +20,19 @@ class FormBody(
   }
 }
 
+class JsonBody(private val any: Any): BodyProvider {
+  fun get(): Any{
+    return any
+  }
+}
+
 fun getBodyProvider(call: Call, data: RequestData): BodyProvider {
   if (call.body == null) {
     return EmptyBodyProvider
+  }
+
+  if(call.body.jsonObject !== null) {
+    return JsonBody(call.body.jsonObject)
   }
 
   if (call.body.formData != null) {

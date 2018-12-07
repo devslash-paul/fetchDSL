@@ -4,6 +4,8 @@ import io.ktor.client.HttpClient
 import io.ktor.client.call.call
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.engine.apache.Apache
+import io.ktor.client.features.json.GsonSerializer
+import io.ktor.client.features.json.JsonFeature
 import io.ktor.client.request.forms.FormDataContent
 import io.ktor.client.request.headers
 import io.ktor.content.ByteArrayContent
@@ -22,6 +24,13 @@ class HttpSessionManager(engine: HttpClientEngine, private val session: Session)
   private lateinit var sessionManager: SessionManager
   private val client = HttpClient(Apache) {
     followRedirects = false
+    install(JsonFeature) {
+      serializer = GsonSerializer {
+        // Configurable .GsonBuilder
+        serializeNulls()
+        disableHtmlEscaping()
+      }
+    }
   }
 
   fun run() {
@@ -150,6 +159,9 @@ class HttpSessionManager(engine: HttpClientEngine, private val session: Session)
         }
       }
       when (modelRequest.body) {
+        is JsonBody -> {
+          body = (modelRequest.body as JsonBody).get()
+        }
         is BasicBodyProvider -> {
           body = ByteArrayContent((modelRequest.body as BasicBodyProvider).get().toByteArray())
         }

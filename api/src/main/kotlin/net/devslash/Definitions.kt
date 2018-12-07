@@ -40,7 +40,9 @@ interface RequestData {
 
 interface BasicOutput : FullDataAfterHook
 
-data class HttpBody(val value: String?, val formData: Map<String, List<String>>?)
+data class HttpBody(val value: String?,
+                    val formData: Map<String, List<String>>?,
+                    val jsonObject: Any?)
 
 interface ReplaceableValue<T, V> {
   fun get(data: V): T

@@ -69,8 +69,9 @@ open class CallBuilder(private val url: String) {
 class BodyBuilder {
   var value: String? = null
   var formParams: Map<String, List<String>>? = null
+  val jsonObject: Any? = null
 
-  fun build(): HttpBody = HttpBody(value, formParams)
+  fun build(): HttpBody = HttpBody(value, formParams, jsonObject)
 }
 
 @SessionDsl

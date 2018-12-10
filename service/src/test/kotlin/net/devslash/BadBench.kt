@@ -14,7 +14,6 @@ class BadBench {
   @Test
   fun testBasicBenchmark() {
     var count = 0
-    val semaphore = Semaphore(20)
     val engine: HttpClientEngine = MockEngine {
 
       delay(100)
@@ -23,7 +22,7 @@ class BadBench {
 
     val time = measureTimeMillis {
       runHttp(engine) {
-        concurrency = 100
+        concurrency = 1000
         call("http://example.com") {
           before {}
           after {

@@ -2,20 +2,9 @@ package net.devslash
 
 import java.net.URL
 
-interface RequestDecorator {
-  suspend fun accept(
-    httpSession: SessionManager, cookie: CookieJar, req: HttpRequest, data: RequestData
-  ) {
-    accept(req, data)
-  }
-
-  suspend fun accept(req: HttpRequest, data: RequestData) {}
-}
-
 interface ResponseConsumer {
   fun accept(resp: HttpResponse)
 }
-
 
 class HttpRequest(val type: HttpMethod, val url: String, val body: BodyProvider) {
   val headers = mutableMapOf<String, MutableList<String>>()
@@ -29,9 +18,10 @@ class HttpRequest(val type: HttpMethod, val url: String, val body: BodyProvider)
   }
 }
 
-data class HttpResponse(
-  var url: URL, val statusCode: Int, val headers: Map<String, List<String>>, var body: ByteArray
-) {
+data class HttpResponse(var url: URL,
+                        val statusCode: Int,
+                        val headers: Map<String, List<String>>,
+                        var body: ByteArray) {
   override fun equals(other: Any?): Boolean {
     if (this === other) return true
     if (javaClass != other?.javaClass) return false

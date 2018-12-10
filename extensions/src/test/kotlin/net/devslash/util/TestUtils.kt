@@ -1,7 +1,6 @@
 package net.devslash.util
 
 import io.ktor.client.engine.apache.Apache
-import io.ktor.client.engine.cio.CIO
 import net.devslash.*
 import java.net.URL
 

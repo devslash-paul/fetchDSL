@@ -1,7 +1,6 @@
 package net.devslash
 
 class CookieJar : SimpleBeforeHook, SimpleAfterHook {
-  // always send all cookies
   private val cookies = mutableMapOf<String, String>()
 
   override fun accept(req: HttpRequest, data: RequestData) {

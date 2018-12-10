@@ -5,7 +5,9 @@ data class StrValue(val value: String) : Value()
 data class ProvidedValue(val lambda: (RequestData) -> String) : Value()
 
 interface BodyProvider
-data class Session(val calls: List<Call>, val concurrency: Int = 100)
+data class Session(val calls: List<Call>,
+                   val concurrency: Int = 100,
+                   val delay: Long)
 data class Call(val url: String, val headers: Map<String, List<Value>>?,
                 val cookieJar: String?,
                 val type: HttpMethod,
@@ -31,7 +33,7 @@ interface RequestDataSupplier {
 }
 
 interface OutputFormat {
-  fun accept(f: HttpResponse, rep: RequestData): ByteArray?
+  fun accept(resp: HttpResponse, rep: RequestData): ByteArray?
 }
 
 interface RequestData {
@@ -83,6 +85,8 @@ interface AfterHook
 interface SimpleAfterHook : AfterHook {
   fun accept(resp: HttpResponse)
 }
+
+interface ErrorHook
 
 fun (() -> Any).toPostHook(): AfterHook = object : SimpleAfterHook {
   override fun accept(resp: HttpResponse) {

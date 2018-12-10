@@ -5,7 +5,7 @@ import net.devslash.OutputFormat
 import net.devslash.RequestData
 
 class DefaultOutput : OutputFormat {
-  override fun accept(f: HttpResponse, rep: RequestData): ByteArray? {
-    return f.body
+  override fun accept(resp: HttpResponse, rep: RequestData): ByteArray? {
+    return resp.body
   }
 }

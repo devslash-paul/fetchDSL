@@ -5,15 +5,15 @@ import net.devslash.OutputFormat
 import net.devslash.RequestData
 
 class DebugOutput : OutputFormat {
-  override fun accept(f: HttpResponse, rep: RequestData): ByteArray? {
+  override fun accept(resp: HttpResponse, rep: RequestData): ByteArray? {
     return """
               ----------------
-              url: ${f.url}
-              status: ${f.statusCode}
-              headers: [${f.headers}]
+              url: ${resp.url}
+              status: ${resp.statusCode}
+              headers: [${resp.headers}]
               data: ${rep.getReplacements()}
               body ->
-              ${String(f.body)}
+              ${String(resp.body)}
               ----------------
            """.trimIndent().toByteArray()
   }

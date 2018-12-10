@@ -1,36 +1,33 @@
 package net.devslash
 
+import com.google.gson.Gson
 import io.ktor.client.HttpClient
 import io.ktor.client.call.call
 import io.ktor.client.engine.HttpClientEngine
-import io.ktor.client.engine.apache.Apache
-import io.ktor.client.features.json.GsonSerializer
-import io.ktor.client.features.json.JsonFeature
 import io.ktor.client.request.forms.FormDataContent
 import io.ktor.client.request.headers
 import io.ktor.content.ByteArrayContent
+import io.ktor.content.TextContent
+import io.ktor.http.ContentType
 import io.ktor.http.Headers
 import io.ktor.http.Parameters
 import io.ktor.util.cio.toByteArray
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import java.net.URL
 import java.util.concurrent.Semaphore
 
-class HttpSessionManager(engine: HttpClientEngine, private val session: Session) :
-  SessionManager {
+class HttpSessionManager(private val engine: HttpClientEngine,
+                         private val session: Session) : SessionManager {
 
   private val semaphore = Semaphore(0)
+  private val gson = Gson()
   private lateinit var sessionManager: SessionManager
-  private val client = HttpClient(Apache) {
+  private val client = HttpClient(engine) {
     followRedirects = false
-    install(JsonFeature) {
-      serializer = GsonSerializer {
-        // Configurable .GsonBuilder
-        serializeNulls()
-        disableHtmlEscaping()
-      }
-    }
   }
 
   fun run() {
@@ -40,9 +37,9 @@ class HttpSessionManager(engine: HttpClientEngine, private val session: Session)
     client.close()
   }
 
-  private suspend fun produceHttp(
-    call: Call, jar: CookieJar, channel: Channel<Pair<HttpRequest, RequestData>>
-  ) {
+  private suspend fun produceHttp(call: Call,
+                                  jar: CookieJar,
+                                  channel: Channel<Pair<HttpRequest, RequestData>>) {
     val dataSupplier = getCallDataSupplier(call.dataSupplier)
     do {
       val data = dataSupplier.getDataForRequest()
@@ -52,7 +49,7 @@ class HttpSessionManager(engine: HttpClientEngine, private val session: Session)
       preRequest.add(jar)
 
       val shouldSkip =
-        preRequest.filter { it is SkipBeforeHook }.any { (it as SkipBeforeHook).skip(data) }
+          preRequest.filter { it is SkipBeforeHook }.any { (it as SkipBeforeHook).skip(data) }
       if (shouldSkip) continue
 
       preRequest.forEach {
@@ -63,8 +60,8 @@ class HttpSessionManager(engine: HttpClientEngine, private val session: Session)
       }
       call.headers?.forEach { entry ->
         entry.value.forEach {
-          val s = when(it) {
-            is StrValue -> it.value
+          val s = when (it) {
+            is StrValue      -> it.value
             is ProvidedValue -> it.lambda(data)
           }
           req.addHeader(entry.key, s)
@@ -91,9 +88,7 @@ class HttpSessionManager(engine: HttpClientEngine, private val session: Session)
 
     while (!(channel.isClosedForReceive)) {
       for (next in channel) {
-        while (!semaphore.tryAcquire()) {
-          delay(10)
-        }
+        semaphore.acquire()
         launch(Dispatchers.IO) {
           try {
             val request = makeRequest(next.first)
@@ -113,9 +108,7 @@ class HttpSessionManager(engine: HttpClientEngine, private val session: Session)
     }
   }
 
-  private fun getHttpRequest(
-    call: Call, data: RequestData
-  ): HttpRequest {
+  private fun getHttpRequest(call: Call, data: RequestData): HttpRequest {
     val url = getUrlProvider(call, data)
     val body = getBodyProvider(call, data)
     val currentUrl = url.get()
@@ -126,12 +119,10 @@ class HttpSessionManager(engine: HttpClientEngine, private val session: Session)
 
   private suspend fun mapResponse(request: io.ktor.client.response.HttpResponse): HttpResponse {
     val response = request.call.response
-    return HttpResponse(
-      URL(request.call.request.url.toString()),
-      response.status.value,
-      mapHeaders(response.headers),
-      response.content.toByteArray()
-    )
+    return HttpResponse(URL(request.call.request.url.toString()),
+        response.status.value,
+        mapHeaders(response.headers),
+        response.content.toByteArray())
   }
 
   private fun mapHeaders(headers: Headers): Map<String, List<String>> {
@@ -143,7 +134,7 @@ class HttpSessionManager(engine: HttpClientEngine, private val session: Session)
 
   private fun mapType(type: HttpMethod): io.ktor.http.HttpMethod {
     return when (type) {
-      HttpMethod.GET -> io.ktor.http.HttpMethod.Get
+      HttpMethod.GET  -> io.ktor.http.HttpMethod.Get
       HttpMethod.POST -> io.ktor.http.HttpMethod.Post
     }
   }
@@ -159,13 +150,14 @@ class HttpSessionManager(engine: HttpClientEngine, private val session: Session)
         }
       }
       when (modelRequest.body) {
-        is JsonBody -> {
-          body = (modelRequest.body as JsonBody).get()
+        is JsonBody          -> {
+          body = TextContent(gson.toJson((modelRequest.body as JsonBody).get()),
+              ContentType.Application.Json)
         }
         is BasicBodyProvider -> {
           body = ByteArrayContent((modelRequest.body as BasicBodyProvider).get().toByteArray())
         }
-        is FormBody -> body = FormDataContent(Parameters.build {
+        is FormBody          -> body = FormDataContent(Parameters.build {
           val prov = modelRequest.body as FormBody
           prov.get().forEach { key, value ->
             value.forEach {

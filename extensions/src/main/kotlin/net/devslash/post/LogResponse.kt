@@ -1,13 +1,17 @@
 package net.devslash.post
 
-import net.devslash.HttpResponse
-import net.devslash.SimpleAfterHook
+import net.devslash.*
 
-class LogResponse : SimpleAfterHook {
-  override fun accept(resp: HttpResponse) {
-    if (resp.statusCode < 200) {
-      println("error: " + String(resp.body))
+class DefaultResponseFormat : OutputFormat {
+  override fun accept(resp: HttpResponse, rep: RequestData): ByteArray? {
+    return "Resp ${resp.url} -> ${resp.statusCode}".toByteArray()
+  }
+}
+
+class LogResponse(private val format: OutputFormat = DefaultResponseFormat()) : FullDataAfterHook {
+  override fun accept(req: HttpRequest, resp: HttpResponse, data: RequestData) {
+    format.accept(resp, data)?.let {
+      println(it)
     }
-    println("Resp ${resp.url} -> ${resp.statusCode}")
   }
 }

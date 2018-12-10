@@ -29,9 +29,9 @@ open class CallBuilder(private val url: String) {
   var headers: Map<String, List<Any>>? = null
   private var skipRequestIfOutputExists: Boolean = false
 
-  // new style
   private var preHooksList = listOf<BeforeHook>()
   private var postHooksList = listOf<AfterHook>()
+  private val onError = listOf<ErrorHook>()
 
   fun before(block: UnaryAddBuilder<BeforeHook>.() -> Unit) {
     preHooksList = UnaryAddBuilder<BeforeHook>().apply(block).build()
@@ -78,11 +78,12 @@ class BodyBuilder {
 class SessionBuilder {
   private var calls = mutableListOf<Call>()
   var concurrency = 20
+  var delay = 20L
 
   fun call(url: String, block: CallBuilder.() -> Unit = {}) {
     calls.add(CallBuilder(url).apply(block).build())
   }
 
-  fun build(): Session = Session(calls, concurrency)
+  fun build(): Session = Session(calls, concurrency, delay)
 }
 

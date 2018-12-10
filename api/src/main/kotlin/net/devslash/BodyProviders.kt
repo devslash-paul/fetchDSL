@@ -9,9 +9,8 @@ class BasicBodyProvider(private val body: String, val data: RequestData) : BodyP
   }
 }
 
-class FormBody(
-  private val body: Map<String, List<String>>, private val data: RequestData
-) : BodyProvider {
+class FormBody(private val body: Map<String, List<String>>,
+               private val data: RequestData) : BodyProvider {
   fun get(): Map<String, List<String>> {
     return body.map {
       val entries = it.value.map { it.asReplaceableValue().get(data) }
@@ -20,8 +19,8 @@ class FormBody(
   }
 }
 
-class JsonBody(private val any: Any): BodyProvider {
-  fun get(): Any{
+class JsonBody(private val any: Any) : BodyProvider {
+  fun get(): Any {
     return any
   }
 }
@@ -31,7 +30,7 @@ fun getBodyProvider(call: Call, data: RequestData): BodyProvider {
     return EmptyBodyProvider
   }
 
-  if(call.body.jsonObject !== null) {
+  if (call.body.jsonObject !== null) {
     return JsonBody(call.body.jsonObject)
   }
 

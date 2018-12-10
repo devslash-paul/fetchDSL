@@ -13,7 +13,7 @@ dependencies {
   compile(project(":api"))
   compile(project(":extensions"))
   compile(project(":service"))
-  compile("io.ktor:ktor-server-netty:1.0.0")
+  compile("io.ktor:ktor-server-netty:1.0.1")
 
   implementation("com.google.code.gson:gson:2.3.1")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.0.0")

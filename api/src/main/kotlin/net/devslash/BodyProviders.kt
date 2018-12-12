@@ -25,6 +25,12 @@ class JsonBody(private val any: Any) : BodyProvider {
   }
 }
 
+class LazyJsonBody(private val any: (RequestData) -> JsonBody) : BodyProvider {
+  fun get(data: RequestData): JsonBody {
+    return any(data)
+  }
+}
+
 fun getBodyProvider(call: Call, data: RequestData): BodyProvider {
   if (call.body == null) {
     return EmptyBodyProvider
@@ -32,6 +38,11 @@ fun getBodyProvider(call: Call, data: RequestData): BodyProvider {
 
   if (call.body.jsonObject !== null) {
     return JsonBody(call.body.jsonObject)
+  }
+
+  if (call.body.lazyJsonObject != null) {
+    val lazyJsonObject = call.body.lazyJsonObject
+    return JsonBody(lazyJsonObject(data))
   }
 
   if (call.body.formData != null) {

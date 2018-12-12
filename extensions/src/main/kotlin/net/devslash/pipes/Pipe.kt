@@ -1,11 +1,11 @@
 package net.devslash.pipes
 
 import net.devslash.*
-import java.util.*
+import java.util.concurrent.ConcurrentLinkedDeque
 
 class Pipe(val acceptor: (HttpResponse, RequestData) -> List<String>, private val split: String? = null) : BasicOutput, RequestDataSupplier {
 
-  private val storage = ArrayDeque<String>()
+  private val storage = ConcurrentLinkedDeque<String>()
 
   override fun getDataForRequest(): RequestData {
     val currentValue = storage.pop()

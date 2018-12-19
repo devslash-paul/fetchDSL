@@ -1,6 +1,5 @@
 package net.devslash
 
-import com.github.kittinunf.result.Result
 import com.google.gson.Gson
 import io.ktor.client.HttpClient
 import io.ktor.client.call.call
@@ -100,10 +99,10 @@ class HttpSessionManager(engine: HttpClientEngine, private val session: Session)
               val contents = next.get()
               val request = makeRequest(contents.first)
               when (request) {
-                is Result.Failure<*, *> -> {
+                is Failure -> {
                   handleFailure(call, channel, next, request)
                 }
-                is Result.Success       -> {
+                is Success    -> {
                   val resp = mapResponse(request.value)
                   afterRequest.forEach {
                     when (it) {
@@ -128,14 +127,14 @@ class HttpSessionManager(engine: HttpClientEngine, private val session: Session)
   private suspend fun handleFailure(call: Call,
                                     channel: Channel<Envelope<Pair<HttpRequest, RequestData>>>,
                                     next: Envelope<Pair<HttpRequest, RequestData>>,
-                                    request: Result.Failure<*, *>) {
+                                    request: Failure<*, java.lang.Exception>) {
     call.onError?.let {
       when (it) {
         is ChannelReceiving<*> -> {
-          (it as ChannelReceiving<Contents>).accept(channel, next, request.error)
+          (it as ChannelReceiving<Contents>).accept(channel, next, request.err)
         }
         else                   -> {
-          throw request.error
+          throw request.err
         }
       }
     }
@@ -172,7 +171,7 @@ class HttpSessionManager(engine: HttpClientEngine, private val session: Session)
     }
   }
 
-  private suspend fun makeRequest(modelRequest: HttpRequest): Result<io.ktor.client.response.HttpResponse, Exception> {
+  private suspend fun makeRequest(modelRequest: HttpRequest): Result<io.ktor.client.response.HttpResponse, java.lang.Exception> {
     try {
       val req = client.call(modelRequest.url) {
         method = mapType(modelRequest.type)
@@ -201,9 +200,9 @@ class HttpSessionManager(engine: HttpClientEngine, private val session: Session)
           })
         }
       }
-      return Result.Success(req.response)
+      return Success(req.response)
     } catch (e: Exception) {
-      return Result.error(e)
+      return Failure(e)
     }
   }
 

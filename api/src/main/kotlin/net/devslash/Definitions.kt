@@ -1,22 +1,23 @@
 package net.devslash
 
+import kotlinx.coroutines.channels.Channel
+
 sealed class Value
 data class StrValue(val value: String) : Value()
 data class ProvidedValue(val lambda: (RequestData) -> String) : Value()
 
 interface BodyProvider
-data class Session(val calls: List<Call>,
-                   val concurrency: Int = 100,
-                   val delay: Long)
-data class Call(val url: String, val headers: Map<String, List<Value>>?,
+data class Session(val calls: List<Call>, val concurrency: Int = 100, val delay: Long)
+
+data class Call(val url: String,
+                val headers: Map<String, List<Value>>?,
                 val cookieJar: String?,
                 val type: HttpMethod,
                 val dataSupplier: RequestDataSupplier?,
                 val body: HttpBody?,
-                val skipRequestIfOutputExists: Boolean,
+                val onError: OnError?,
                 val beforeHooks: List<BeforeHook>,
-                val afterHooks: List<AfterHook>
-)
+                val afterHooks: List<AfterHook>)
 
 interface RequestDataSupplier {
   /**
@@ -69,9 +70,10 @@ fun (() -> Unit).toPreHook() = object : SimpleBeforeHook {
 }
 
 interface SessionPersistingBeforeHook : BeforeHook {
-  suspend fun accept(
-    sessionManager: SessionManager, cookieJar: CookieJar, req: HttpRequest, data: RequestData
-  )
+  suspend fun accept(sessionManager: SessionManager,
+                     cookieJar: CookieJar,
+                     req: HttpRequest,
+                     data: RequestData)
 }
 
 interface SkipBeforeHook : BeforeHook {
@@ -82,12 +84,22 @@ interface SimpleBeforeHook : BeforeHook {
   fun accept(req: HttpRequest, data: RequestData)
 }
 
+class Envelope<T>(val message: T, val maxRetries: Int = 3) {
+  var current = 0
+  fun get() = message
+  fun fail() = current++
+  fun shouldProceed() = current < maxRetries
+}
+
+interface OnError
+interface ChannelReceiving<V> : OnError {
+  suspend fun accept(channel: Channel<Envelope<V>>, envelope: Envelope<V>, e: Exception)
+}
+
 interface AfterHook
 interface SimpleAfterHook : AfterHook {
   fun accept(resp: HttpResponse)
 }
-
-interface ErrorHook
 
 fun (() -> Any).toPostHook(): AfterHook = object : SimpleAfterHook {
   override fun accept(resp: HttpResponse) {
@@ -95,7 +107,7 @@ fun (() -> Any).toPostHook(): AfterHook = object : SimpleAfterHook {
   }
 }
 
-fun ((HttpResponse) -> Any).toPostHook(): AfterHook = object: SimpleAfterHook {
+fun ((HttpResponse) -> Any).toPostHook(): AfterHook = object : SimpleAfterHook {
   override fun accept(resp: HttpResponse) {
     this@toPostHook(resp)
   }

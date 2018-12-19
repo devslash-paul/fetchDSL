@@ -1,5 +1,7 @@
 package net.devslash
 
+import net.devslash.err.RetryOnTransitiveError
+
 @DslMarker
 annotation class SessionDsl
 
@@ -27,11 +29,10 @@ open class CallBuilder(private val url: String) {
   var body: HttpBody? = null
   var type: HttpMethod = HttpMethod.GET
   var headers: Map<String, List<Any>>? = null
-  private var skipRequestIfOutputExists: Boolean = false
+  var onError: OnError? = RetryOnTransitiveError()
 
   private var preHooksList = listOf<BeforeHook>()
   private var postHooksList = listOf<AfterHook>()
-  private val onError = listOf<ErrorHook>()
 
   fun before(block: UnaryAddBuilder<BeforeHook>.() -> Unit) {
     preHooksList = UnaryAddBuilder<BeforeHook>().apply(block).build()
@@ -61,7 +62,7 @@ open class CallBuilder(private val url: String) {
 
   fun build(): Call {
     return Call(url, mapHeaders(headers), cookieJar, type, data, body,
-        skipRequestIfOutputExists, preHooksList, postHooksList)
+         onError, preHooksList, postHooksList)
   }
 }
 

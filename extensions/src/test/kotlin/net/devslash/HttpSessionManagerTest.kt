@@ -19,6 +19,7 @@ import java.time.Duration.ofSeconds
 import java.util.concurrent.CountDownLatch
 
 internal class HttpSessionManagerTest : ServerTest() {
+
   override lateinit var appEngine: ApplicationEngine
 
   @Test

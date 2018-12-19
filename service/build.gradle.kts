@@ -15,6 +15,7 @@ dependencies {
   compile(project(":api"))
   compile("io.ktor:ktor-client-cio:1.0.1")
   compile("io.ktor:ktor-client-apache:1.0.1")
+  compile("com.github.kittinunf.result:result:1.5.0")
 
   implementation("com.google.code.gson:gson:2.3.1")
   implementation("org.apache.httpcomponents:httpclient:4.5")

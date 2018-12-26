@@ -31,15 +31,15 @@ open class CallBuilder(private val url: String) {
   var headers: Map<String, List<Any>>? = null
   var onError: OnError? = RetryOnTransitiveError()
 
-  private var preHooksList = listOf<BeforeHook>()
-  private var postHooksList = listOf<AfterHook>()
+  private var preHooksList = mutableListOf<BeforeHook>()
+  private var postHooksList = mutableListOf<AfterHook>()
 
   fun before(block: UnaryAddBuilder<BeforeHook>.() -> Unit) {
-    preHooksList = UnaryAddBuilder<BeforeHook>().apply(block).build()
+    preHooksList.addAll(UnaryAddBuilder<BeforeHook>().apply(block).build())
   }
 
   fun after(block: UnaryAddBuilder<AfterHook>.() -> Unit) {
-    postHooksList = UnaryAddBuilder<AfterHook>().apply(block).build()
+    postHooksList.addAll(UnaryAddBuilder<AfterHook>().apply(block).build())
   }
 
   fun body(block: BodyBuilder.() -> Unit) {

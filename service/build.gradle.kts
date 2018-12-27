@@ -15,7 +15,10 @@ dependencies {
   compile(project(":api"))
   compile("io.ktor:ktor-client-cio:1.0.1")
   compile("io.ktor:ktor-client-apache:1.0.1")
+
+  compile("com.fasterxml.jackson.core:jackson-core:2.9.8")
   compile("com.fasterxml.jackson.core:jackson-databind:2.9.8")
+  compile("com.fasterxml.jackson.core:jackson-annotations:2.9.8")
 
   implementation("org.apache.httpcomponents:httpclient:4.5")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.0.0")

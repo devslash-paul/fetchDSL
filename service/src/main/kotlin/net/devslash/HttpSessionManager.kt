@@ -1,6 +1,6 @@
 package net.devslash
 
-import com.google.gson.Gson
+import com.fasterxml.jackson.databind.ObjectMapper
 import io.ktor.client.HttpClient
 import io.ktor.client.call.call
 import io.ktor.client.engine.HttpClientEngine
@@ -26,7 +26,7 @@ typealias Contents = Pair<HttpRequest, RequestData>
 class HttpSessionManager(engine: HttpClientEngine, private val session: Session) : SessionManager {
 
   private val semaphore = Semaphore(0)
-  private val gson = Gson()
+  private val mapper = ObjectMapper()
   private lateinit var sessionManager: SessionManager
   private val client = HttpClient(engine) {
     followRedirects = false
@@ -184,7 +184,7 @@ class HttpSessionManager(engine: HttpClientEngine, private val session: Session)
         }
         when (modelRequest.body) {
           is JsonBody          -> {
-            body = TextContent(gson.toJson((modelRequest.body as JsonBody).get()),
+            body = TextContent(mapper.writeValueAsString((modelRequest.body as JsonBody).get()),
                 ContentType.Application.Json)
           }
           is BasicBodyProvider -> {
@@ -203,13 +203,6 @@ class HttpSessionManager(engine: HttpClientEngine, private val session: Session)
       return Success(req.response)
     } catch (e: Exception) {
       return Failure(e)
-    }
-  }
-
-  private fun shouldRetry(e: Exception): Boolean {
-    return when (e) {
-      is SocketTimeoutException -> true
-      else                      -> false
     }
   }
 }

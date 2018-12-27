@@ -2,10 +2,6 @@ package net.devslash
 
 import java.net.URL
 
-interface ResponseConsumer {
-  fun accept(resp: HttpResponse)
-}
-
 class HttpRequest(val type: HttpMethod, val url: String, val body: BodyProvider) {
   val headers = mutableMapOf<String, MutableList<String>>()
 

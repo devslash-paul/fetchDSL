@@ -92,7 +92,7 @@ class HttpSessionManager(engine: HttpClientEngine, private val session: Session)
     while (!(channel.isClosedForReceive)) {
       for (next in channel) {
         semaphore.acquire()
-        launch(Dispatchers.IO) {
+        launch(Dispatchers.Default) {
           try {
             // ensure that this is a valid request
             if (next.shouldProceed()) {

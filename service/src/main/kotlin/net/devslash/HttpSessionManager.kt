@@ -14,7 +14,6 @@ import io.ktor.http.Parameters
 import io.ktor.util.cio.toByteArray
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
-import java.net.SocketTimeoutException
 import java.net.URL
 import java.util.concurrent.Executors
 import java.util.concurrent.Semaphore
@@ -85,7 +84,9 @@ class HttpSessionManager(engine: HttpClientEngine, private val session: Session)
     val afterRequest: MutableList<AfterHook> = mutableListOf(jar)
     afterRequest.addAll(call.afterHooks)
 
-    val dispatcher = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2)
+    val threadPool = System.getenv("HTTP_THREAD_POOL_SIZE")?.toInt()
+        ?: Runtime.getRuntime().availableProcessors() * 2
+    val dispatcher = Executors.newFixedThreadPool(threadPool)
         .asCoroutineDispatcher()
     semaphore.release(session.concurrency)
 

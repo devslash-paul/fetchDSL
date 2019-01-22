@@ -12,13 +12,11 @@ import io.ktor.http.ContentType
 import io.ktor.http.Headers
 import io.ktor.http.Parameters
 import io.ktor.util.cio.toByteArray
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import java.net.SocketTimeoutException
 import java.net.URL
+import java.util.concurrent.Executors
 import java.util.concurrent.Semaphore
 
 typealias Contents = Pair<HttpRequest, RequestData>
@@ -87,40 +85,46 @@ class HttpSessionManager(engine: HttpClientEngine, private val session: Session)
     val afterRequest: MutableList<AfterHook> = mutableListOf(jar)
     afterRequest.addAll(call.afterHooks)
 
+    val dispatcher = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2)
+        .asCoroutineDispatcher()
     semaphore.release(session.concurrency)
 
-    while (!(channel.isClosedForReceive)) {
-      for (next in channel) {
-        semaphore.acquire()
-        launch(Dispatchers.Default) {
-          try {
-            // ensure that this is a valid request
-            if (next.shouldProceed()) {
-              val contents = next.get()
-              val request = makeRequest(contents.first)
-              when (request) {
-                is Failure -> {
-                  handleFailure(call, channel, next, request)
-                }
-                is Success    -> {
-                  val resp = mapResponse(request.value)
-                  afterRequest.forEach {
-                    when (it) {
-                      is SimpleAfterHook            -> it.accept(resp.copy())
-                      is ChainReceivingResponseHook -> it.accept(resp)
-                      is FullDataAfterHook          -> it.accept(contents.first,
-                          resp,
-                          contents.second)
+    try {
+      while (!(channel.isClosedForReceive)) {
+        for (next in channel) {
+          semaphore.acquire()
+          launch(dispatcher) {
+            try {
+              // ensure that this is a valid request
+              if (next.shouldProceed()) {
+                val contents = next.get()
+                val request = makeRequest(contents.first)
+                when (request) {
+                  is Failure -> {
+                    handleFailure(call, channel, next, request)
+                  }
+                  is Success -> {
+                    val resp = mapResponse(request.value)
+                    afterRequest.forEach {
+                      when (it) {
+                        is SimpleAfterHook            -> it.accept(resp.copy())
+                        is ChainReceivingResponseHook -> it.accept(resp)
+                        is FullDataAfterHook          -> it.accept(contents.first,
+                            resp,
+                            contents.second)
+                      }
                     }
                   }
                 }
               }
+            } finally {
+              semaphore.release()
             }
-          } finally {
-            semaphore.release()
           }
         }
       }
+    } finally {
+      dispatcher.close()
     }
   }
 

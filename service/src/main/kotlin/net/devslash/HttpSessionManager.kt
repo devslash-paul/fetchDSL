@@ -79,12 +79,15 @@ class HttpSessionManager(engine: HttpClientEngine, private val session: Session)
     // Okay, so in here we're going to do the one to many calls we have to to get this to run.
     val channel: Channel<Envelope<Pair<HttpRequest, RequestData>>> =
         Channel(session.concurrency * 2)
-    launch(Dispatchers.Default) { produceHttp(call, jar, channel) }
+    val produceThreadPool = System.getProperty("PRODUCE_THREAD_POOL_SIZE")?.toInt()
+        ?: Runtime.getRuntime().availableProcessors()
+    val produceDispatcher = Executors.newFixedThreadPool(produceThreadPool).asCoroutineDispatcher()
+    launch(produceDispatcher) { produceHttp(call, jar, channel) }
 
     val afterRequest: MutableList<AfterHook> = mutableListOf(jar)
     afterRequest.addAll(call.afterHooks)
 
-    val threadPool = System.getenv("HTTP_THREAD_POOL_SIZE")?.toInt()
+    val threadPool = System.getProperty("HTTP_THREAD_POOL_SIZE")?.toInt()
         ?: Runtime.getRuntime().availableProcessors() * 2
     val dispatcher = Executors.newFixedThreadPool(threadPool)
         .asCoroutineDispatcher()

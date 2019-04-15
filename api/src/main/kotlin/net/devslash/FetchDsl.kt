@@ -61,6 +61,15 @@ open class CallBuilder(private val url: String) {
   }
 
   fun build(): Call {
+    val localHeaders = headers
+    if(localHeaders == null || !localHeaders!!.contains("User-Agent")) {
+      val set = mutableMapOf<String, List<Any>>()
+      if (localHeaders != null) {
+        set.putAll(localHeaders)
+      }
+      set["User-Agent"] = listOf("FetchDSL (Apache-HttpAsyncClient + Kotlin, version not set)")
+      headers = set
+    }
     return Call(url, mapHeaders(headers), cookieJar, type, data, body,
          onError, preHooksList, postHooksList)
   }

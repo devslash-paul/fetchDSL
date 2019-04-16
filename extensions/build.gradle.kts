@@ -10,12 +10,12 @@ repositories {
 
 
 dependencies {
-  compile(kotlin("stdlib", "1.3.0"))
+  compile(kotlin("stdlib", "1.3.30"))
   compile(project(":api"))
   compile(project(":service"))
 
   implementation("com.google.code.gson:gson:2.3.1")
-  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.0.0")
+  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.2.0")
 
   testImplementation("org.junit.jupiter:junit-jupiter-api:5.3.1")
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.3.1")

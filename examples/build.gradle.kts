@@ -9,12 +9,12 @@ repositories {
 
 
 dependencies {
-  compile(kotlin("stdlib", "1.3.0"))
+  compile(kotlin("stdlib", "1.3.30"))
   compile(project(":api"))
   compile(project(":extensions"))
   compile(project(":service"))
-  compile("io.ktor:ktor-server-netty:1.0.1")
+  compile("io.ktor:ktor-server-netty:1.1.4")
 
   implementation("com.google.code.gson:gson:2.3.1")
-  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.0.0")
+  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.2.0")
 }

@@ -84,7 +84,7 @@ interface SimpleBeforeHook : BeforeHook {
   fun accept(req: HttpRequest, data: RequestData)
 }
 
-class Envelope<T>(val message: T, val maxRetries: Int = 3) {
+class Envelope<T>(private val message: T, private val maxRetries: Int = 3) {
   var current = 0
   fun get() = message
   fun fail() = current++

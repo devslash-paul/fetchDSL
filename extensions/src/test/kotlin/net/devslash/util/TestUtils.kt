@@ -43,4 +43,3 @@ fun getCall(sup: HttpBody? = null, url: String = "https://example.com") = CallBu
 ).apply {
   body = sup
 }.build()
-

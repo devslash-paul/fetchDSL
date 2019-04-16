@@ -17,6 +17,7 @@ import kotlinx.coroutines.channels.Channel
 import java.net.URL
 import java.util.concurrent.Executors
 import java.util.concurrent.Semaphore
+import kotlin.coroutines.CoroutineContext
 
 typealias Contents = Pair<HttpRequest, RequestData>
 
@@ -27,7 +28,9 @@ class HttpSessionManager(engine: HttpClientEngine, private val session: Session)
   private lateinit var sessionManager: SessionManager
   private val client = HttpClient(engine) {
     followRedirects = false
+    engine {
 
+    }
   }
 
   fun run() {
@@ -74,6 +77,12 @@ class HttpSessionManager(engine: HttpClientEngine, private val session: Session)
 
   override fun call(call: Call) = call(call, CookieJar())
 
+  private suspend fun getTicket() {
+    withContext(Dispatchers.Default) {
+      semaphore.acquire()
+    }
+  }
+
   @ExperimentalCoroutinesApi
   override fun call(call: Call, jar: CookieJar) = runBlocking {
     // Okay, so in here we're going to do the one to many calls we have to to get this to run.
@@ -93,42 +102,42 @@ class HttpSessionManager(engine: HttpClientEngine, private val session: Session)
         .asCoroutineDispatcher()
     semaphore.release(session.concurrency)
 
-    try {
-      while (!(channel.isClosedForReceive)) {
-        for (next in channel) {
-          semaphore.acquire()
-          launch(dispatcher) {
-            try {
-              // ensure that this is a valid request
-              if (next.shouldProceed()) {
-                val contents = next.get()
-                val request = makeRequest(contents.first)
-                when (request) {
-                  is Failure -> {
-                    handleFailure(call, channel, next, request)
-                  }
-                  is Success -> {
-                    val resp = mapResponse(request.value)
-                    afterRequest.forEach {
-                      when (it) {
-                        is SimpleAfterHook            -> it.accept(resp.copy())
-                        is ChainReceivingResponseHook -> it.accept(resp)
-                        is FullDataAfterHook          -> it.accept(contents.first,
-                            resp,
-                            contents.second)
-                      }
-                    }
-                  }
+    val jobs = mutableListOf<Job>()
+    repeat(session.concurrency) {
+      jobs += launchHttpProcessor(call,
+          afterRequest,
+          it,
+          channel,
+          dispatcher)
+    }
+    jobs.joinAll()
+  }
+
+  private fun CoroutineScope.launchHttpProcessor(call: Call,
+                                                 afterRequest: List<AfterHook>,
+                                                 it: Int,
+                                                 channel: Channel<Envelope<Pair<HttpRequest, RequestData>>>,
+                                                 dispatcher: CoroutineContext) = launch(dispatcher) {
+    for (next in channel) {
+      // ensure that this is a valid request
+      if (next.shouldProceed()) {
+        val contents = next.get()
+        when (val request = makeRequest(contents.first)) {
+          is Failure -> {
+            handleFailure(call, channel, next, request)
+          }
+          is Success -> {
+            val resp = mapResponse(request.value)
+            afterRequest.forEach {
+              when (it) {
+                is SimpleAfterHook -> it.accept(resp.copy())
+                is ChainReceivingResponseHook -> it.accept(resp)
+                is FullDataAfterHook -> it.accept(contents.first, resp, contents.second)
                 }
               }
-            } finally {
-              semaphore.release()
             }
           }
         }
-      }
-    } finally {
-      dispatcher.close()
     }
   }
 

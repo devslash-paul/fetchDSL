@@ -4,7 +4,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
   base
   `maven-publish`
-  kotlin("jvm") version "1.3.0" apply false
+  kotlin("jvm") version "1.3.30" apply false
   id("com.jfrog.bintray") version "1.8.4" apply false
 }
 

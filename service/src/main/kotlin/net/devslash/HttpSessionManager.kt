@@ -77,12 +77,6 @@ class HttpSessionManager(engine: HttpClientEngine, private val session: Session)
 
   override fun call(call: Call) = call(call, CookieJar())
 
-  private suspend fun getTicket() {
-    withContext(Dispatchers.Default) {
-      semaphore.acquire()
-    }
-  }
-
   @ExperimentalCoroutinesApi
   override fun call(call: Call, jar: CookieJar) = runBlocking {
     // Okay, so in here we're going to do the one to many calls we have to to get this to run.
@@ -90,7 +84,8 @@ class HttpSessionManager(engine: HttpClientEngine, private val session: Session)
         Channel(session.concurrency * 2)
     val produceThreadPool = System.getProperty("PRODUCE_THREAD_POOL_SIZE")?.toInt()
         ?: Runtime.getRuntime().availableProcessors()
-    val produceDispatcher = Executors.newFixedThreadPool(produceThreadPool).asCoroutineDispatcher()
+    val produceExecutor = Executors.newFixedThreadPool(produceThreadPool)
+    val produceDispatcher = produceExecutor.asCoroutineDispatcher()
     launch(produceDispatcher) { produceHttp(call, jar, channel) }
 
     val afterRequest: MutableList<AfterHook> = mutableListOf(jar)
@@ -98,24 +93,25 @@ class HttpSessionManager(engine: HttpClientEngine, private val session: Session)
 
     val threadPool = System.getProperty("HTTP_THREAD_POOL_SIZE")?.toInt()
         ?: Runtime.getRuntime().availableProcessors() * 2
-    val dispatcher = Executors.newFixedThreadPool(threadPool)
-        .asCoroutineDispatcher()
+    val httpThreadPool = Executors.newFixedThreadPool(threadPool)
+    val dispatcher = httpThreadPool.asCoroutineDispatcher()
     semaphore.release(session.concurrency)
 
     val jobs = mutableListOf<Job>()
     repeat(session.concurrency) {
       jobs += launchHttpProcessor(call,
           afterRequest,
-          it,
           channel,
           dispatcher)
     }
     jobs.joinAll()
+    produceExecutor.shutdownNow()
+    httpThreadPool.shutdownNow()
+    Unit
   }
 
   private fun CoroutineScope.launchHttpProcessor(call: Call,
                                                  afterRequest: List<AfterHook>,
-                                                 it: Int,
                                                  channel: Channel<Envelope<Pair<HttpRequest, RequestData>>>,
                                                  dispatcher: CoroutineContext) = launch(dispatcher) {
     for (next in channel) {
@@ -130,14 +126,14 @@ class HttpSessionManager(engine: HttpClientEngine, private val session: Session)
             val resp = mapResponse(request.value)
             afterRequest.forEach {
               when (it) {
-                is SimpleAfterHook -> it.accept(resp.copy())
+                is SimpleAfterHook            -> it.accept(resp.copy())
                 is ChainReceivingResponseHook -> it.accept(resp)
-                is FullDataAfterHook -> it.accept(contents.first, resp, contents.second)
-                }
+                is FullDataAfterHook          -> it.accept(contents.first, resp, contents.second)
               }
             }
           }
         }
+      }
     }
   }
 

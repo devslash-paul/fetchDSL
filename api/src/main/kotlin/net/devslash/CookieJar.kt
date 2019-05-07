@@ -4,11 +4,11 @@ import java.net.URL
 import java.util.concurrent.ConcurrentHashMap
 
 class CookieJar : SimpleBeforeHook, SimpleAfterHook {
-  private val cookies = ConcurrentHashMap(mutableMapOf<URL, MutableMap<String, String>>())
+  private val cookies = ConcurrentHashMap(mutableMapOf<String, MutableMap<String, String>>())
 
   override fun accept(req: HttpRequest, data: RequestData) {
     val basicURl = URL(req.url)
-    val filteredUrl = URL("${basicURl.protocol}://${basicURl.host}")
+    val filteredUrl = "${basicURl.protocol}://${basicURl.host}"
 
     synchronized(this) {
       val siteCookies = cookies[filteredUrl]
@@ -24,7 +24,7 @@ class CookieJar : SimpleBeforeHook, SimpleAfterHook {
 
   override fun accept(resp: HttpResponse) {
     // we need to sort via the domain name + the security
-    val filteredUrl = URL("${resp.url.protocol}://${resp.url.host}")
+    val filteredUrl = "${resp.url.protocol}://${resp.url.host}"
     resp.headers.filterKeys { it.equals("Set-Cookie", true) }
         .forEach {
           it.value.forEach { a ->

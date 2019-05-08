@@ -6,9 +6,9 @@ import net.devslash.RequestDataSupplier
 import java.io.File
 import java.util.concurrent.atomic.AtomicInteger
 
-class FileDataSupplier(val name: String, val split: String = " ") : RequestDataSupplier {
-  val sourceFile = File(name).readLines()
-  val line = AtomicInteger(0)
+class FileDataSupplier(val name: String, private val split: String = " ") : RequestDataSupplier {
+  private val sourceFile = File(name).readLines()
+  private val line = AtomicInteger(0)
 
   override fun getDataForRequest(): RequestData {
     val ourLine = sourceFile[line.getAndIncrement()].split(split)

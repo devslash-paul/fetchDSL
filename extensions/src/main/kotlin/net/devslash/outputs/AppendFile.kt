@@ -1,7 +1,9 @@
 package net.devslash.outputs
 
 import net.devslash.*
+import java.io.BufferedOutputStream
 import java.io.File
+import java.io.FileOutputStream
 
 class AppendFile(private val fileName: String,
                  private val out: OutputFormat = DefaultOutput()) : BasicOutput {
@@ -23,8 +25,11 @@ class AppendFile(private val fileName: String,
     val output = out.accept(resp, data)
     if (output != null) {
       synchronized(lock) {
-        f.appendBytes(output)
-        f.appendBytes("\n".toByteArray())
+        val os = BufferedOutputStream(FileOutputStream(f, true))
+        os.use {
+          os.write(output)
+          os.write("\n".toByteArray())
+        }
       }
     }
   }

@@ -27,9 +27,12 @@ class AppendFile(private val fileName: String,
     val output = out.accept(resp, data)
     if (output != null) {
       synchronized(lock) {
-        f.use {
-          f.write(output)
-          f.write(NEWLINE)
+        f.write(output)
+        f.write(NEWLINE)
+        f.flush()
+        if (memoizedFile == null) {
+          // if we're doing it on a per call basis, close the stream
+          f.close()
         }
       }
     }

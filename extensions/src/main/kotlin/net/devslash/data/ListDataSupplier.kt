@@ -18,7 +18,6 @@ class ListDataSupplier<T>(private val list: List<T>,
   override fun hasNext(): Boolean {
     val lineNum = line.get()
     // Check if we're either at the end of the file, or the second last line and it's an empty line
-    return lineNum < list.size - 1
+    return lineNum < list.size
   }
-
 }

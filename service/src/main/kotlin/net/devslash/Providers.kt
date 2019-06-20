@@ -6,7 +6,6 @@ interface URLProvider {
 
 interface OutputHandler {
   fun output(resp: HttpResponse, data: RequestData)
-  fun suspectedOutput(data: RequestData): String? = null
 }
 
 class SystemOutputProvider : OutputHandler {

@@ -10,7 +10,6 @@ enum class HttpMethod {
 }
 
 class UnaryAddBuilder<T> {
-
   private var hooks = mutableListOf<T>()
 
   operator fun T.unaryPlus() {

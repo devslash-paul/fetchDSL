@@ -4,7 +4,7 @@ package net.devslash
 class BasicBodyProvider(private val body: String, val data: RequestData) : BodyProvider {
   fun get(): String {
     var copy = "" + body
-    data.getReplacements().forEach { key, value -> copy = copy.replace(key, value) }
+    data.getReplacements().forEach { (key, value) -> copy = copy.replace(key, value) }
     return copy
   }
 }
@@ -22,12 +22,6 @@ class FormBody(private val body: Map<String, List<String>>,
 class JsonBody(private val any: Any) : BodyProvider {
   fun get(): Any {
     return any
-  }
-}
-
-class LazyJsonBody(private val any: (RequestData) -> JsonBody) : BodyProvider {
-  fun get(data: RequestData): JsonBody {
-    return any(data)
   }
 }
 

@@ -29,7 +29,6 @@ class HttpSessionManager(engine: HttpClientEngine, private val session: Session)
   private val client = HttpClient(engine) {
     followRedirects = false
     engine {
-
     }
   }
 
@@ -205,7 +204,7 @@ class HttpSessionManager(engine: HttpClientEngine, private val session: Session)
           }
           is FormBody          -> body = FormDataContent(Parameters.build {
             val prov = modelRequest.body as FormBody
-            prov.get().forEach { key, value ->
+            prov.get().forEach { (key, value) ->
               value.forEach {
                 append(key, it)
               }

@@ -2,7 +2,7 @@
 
 fetchDSL is a tool that aims to provide the ability to easily declaritively create a series of HTTP calls
 
-[![Build Status](https://dev.azure.com/devslash/FetchDSL/_apis/build/status/paulthom12345.HttpDSL)](https://dev.azure.com/devslash/FetchDSL/_build/latest?definitionId=1)
+[![Build Status](https://dev.azure.com/devslash/FetchDSL/_apis/build/status/Fetch%20DSL%20Master%20Build%20-%20devslash?branchName=master)](https://dev.azure.com/devslash/FetchDSL/_build/latest?definitionId=3&branchName=master)
 
 ### Uses
 

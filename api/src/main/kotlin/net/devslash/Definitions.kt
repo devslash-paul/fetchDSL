@@ -7,7 +7,7 @@ data class StrValue(val value: String) : Value()
 data class ProvidedValue(val lambda: (RequestData) -> String) : Value()
 
 interface BodyProvider
-data class Session(val calls: List<Call>, val concurrency: Int = 100, val delay: Long)
+data class Session(val calls: List<Call>, val concurrency: Int = 100, val delay: Long?)
 
 data class Call(val url: String,
                 val headers: Map<String, List<Value>>?,
@@ -121,6 +121,6 @@ interface FullDataAfterHook : AfterHook {
   fun accept(req: HttpRequest, resp: HttpResponse, data: RequestData)
 }
 
-sealed class Result<T, E>
-data class Success<T, E>(val value: T) : Result<T, E>()
-data class Failure<T, E>(val err: E) : Result<T, E>()
+sealed class HttpResult<out T, out E>
+data class Success<out T>(val value: T) : HttpResult<T, Nothing>()
+data class Failure<out E: Throwable>(val err: E) : HttpResult<Nothing, E>()

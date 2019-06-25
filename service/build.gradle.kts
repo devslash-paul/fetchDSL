@@ -21,7 +21,7 @@ dependencies {
   compile("com.fasterxml.jackson.core:jackson-annotations:2.9.8")
 
   implementation("org.apache.httpcomponents:httpclient:4.5")
-  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.2.0")
+  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.0-M1")
 
   testImplementation("org.junit.jupiter:junit-jupiter-api:5.1.0")
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.1.0")

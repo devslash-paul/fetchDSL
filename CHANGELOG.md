@@ -1,3 +1,10 @@
+Next
+====
+* Delay working
+* Added chained calls
+* ListDataSupplier now has a default transformer
+* Http calling behavior has been abstracted to simplify testing
+
 0.5.0
 ====
 * Update header API to only require String. Bringing ReplaceableValue internally

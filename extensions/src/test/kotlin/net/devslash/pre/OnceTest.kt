@@ -26,7 +26,9 @@ internal class OnceTest {
   fun testOnlySingle() = runBlocking {
     var count = 0
     val o = Once(object : BeforeHook {
-      fun invoke(sess: SessionManager) {
+
+      @Suppress("unused")
+      fun invoke(@Suppress("UNUSED_PARAMETER") sess: SessionManager) {
         count += 1
       }
     })
@@ -42,7 +44,8 @@ internal class OnceTest {
     runBlocking {
       val o = Once(object : BeforeHook {
         // invalid as String is not available for injection
-        fun invoke(s: String) {
+        @Suppress("unused")
+        fun invoke(@Suppress("UNUSED_PARAMETER") s: String) {
         }
       })
 
@@ -61,7 +64,7 @@ internal class OnceTest {
   @Test
   fun testWorksWithComplexHook() = runBlocking {
     var count = 0
-    var o = Once(object: SessionPersistingBeforeHook {
+    val o = Once(object: SessionPersistingBeforeHook {
       override suspend fun accept(sessionManager: SessionManager,
                                   cookieJar: CookieJar,
                                   req: HttpRequest,

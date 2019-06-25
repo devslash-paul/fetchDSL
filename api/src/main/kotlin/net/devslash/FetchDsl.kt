@@ -61,7 +61,7 @@ open class CallBuilder(private val url: String) {
 
   fun build(): Call {
     val localHeaders = headers
-    if(localHeaders == null || !localHeaders!!.contains("User-Agent")) {
+    if(localHeaders == null || !localHeaders.contains("User-Agent")) {
       val set = mutableMapOf<String, List<Any>>()
       if (localHeaders != null) {
         set.putAll(localHeaders)
@@ -85,14 +85,36 @@ class BodyBuilder {
 }
 
 @SessionDsl
-class SessionBuilder {
+class MultiCallBuilder {
   private var calls = mutableListOf<Call>()
-  var concurrency = 20
-  var delay = 20L
 
   fun call(url: String, block: CallBuilder.() -> Unit = {}) {
     calls.add(CallBuilder(url).apply(block).build())
   }
+
+  fun calls() = calls
+}
+
+@SessionDsl
+class SessionBuilder {
+  private var calls = mutableListOf<Call>()
+  private val chained = mutableListOf<List<Call>>()
+
+  var concurrency = 20
+  var delay: Long? = null
+
+  fun call(url: String, block: CallBuilder.() -> Unit = {}) {
+    calls.add(CallBuilder(url).apply(block).build())
+  }
+
+  // TODO: Re-enable when chaining is stable
+//  fun chained(block: MultiCallBuilder.(prev: Previous?) -> Unit = {}) {
+//    if (chained.isNotEmpty()) {
+//      val line = chained.last().line
+//
+//    }
+//    chained.add(MultiCallBuilder().apply(block).calls())
+//  }
 
   fun build(): Session = Session(calls, concurrency, delay)
 }

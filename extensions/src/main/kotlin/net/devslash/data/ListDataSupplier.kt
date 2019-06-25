@@ -6,7 +6,7 @@ import net.devslash.RequestDataSupplier
 import java.util.concurrent.atomic.AtomicInteger
 
 class ListDataSupplier<T>(private val list: List<T>,
-                          private val transform: (T) -> List<String>) : RequestDataSupplier {
+                          private val transform: (T) -> List<String> = {listOf("$it")}) : RequestDataSupplier {
   private val line = AtomicInteger(0)
 
   override fun getDataForRequest(): RequestData {

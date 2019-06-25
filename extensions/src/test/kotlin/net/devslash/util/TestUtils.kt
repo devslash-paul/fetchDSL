@@ -27,7 +27,7 @@ fun getCookieJar(): CookieJar {
 }
 
 fun getSessionManager(): SessionManager {
-  return HttpSessionManager(Apache.create(), getSession())
+  return HttpSessionManager(HttpDriver(Apache.create()), getSession())
 }
 
 fun getSession(): Session {

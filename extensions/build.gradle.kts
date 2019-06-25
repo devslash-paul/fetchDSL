@@ -8,6 +8,7 @@ repositories {
   maven("http://dl.bintray.com/kotlin/kotlin-eap")
 }
 
+val mockkVersion = "1.9.3"
 
 dependencies {
   compile(kotlin("stdlib", "1.3.30"))
@@ -15,9 +16,10 @@ dependencies {
   compile(project(":service"))
 
   implementation("com.google.code.gson:gson:2.3.1")
-  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.2.0")
+  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.0-M1")
 
   testImplementation("org.junit.jupiter:junit-jupiter-api:5.3.1")
+  testImplementation("io.mockk:mockk:$mockkVersion")
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.3.1")
 
   testCompile("org.hamcrest:hamcrest-core:1.3")

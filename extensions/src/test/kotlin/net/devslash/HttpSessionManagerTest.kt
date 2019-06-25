@@ -76,7 +76,7 @@ internal class HttpSessionManagerTest : ServerTest() {
         call(address) {
           after {
             +object : SimpleAfterHook {
-              override fun accept(resp: net.devslash.HttpResponse) {
+              override fun accept(resp: HttpResponse) {
                 countdown.countDown()
                 countdown.await()
               }

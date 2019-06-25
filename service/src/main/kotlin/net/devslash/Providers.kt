@@ -4,16 +4,6 @@ interface URLProvider {
   fun get(): String
 }
 
-interface OutputHandler {
-  fun output(resp: HttpResponse, data: RequestData)
-}
-
-class SystemOutputProvider : OutputHandler {
-  override fun output(resp: HttpResponse, data: RequestData) {
-    println("Call [${resp.url}] => ${resp.statusCode}")
-  }
-}
-
 fun getCallDataSupplier(data: RequestDataSupplier?): RequestDataSupplier {
   if (data != null) {
     data.init()

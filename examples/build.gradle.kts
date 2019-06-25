@@ -16,5 +16,5 @@ dependencies {
   compile("io.ktor:ktor-server-netty:1.1.4")
 
   implementation("com.google.code.gson:gson:2.3.1")
-  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.2.0")
+  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.0-M1")
 }

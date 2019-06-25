@@ -1,42 +1,26 @@
 package net.devslash
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import io.ktor.client.HttpClient
-import io.ktor.client.call.call
-import io.ktor.client.engine.HttpClientEngine
-import io.ktor.client.request.forms.FormDataContent
-import io.ktor.client.request.headers
-import io.ktor.content.ByteArrayContent
-import io.ktor.content.TextContent
-import io.ktor.http.ContentType
-import io.ktor.http.Headers
-import io.ktor.http.Parameters
-import io.ktor.util.cio.toByteArray
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
-import java.net.URL
+import java.time.Clock
 import java.util.concurrent.Executors
 import java.util.concurrent.Semaphore
 import kotlin.coroutines.CoroutineContext
 
 typealias Contents = Pair<HttpRequest, RequestData>
 
-class HttpSessionManager(engine: HttpClientEngine, private val session: Session) : SessionManager {
+class HttpSessionManager(val engine: HttpDriver, private val session: Session) : SessionManager {
 
   private val semaphore = Semaphore(0)
-  private val mapper = ObjectMapper()
+  private var lastCall = 0L
+  private val clock = Clock.systemUTC()
   private lateinit var sessionManager: SessionManager
-  private val client = HttpClient(engine) {
-    followRedirects = false
-    engine {
-    }
-  }
 
   fun run() {
-    sessionManager = this
-    session.calls.map { call(it, CookieJar()) }
-
-    client.close()
+    engine.use {
+      sessionManager = this
+      session.calls.map { call(it, CookieJar()) }
+    }
   }
 
   private suspend fun produceHttp(call: Call,
@@ -44,7 +28,7 @@ class HttpSessionManager(engine: HttpClientEngine, private val session: Session)
     val dataSupplier = getCallDataSupplier(call.dataSupplier)
     do {
       val data = dataSupplier.getDataForRequest()
-      val req = getHttpRequest(call, data)
+      val req = mapHttpRequest(call, data)
       // Call the prerequesites
       val preRequest = call.beforeHooks.toMutableList()
       preRequest.add(jar)
@@ -76,7 +60,6 @@ class HttpSessionManager(engine: HttpClientEngine, private val session: Session)
 
   override fun call(call: Call) = call(call, CookieJar())
 
-  @ExperimentalCoroutinesApi
   override fun call(call: Call, jar: CookieJar) = runBlocking {
     // Okay, so in here we're going to do the one to many calls we have to to get this to run.
     val channel: Channel<Envelope<Pair<HttpRequest, RequestData>>> =
@@ -90,14 +73,25 @@ class HttpSessionManager(engine: HttpClientEngine, private val session: Session)
     val afterRequest: MutableList<AfterHook> = mutableListOf(jar)
     afterRequest.addAll(call.afterHooks)
 
+    val delay = session.delay
+    val hasDelay = delay != null && delay > 0
+
+    if (hasDelay) {
+      println("Delay has been set to $delay ms. This means that after a call has been made, " + //
+          "there will be a delay of at least $delay ms before the beginning of the next one.\n" + //
+          "Due to a delay being set - the number of HTTP threads has been locked to 1. " + //
+          "Effectively `session.concurrency = 1`")
+    }
+
     val threadPool = System.getProperty("HTTP_THREAD_POOL_SIZE")?.toInt()
         ?: Runtime.getRuntime().availableProcessors() * 2
-    val httpThreadPool = Executors.newFixedThreadPool(threadPool)
+    val httpThreadPool = Executors.newFixedThreadPool(if (hasDelay) 1 else threadPool)
     val dispatcher = httpThreadPool.asCoroutineDispatcher()
     semaphore.release(session.concurrency)
 
     val jobs = mutableListOf<Job>()
-    repeat(session.concurrency) {
+    val concurrency = if (hasDelay) 1 else session.concurrency
+    repeat(concurrency) {
       jobs += launchHttpProcessor(call,
           afterRequest,
           channel,
@@ -122,7 +116,7 @@ class HttpSessionManager(engine: HttpClientEngine, private val session: Session)
             handleFailure(call, channel, next, request)
           }
           is Success -> {
-            val resp = mapResponse(request.value)
+            val resp = engine.mapResponse(request.value)
             afterRequest.forEach {
               when (it) {
                 is SimpleAfterHook            -> it.accept(resp.copy())
@@ -139,7 +133,7 @@ class HttpSessionManager(engine: HttpClientEngine, private val session: Session)
   private suspend fun handleFailure(call: Call,
                                     channel: Channel<Envelope<Pair<HttpRequest, RequestData>>>,
                                     next: Envelope<Pair<HttpRequest, RequestData>>,
-                                    request: Failure<*, java.lang.Exception>) {
+                                    request: Failure<java.lang.Exception>) {
     call.onError?.let {
       when (it) {
         is ChannelReceiving<*> -> {
@@ -152,7 +146,7 @@ class HttpSessionManager(engine: HttpClientEngine, private val session: Session)
     }
   }
 
-  private fun getHttpRequest(call: Call, data: RequestData): HttpRequest {
+  private fun mapHttpRequest(call: Call, data: RequestData): HttpRequest {
     val url = getUrlProvider(call, data)
     val body = getBodyProvider(call, data)
     val currentUrl = url.get()
@@ -161,60 +155,23 @@ class HttpSessionManager(engine: HttpClientEngine, private val session: Session)
     return HttpRequest(type, currentUrl, body)
   }
 
-  private suspend fun mapResponse(request: io.ktor.client.response.HttpResponse): HttpResponse {
-    val response = request.call.response
-    return HttpResponse(URL(request.call.request.url.toString()),
-        response.status.value,
-        mapHeaders(response.headers),
-        response.content.toByteArray())
+  private suspend fun makeRequest(modelRequest: HttpRequest): HttpResult<io.ktor.client.response.HttpResponse, java.lang.Exception> {
+    maybeDelay()
+    val result = engine.call(modelRequest)
+    lastCall = clock.millis()
+    return result
   }
 
-  private fun mapHeaders(headers: Headers): Map<String, List<String>> {
-    val map = mutableMapOf<String, List<String>>()
-    headers.forEach { key, value -> map[key] = value }
-
-    return map
-  }
-
-  private fun mapType(type: HttpMethod): io.ktor.http.HttpMethod {
-    return when (type) {
-      HttpMethod.GET  -> io.ktor.http.HttpMethod.Get
-      HttpMethod.POST -> io.ktor.http.HttpMethod.Post
-    }
-  }
-
-  private suspend fun makeRequest(modelRequest: HttpRequest): Result<io.ktor.client.response.HttpResponse, java.lang.Exception> {
-    try {
-      val req = client.call(modelRequest.url) {
-        method = mapType(modelRequest.type)
-        headers {
-          modelRequest.headers.forEach {
-            it.value.forEach { kVal ->
-              append(it.key, kVal)
-            }
-          }
-        }
-        when (modelRequest.body) {
-          is JsonBody          -> {
-            body = TextContent(mapper.writeValueAsString((modelRequest.body as JsonBody).get()),
-                ContentType.Application.Json)
-          }
-          is BasicBodyProvider -> {
-            body = ByteArrayContent((modelRequest.body as BasicBodyProvider).get().toByteArray())
-          }
-          is FormBody          -> body = FormDataContent(Parameters.build {
-            val prov = modelRequest.body as FormBody
-            prov.get().forEach { (key, value) ->
-              value.forEach {
-                append(key, it)
-              }
-            }
-          })
-        }
+  private suspend fun maybeDelay() {
+    val delay = session.delay
+    if (delay != null && delay > 0) {
+      // Then between every call, we have to have waited at least that many ms
+      val diff = clock.millis() - lastCall
+      if (diff < delay) {
+        // we have to wait for the diff. Due to the fact that delays institute a single threaded
+        // system, this is safe
+        delay(delay - diff)
       }
-      return Success(req.response)
-    } catch (e: Exception) {
-      return Failure(e)
     }
   }
 }

@@ -1,4 +1,4 @@
-Next
+0.14.0
 ====
 * Delay working
 * Added chained calls

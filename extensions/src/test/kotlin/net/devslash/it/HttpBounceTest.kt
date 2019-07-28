@@ -84,10 +84,7 @@ class HttpBounceTest : ServerTest() {
     runHttp {
       call(address) {
         this.headers = mapOf("A" to listOf(ProvidedValue { r -> "!1!".asReplaceableValue().get(r) + "."}), "C" to listOf("D"))
-        data = object: RequestDataSupplier {
-          override fun hasNext(): Boolean = false
-          override fun getDataForRequest(): RequestData = ListBasedRequestData(listOf("Hi"))
-        }
+        data = SingleUseDataSupplier(mapOf("!1!" to "Hi"))
       }
     }
 

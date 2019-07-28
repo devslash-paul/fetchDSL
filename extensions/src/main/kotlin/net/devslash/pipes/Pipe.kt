@@ -7,8 +7,8 @@ class Pipe(val acceptor: (HttpResponse, RequestData) -> List<String>, private va
 
   private val storage = ConcurrentLinkedDeque<String>()
 
-  override fun getDataForRequest(): RequestData {
-    val currentValue = storage.pop()
+  override suspend fun getDataForRequest(): RequestData? {
+    val currentValue = storage.poll() ?: return null
     val line = if (split != null) {
       currentValue.split(split)
     } else listOf(currentValue)
@@ -21,8 +21,6 @@ class Pipe(val acceptor: (HttpResponse, RequestData) -> List<String>, private va
       }
     }
   }
-
-  override fun hasNext(): Boolean = storage.isNotEmpty()
 
   override fun accept(req: HttpRequest, resp: HttpResponse, data: RequestData) {
     val newResults = acceptor(resp, data)

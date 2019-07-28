@@ -25,9 +25,10 @@ class HttpSessionManager(val engine: HttpDriver, private val session: Session) :
 
   private suspend fun produceHttp(call: Call,
                                   jar: CookieJar, channel: Channel<Envelope<Contents>>) {
-    val dataSupplier = getCallDataSupplier(call.dataSupplier)
-    do {
-      val data = dataSupplier.getDataForRequest()
+    val dataSupplier = handleNoSupplier(call.dataSupplier)
+
+    while (true) {
+      val data = dataSupplier.getDataForRequest() ?: break
       val req = mapHttpRequest(call, data)
       // Call the prerequesites
       val preRequest = call.beforeHooks.toMutableList()
@@ -54,7 +55,7 @@ class HttpSessionManager(val engine: HttpDriver, private val session: Session) :
       }
 
       channel.send(Envelope(Pair(req, data)))
-    } while (dataSupplier.hasNext())
+    }
     channel.close()
   }
 

@@ -1,7 +1,4 @@
-plugins {
-  kotlin("jvm")
-  `maven-publish`
-}
+val globalConf = rootProject.ext
 
 repositories {
   jcenter()
@@ -9,18 +6,20 @@ repositories {
 }
 
 val mockkVersion = "1.9.3"
+val junitVersion = "5.5.0"
+val kotlinVersion by extra("kotlinVersion")
 
 dependencies {
-  compile(kotlin("stdlib", "1.3.30"))
+  compile(kotlin("stdlib", kotlinVersion))
   compile(project(":api"))
   compile(project(":service"))
 
   implementation("com.google.code.gson:gson:2.3.1")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.0-M1")
 
-  testImplementation("org.junit.jupiter:junit-jupiter-api:5.3.1")
+  testImplementation("org.junit.jupiter:junit-jupiter-api:$junitVersion")
   testImplementation("io.mockk:mockk:$mockkVersion")
-  testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.3.1")
+  testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junitVersion")
 
   testCompile("org.hamcrest:hamcrest-core:1.3")
   testCompile("io.ktor:ktor-client-mock:1.0.0")

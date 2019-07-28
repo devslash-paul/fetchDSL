@@ -1,17 +1,7 @@
-import org.gradle.api.tasks.bundling.Jar
-
-plugins {
-  java
-  `maven-publish`
-  kotlin("jvm")
-}
-
-repositories {
-  jcenter()
-}
+val kotlinVersion by extra("kotlinVersion")
 
 dependencies {
-  compile(kotlin("stdlib", "1.3.30"))
+  compile(kotlin("stdlib", kotlinVersion))
   compile(project(":api"))
   compile("io.ktor:ktor-client-cio:1.1.4")
   compile("io.ktor:ktor-client-apache:1.1.4")
@@ -28,4 +18,3 @@ dependencies {
   testCompile("io.ktor:ktor-client-mock-jvm:1.1.4")
   testCompile("org.hamcrest:hamcrest-core:1.3")
 }
-

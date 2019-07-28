@@ -38,6 +38,10 @@ fun getResponseWithBody(body: ByteArray) : HttpResponse {
   return HttpResponse(URL("http://example.com"), 200, mapOf(), body)
 }
 
+fun getResponse(): HttpResponse {
+  return getResponseWithBody("Body".toByteArray())
+}
+
 fun getCall(sup: HttpBody? = null, url: String = "https://example.com") = CallBuilder(
   url
 ).apply {

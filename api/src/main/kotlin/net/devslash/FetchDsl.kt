@@ -3,7 +3,7 @@ package net.devslash
 import net.devslash.err.RetryOnTransitiveError
 
 @DslMarker
-annotation class SessionDsl
+annotation class FetchDSL
 
 enum class HttpMethod {
   GET, POST
@@ -21,7 +21,7 @@ class UnaryAddBuilder<T> {
   }
 }
 
-@SessionDsl
+@FetchDSL
 open class CallBuilder(private val url: String) {
   private var cookieJar: String? = null
   var data: RequestDataSupplier? = null
@@ -74,7 +74,7 @@ open class CallBuilder(private val url: String) {
   }
 }
 
-@SessionDsl
+@FetchDSL
 class BodyBuilder {
   var value: String? = null
   var formParams: Map<String, List<String>>? = null
@@ -84,7 +84,7 @@ class BodyBuilder {
   fun build(): HttpBody = HttpBody(value, formParams, jsonObject, lazyJsonObject)
 }
 
-@SessionDsl
+@FetchDSL
 class MultiCallBuilder {
   private var calls = mutableListOf<Call>()
 
@@ -95,7 +95,7 @@ class MultiCallBuilder {
   fun calls() = calls
 }
 
-@SessionDsl
+@FetchDSL
 class SessionBuilder {
   private var calls = mutableListOf<Call>()
   private val chained = mutableListOf<List<Call>>()

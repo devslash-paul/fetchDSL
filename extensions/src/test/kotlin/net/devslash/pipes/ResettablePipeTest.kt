@@ -1,5 +1,6 @@
 package net.devslash.pipes
 
+import kotlinx.coroutines.runBlocking
 import net.devslash.HttpResponse
 import net.devslash.util.getBasicRequest
 import net.devslash.util.requestDataFromList
@@ -11,14 +12,14 @@ import java.net.URL
 internal class ResettablePipeTest {
 
   @Test
-  fun testPipeStartsEmpty() {
+  fun testPipeStartsEmpty() = runBlocking{
     val pipe = ResettablePipe({ _, _ -> listOf("A", "B") }, null)
 
-    assertThat(pipe.hasNext(), equalTo(false))
+    assertThat(pipe.getDataForRequest(), nullValue())
   }
 
   @Test
-  fun testPipeSingleCase() {
+  fun testPipeSingleCase() = runBlocking {
     val pipe = ResettablePipe({ r, _ -> listOf(String(r.body)) }, null)
 
     pipe.accept(
@@ -27,21 +28,19 @@ internal class ResettablePipeTest {
       requestDataFromList(listOf())
     )
 
-    assertThat(pipe.hasNext(), equalTo(true))
-    val data = pipe.getDataForRequest()
+    val data = pipe.getDataForRequest()!!
     assertThat(data, not(nullValue()))
     assertThat(data.getReplacements()["!1!"], equalTo("result"))
-    assertThat(pipe.hasNext(), equalTo(false))
+    assertThat(pipe.getDataForRequest(), nullValue())
 
     // now reset
     pipe.reset()
-    assertThat(pipe.hasNext(), equalTo(true))
-    val nextData = pipe.getDataForRequest()
+    val nextData = pipe.getDataForRequest()!!
     assertThat(data, equalTo(nextData))
   }
 
   @Test
-  fun testPipeCanReturnMultipleResults() {
+  fun testPipeCanReturnMultipleResults() = runBlocking {
     val vals = listOf("a", "b", "c")
     val pipe = Pipe({ _, _ -> vals }, " ")
     pipe.accept(
@@ -51,13 +50,12 @@ internal class ResettablePipeTest {
     )
 
     vals.forEach {
-      assertThat(pipe.hasNext(), equalTo(true))
-      assertThat(pipe.getDataForRequest().getReplacements(), equalTo(mapOf("!1!" to it)))
+      assertThat(pipe.getDataForRequest()!!.getReplacements(), equalTo(mapOf("!1!" to it)))
     }
   }
 
   @Test
-  fun testPipeAcceptsMultipleAndReturnsInOrder() {
+  fun testPipeAcceptsMultipleAndReturnsInOrder() = runBlocking {
     val pipe = Pipe({ r, _ -> listOf(String(r.body)) }, " ")
     pipe.accept(
         getBasicRequest(),
@@ -77,12 +75,11 @@ internal class ResettablePipeTest {
 
     val values = listOf("a", "b", "c")
     values.forEach {
-      assertThat(pipe.hasNext(), equalTo(true))
-      val data = pipe.getDataForRequest()
+      val data = pipe.getDataForRequest()!!
       val repl = data.getReplacements()
       assertThat(repl, equalTo(mapOf("!1!" to it)))
     }
 
-    assertThat(pipe.hasNext(), equalTo(false))
+    assertThat(pipe.getDataForRequest(), nullValue())
   }
 }

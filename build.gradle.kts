@@ -1,6 +1,8 @@
 import com.jfrog.bintray.gradle.BintrayExtension
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
+extra["kotlinVersion"] = "1.3.30"
+
 plugins {
   base
   `maven-publish`
@@ -27,6 +29,7 @@ subprojects {
     plugin("maven-publish")
     plugin("java-library")
     plugin("com.jfrog.bintray")
+    plugin("org.jetbrains.kotlin.jvm")
 
     from("../publishing.gradle")
   }
@@ -39,7 +42,7 @@ subprojects {
     }
   }
 
-  val test by tasks.getting(Test::class) {
+  tasks.getting(Test::class) {
     useJUnitPlatform()
   }
 

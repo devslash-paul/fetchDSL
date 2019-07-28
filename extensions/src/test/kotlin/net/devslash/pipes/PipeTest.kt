@@ -1,5 +1,6 @@
 package net.devslash.pipes
 
+import kotlinx.coroutines.runBlocking
 import net.devslash.HttpResponse
 import net.devslash.util.getBasicRequest
 import net.devslash.util.requestDataFromList
@@ -11,14 +12,14 @@ import java.net.URL
 internal class PipeTest {
 
   @Test
-  fun testPipeStartsEmpty() {
+  fun testPipeStartsEmpty() = runBlocking {
     val pipe = Pipe({ _, _ -> listOf("A", "B") }, null)
 
-    assertThat(pipe.hasNext(), equalTo(false))
+    assertThat(pipe.getDataForRequest(), nullValue())
   }
 
   @Test
-  fun testPipeSingleCase() {
+  fun testPipeSingleCase() = runBlocking {
     val pipe = Pipe({ r, _ -> listOf(String(r.body)) }, null)
 
     pipe.accept(
@@ -27,15 +28,14 @@ internal class PipeTest {
       requestDataFromList(listOf())
     )
 
-    assertThat(pipe.hasNext(), equalTo(true))
-    val data = pipe.getDataForRequest()
+    val data = pipe.getDataForRequest()!!
     assertThat(data, not(nullValue()))
     assertThat(data.getReplacements()["!1!"], equalTo("result"))
-    assertThat(pipe.hasNext(), equalTo(false))
+    assertThat(pipe.getDataForRequest(), nullValue())
   }
 
   @Test
-  fun testPipeSplitsCorrectly() {
+  fun testPipeSplitsCorrectly() = runBlocking {
     val pipe = Pipe({ _, _ -> listOf("a b c") }, " ")
     pipe.accept(
         getBasicRequest(),
@@ -43,14 +43,13 @@ internal class PipeTest {
       requestDataFromList(listOf())
     )
 
-    assertThat(pipe.hasNext(), equalTo(true))
-    val data = pipe.getDataForRequest()
+    val data = pipe.getDataForRequest()!!
     assertThat(data, not(nullValue()))
     assertThat(data.getReplacements(), equalTo(mapOf("!1!" to "a", "!2!" to "b", "!3!" to "c")))
   }
 
   @Test
-  fun testPipeCanReturnMultipleResults() {
+  fun testPipeCanReturnMultipleResults() = runBlocking {
     val vals = listOf("a", "b", "c")
     val pipe = Pipe({ _, _ -> vals }, " ")
     pipe.accept(
@@ -60,13 +59,12 @@ internal class PipeTest {
     )
 
     vals.forEach {
-      assertThat(pipe.hasNext(), equalTo(true))
-      assertThat(pipe.getDataForRequest().getReplacements(), equalTo(mapOf("!1!" to it)))
+      assertThat(pipe.getDataForRequest()!!.getReplacements(), equalTo(mapOf("!1!" to it)))
     }
   }
 
   @Test
-  fun testPipeAcceptsMultipleAndReturnsInOrder() {
+  fun testPipeAcceptsMultipleAndReturnsInOrder() = runBlocking {
     val pipe = Pipe({ r, _ -> listOf(String(r.body)) }, " ")
     pipe.accept(
         getBasicRequest(),
@@ -86,12 +84,11 @@ internal class PipeTest {
 
     val values = listOf("a", "b", "c")
     values.forEach {
-      assertThat(pipe.hasNext(), equalTo(true))
-      val data = pipe.getDataForRequest()
+      val data = pipe.getDataForRequest()!!
       val repl = data.getReplacements()
       assertThat(repl, equalTo(mapOf("!1!" to it)))
     }
 
-    assertThat(pipe.hasNext(), equalTo(false))
+    assertThat(pipe.getDataForRequest(), nullValue())
   }
 }

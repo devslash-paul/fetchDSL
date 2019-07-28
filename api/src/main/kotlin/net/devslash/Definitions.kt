@@ -23,9 +23,7 @@ interface RequestDataSupplier {
   /**
    * Request data should be a closure that is safe to call on a per-request basis
    */
-  fun getDataForRequest(): RequestData
-
-  fun hasNext(): Boolean
+  suspend fun getDataForRequest(): RequestData?
 
   fun init() {
     // By default this is empty, but implementors can be assured that on a per-call basis, this

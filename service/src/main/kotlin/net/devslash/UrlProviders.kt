@@ -10,4 +10,3 @@ private class OverwrittenUrlProvider(private val url: String,
 fun getUrlProvider(call: Call, data: RequestData): URLProvider {
   return OverwrittenUrlProvider(call.url, data)
 }
-

@@ -1,8 +1,3 @@
-plugins {
-  kotlin("jvm")
-  `maven-publish`
-}
-
 dependencies {
   compile(kotlin("stdlib", "1.3.30"))
 

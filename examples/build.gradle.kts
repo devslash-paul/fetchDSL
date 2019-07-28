@@ -1,12 +1,6 @@
-plugins {
-  kotlin("jvm")
-  `maven-publish`
-}
-
 repositories {
   jcenter()
 }
-
 
 dependencies {
   compile(kotlin("stdlib", "1.3.30"))

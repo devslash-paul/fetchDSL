@@ -1,25 +1,32 @@
 package net.devslash
 
+import java.util.concurrent.atomic.AtomicBoolean
+
 interface URLProvider {
   fun get(): String
 }
 
-fun getCallDataSupplier(data: RequestDataSupplier?): RequestDataSupplier {
+fun handleNoSupplier(data: RequestDataSupplier?): RequestDataSupplier {
   if (data != null) {
     data.init()
     return data
   }
-  return object : RequestDataSupplier {
-    override fun hasNext(): Boolean {
-      return false
-    }
 
-    override fun getDataForRequest(): RequestData {
+  // The default re
+  return SingleUseDataSupplier()
+}
+
+class SingleUseDataSupplier(private val supply: Map<String, String> = mapOf()) : RequestDataSupplier {
+  private val first = AtomicBoolean(true)
+
+  override suspend fun getDataForRequest(): RequestData? {
+    if (first.compareAndSet(true, false)) {
       return object : RequestData {
         override fun getReplacements(): Map<String, String> {
-          return mapOf()
+          return supply
         }
       }
     }
+    return null
   }
 }

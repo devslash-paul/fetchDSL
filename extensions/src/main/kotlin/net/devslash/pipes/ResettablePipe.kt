@@ -9,8 +9,9 @@ class ResettablePipe(val acceptor: (HttpResponse, RequestData) -> List<String>,
   private val index = AtomicInteger(0)
   private val storage = mutableListOf<String>()
 
-  override fun getDataForRequest(): RequestData {
-    val currentValue = storage[index.getAndIncrement()]
+  override suspend fun getDataForRequest(): RequestData? {
+    val currentValue = storage.getOrNull(index.getAndIncrement()) ?: return null
+
     val line = if (split != null) {
       currentValue.split(split)
     } else listOf(currentValue)
@@ -21,8 +22,6 @@ class ResettablePipe(val acceptor: (HttpResponse, RequestData) -> List<String>,
   override fun init() {
     reset()
   }
-
-  override fun hasNext(): Boolean = index.get() < storage.size
 
   override fun accept(req: HttpRequest, resp: HttpResponse, data: RequestData) {
     val newResults = acceptor(resp, data)

@@ -6,7 +6,7 @@ import net.devslash.err.RetryOnTransitiveError
 annotation class FetchDSL
 
 enum class HttpMethod {
-  GET, POST
+  GET, POST, DELETE, PUT, HEAD, OPTIONS, PATCH
 }
 
 class UnaryAddBuilder<T> {

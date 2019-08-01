@@ -60,6 +60,11 @@ class HttpDriver(http: HttpClientEngine, followRedirects: Boolean = false) : Aut
     return when (type) {
       HttpMethod.GET  -> io.ktor.http.HttpMethod.Get
       HttpMethod.POST -> io.ktor.http.HttpMethod.Post
+      HttpMethod.DELETE -> io.ktor.http.HttpMethod.Delete
+      HttpMethod.PUT -> io.ktor.http.HttpMethod.Put
+      HttpMethod.PATCH -> io.ktor.http.HttpMethod.Patch
+      HttpMethod.HEAD -> io.ktor.http.HttpMethod.Head
+      HttpMethod.OPTIONS -> io.ktor.http.HttpMethod.Options
     }
   }
 

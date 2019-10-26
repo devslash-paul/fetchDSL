@@ -67,7 +67,7 @@ internal class HttpSessionManagerTest : ServerTest() {
       }
     }
     start()
-    val testConcurrency = 3
+    val testConcurrency = 2
 
     assertTimeout(ofSeconds(10)) {
       val countdown = CountDownLatch(testConcurrency)

@@ -69,7 +69,7 @@ internal class HttpSessionManagerTest : ServerTest() {
     start()
     val testConcurrency = 3
 
-    assertTimeout(ofSeconds(5)) {
+    assertTimeout(ofSeconds(10)) {
       val countdown = CountDownLatch(testConcurrency)
       val path = HttpSessionManagerTest::class.java.getResource("/testfile.log").path
       runHttp {

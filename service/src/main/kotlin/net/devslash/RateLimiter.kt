@@ -5,6 +5,7 @@ import kotlinx.coroutines.sync.Mutex
 import java.time.Clock
 import java.time.Duration
 import java.time.Instant
+import kotlin.math.max
 
 /**
  * This rate limiter isn't perfect but aims to ensure the rate isn't going too fast, and that the rate is smooth. This
@@ -17,7 +18,7 @@ import java.time.Instant
 class AcquiringRateLimiter(private val rateLimitOptions: RateLimitOptions, private val clock: Clock = Clock.systemUTC()) {
   private var lastRelease = Instant.ofEpochMilli(0)
   // This equals how many milliseconds it takes to release a ticket
-  private val qps = rateLimitOptions.duration.toMillis() / rateLimitOptions.count
+  private val qps = rateLimitOptions.duration.toMillis() / max(1, rateLimitOptions.count)
   private val lock = Mutex()
 
   suspend fun acquire() {

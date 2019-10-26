@@ -11,7 +11,7 @@ class ConfigBuilder {
   /**
    * Max time between TCP packets - default 10 seconds.
    */
-  var followRedirects: Boolean = true
+  var followRedirects: Boolean = false
   /**
    * Max time to establish an HTTP connection - default 10 seconds.
    */

@@ -13,6 +13,13 @@ import io.ktor.http.Headers
 import io.ktor.http.Parameters
 import io.ktor.util.cio.toByteArray
 import java.net.URL
+import kotlin.collections.List
+import kotlin.collections.Map
+import kotlin.collections.component1
+import kotlin.collections.component2
+import kotlin.collections.forEach
+import kotlin.collections.mutableMapOf
+import kotlin.collections.set
 
 class HttpDriver(config: Config) : AutoCloseable {
 
@@ -21,6 +28,7 @@ class HttpDriver(config: Config) : AutoCloseable {
       connectTimeout = config.connectTimeout
       connectionRequestTimeout = config.connectionRequestTimeout
       socketTimeout = config.socketTimeout
+      followRedirects = config.followRedirects
     }
     followRedirects = config.followRedirects
   }

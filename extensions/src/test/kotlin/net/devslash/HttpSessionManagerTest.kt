@@ -28,6 +28,7 @@ internal class HttpSessionManagerTest : ServerTest() {
       routing {
         get("/") {
           call.response.header("set-cookie", "session=abcd")
+          call.response.header("Location", "invalid")
           call.response.status(HttpStatusCode.fromValue(302))
           call.respondText("Hi there")
         }
@@ -38,7 +39,7 @@ internal class HttpSessionManagerTest : ServerTest() {
     var cookie: String? = null
     var body: String? = null
     runBlocking {
-      runHttp({followRedirects = false}) {
+      runHttp({}) {
         call(address) {
           after {
             +object : BasicOutput {
@@ -66,13 +67,13 @@ internal class HttpSessionManagerTest : ServerTest() {
       }
     }
     start()
-    val CONCURRENCY = 3
+    val testConcurrency = 3
 
     assertTimeout(ofSeconds(5)) {
-      val countdown = CountDownLatch(CONCURRENCY)
+      val countdown = CountDownLatch(testConcurrency)
       val path = HttpSessionManagerTest::class.java.getResource("/testfile.log").path
       runHttp {
-        concurrency = CONCURRENCY
+        concurrency = testConcurrency
         call(address) {
           after {
             +object : SimpleAfterHook {

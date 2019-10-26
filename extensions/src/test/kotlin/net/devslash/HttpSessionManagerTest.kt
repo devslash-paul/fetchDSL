@@ -66,13 +66,13 @@ internal class HttpSessionManagerTest : ServerTest() {
       }
     }
     start()
-    val cores = Runtime.getRuntime().availableProcessors()
+    val CONCURRENCY = 3
 
     assertTimeout(ofSeconds(5)) {
-      val countdown = CountDownLatch(cores)
+      val countdown = CountDownLatch(CONCURRENCY)
       val path = HttpSessionManagerTest::class.java.getResource("/testfile.log").path
       runHttp {
-        concurrency = cores
+        concurrency = CONCURRENCY
         call(address) {
           after {
             +object : SimpleAfterHook {

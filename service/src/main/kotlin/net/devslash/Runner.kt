@@ -1,7 +1,5 @@
 package net.devslash
 
-import io.ktor.client.engine.apache.Apache
-
 /**
  * Timeouts.
  * Use `0` to specify infinite.

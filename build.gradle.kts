@@ -1,7 +1,12 @@
 import com.jfrog.bintray.gradle.BintrayExtension
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
-extra["kotlinVersion"] = "1.3.30"
+buildscript {
+  project.extra.apply {
+    set("kotlinVersion", "1.3.30")
+    set("ktorVersion", "1.2.4")
+  }
+}
 
 plugins {
   base

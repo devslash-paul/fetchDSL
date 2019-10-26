@@ -35,19 +35,19 @@ class HttpSessionManager(val engine: HttpDriver, private val session: Session) :
       preRequest.add(jar)
 
       val shouldSkip =
-          preRequest.filter { it is SkipBeforeHook }.any { (it as SkipBeforeHook).skip(data) }
+              preRequest.filter { it is SkipBeforeHook }.any { (it as SkipBeforeHook).skip(data) }
       if (shouldSkip) continue
 
       preRequest.forEach {
         when (it) {
-          is SimpleBeforeHook            -> it.accept(req, data)
+          is SimpleBeforeHook -> it.accept(req, data)
           is SessionPersistingBeforeHook -> it.accept(sessionManager, jar, req, data)
         }
       }
       call.headers?.forEach { entry ->
         entry.value.forEach {
           val s = when (it) {
-            is StrValue      -> it.value
+            is StrValue -> it.value
             is ProvidedValue -> it.lambda(data)
           }
           req.addHeader(entry.key, s)

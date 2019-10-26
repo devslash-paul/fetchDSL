@@ -6,7 +6,7 @@ import net.devslash.util.getBasicRequest
 import net.devslash.util.requestDataFromList
 import org.hamcrest.CoreMatchers.*
 import org.hamcrest.MatcherAssert.assertThat
-import org.junit.jupiter.api.Test
+import org.junit.Test
 import java.net.URL
 
 internal class ResettablePipeTest {

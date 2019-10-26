@@ -4,7 +4,7 @@ import net.devslash.ListBasedRequestData
 import net.devslash.util.getResponseWithBody
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.MatcherAssert.assertThat
-import org.junit.jupiter.api.Test
+import org.junit.Test
 
 internal class DebugOutputTest {
   @Test

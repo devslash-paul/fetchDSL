@@ -10,13 +10,19 @@ import io.ktor.routing.routing
 import io.ktor.server.engine.ApplicationEngine
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
+import kotlinx.coroutines.debug.junit4.CoroutinesTimeout
 import kotlinx.coroutines.runBlocking
 import net.devslash.data.FileDataSupplier
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Test
+import org.junit.Assert.assertEquals
+import org.junit.Rule
+import org.junit.Test
 import java.util.concurrent.CountDownLatch
 
 internal class HttpSessionManagerTest : ServerTest() {
+
+  @Rule
+  @JvmField
+  public val rule = CoroutinesTimeout(5000)
 
   override lateinit var appEngine: ApplicationEngine
 
@@ -60,7 +66,8 @@ internal class HttpSessionManagerTest : ServerTest() {
     appEngine = embeddedServer(Netty, serverPort) {
       routing {
         get("/") {
-          call.respond("")
+          // this cannot be the empty string. That turns out to stuff up the blocking on response code.
+          call.respond("A")
         }
       }
     }

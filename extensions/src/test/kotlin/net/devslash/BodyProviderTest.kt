@@ -2,8 +2,8 @@ package net.devslash
 
 import net.devslash.util.getCall
 import net.devslash.util.requestDataFromList
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Test
+import org.junit.Assert.assertEquals
+import org.junit.Test
 
 internal class BodyProviderTest {
 
@@ -15,7 +15,8 @@ internal class BodyProviderTest {
     assertEquals(EmptyBodyProvider::class, provider::class)
   }
 
-  @Test fun testWithBody() {
+  @Test
+  fun testWithBody() {
     val provider = getBodyProvider(
       getCall(HttpBody(null, mapOf("a" to listOf("b"), "c" to listOf("d")), null, null)), requestDataFromList()
     )

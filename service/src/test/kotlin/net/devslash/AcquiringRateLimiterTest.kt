@@ -4,21 +4,21 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runBlockingTest
 import kotlinx.coroutines.withTimeout
-import org.junit.jupiter.api.Assertions.*
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
+import org.junit.Before
+import org.junit.Test
 import java.time.Duration
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import kotlin.system.measureTimeMillis
-import kotlin.time.measureTime
 
 @ExperimentalCoroutinesApi
 class AcquiringRateLimiterTest {
   private lateinit var tenPerSecond: AcquiringRateLimiter
   private lateinit var clock: FakeClock
 
-  @BeforeEach
+  @Before
   fun setup() {
     clock = FakeClock(Instant.ofEpochMilli(100000))
     tenPerSecond = AcquiringRateLimiter(RateLimitOptions(true, 10, Duration.of(1, ChronoUnit.SECONDS)), clock)
@@ -47,7 +47,7 @@ class AcquiringRateLimiterTest {
         }
       }
 
-      assertTrue(time > 900, "Must take more than 900ms due to smoothing")
+      assertTrue("Must take more than 900ms due to smoothing", time > 900)
     }
   }
 }

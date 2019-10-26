@@ -54,7 +54,12 @@ class HttpSessionManager(val engine: HttpDriver, private val session: Session) :
         }
       }
 
-      channel.send(Envelope(Pair(req, data)))
+      if(channel.offer(Envelope(Pair(req, data)))) {
+        continue
+      } else {
+        println("Blocking")
+        channel.send(Envelope(Pair(req, data)))
+      }
     }
     channel.close()
   }
@@ -112,6 +117,7 @@ class HttpSessionManager(val engine: HttpDriver, private val session: Session) :
                                                  channel: Channel<Envelope<Pair<HttpRequest, RequestData>>>,
                                                  dispatcher: CoroutineContext) = launch(dispatcher) {
     for (next in channel) {
+      println("Accepting next")
       // ensure that this is a valid request
       if (next.shouldProceed()) {
         val contents = next.get()

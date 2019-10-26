@@ -6,9 +6,9 @@ import net.devslash.util.getBasicRequest
 import net.devslash.util.getCookieJar
 import net.devslash.util.getSessionManager
 import net.devslash.util.requestDataFromList
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.fail
+import org.junit.Assert.assertEquals
+import org.junit.Assert.fail
+import org.junit.Test
 
 internal class OnceTest {
 
@@ -64,7 +64,7 @@ internal class OnceTest {
   @Test
   fun testWorksWithComplexHook() = runBlocking {
     var count = 0
-    val o = Once(object: SessionPersistingBeforeHook {
+    val o = Once(object : SessionPersistingBeforeHook {
       override suspend fun accept(sessionManager: SessionManager,
                                   cookieJar: CookieJar,
                                   req: HttpRequest,

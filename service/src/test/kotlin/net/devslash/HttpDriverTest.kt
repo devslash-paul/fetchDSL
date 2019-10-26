@@ -26,10 +26,8 @@ internal class HttpDriverTest : ServerTest() {
     appEngine = embeddedServer(Netty, serverPort) {
       routing {
         get("/") {
-          println("IN")
           delay(1200)
           call.respond(HttpStatusCode.OK, "")
-          println("OUT")
         }
       }
     }
@@ -39,14 +37,10 @@ internal class HttpDriverTest : ServerTest() {
       HttpDriver(ConfigBuilder().apply {
         socketTimeout = 1000
       }.build()).use {
-        println("Started")
         val res = it.call(HttpRequest(HttpMethod.GET, address, EmptyBodyProvider))
-        println("Ended")
 
         assertThat(res, instanceOf(Failure::class.java))
-        println("Asserted")
         assertThat((res as Failure).err, instanceOf(SocketTimeoutException::class.java))
-        println("Finalised")
       }
     }
   }

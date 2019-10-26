@@ -15,7 +15,7 @@ import java.time.Instant
  * there is inconsistency with how fast requests are performed, then the rate limit may be over-restrictive.
  */
 class AcquiringRateLimiter(private val rateLimitOptions: RateLimitOptions, private val clock: Clock = Clock.systemUTC()) {
-  private var lastRelease = clock.instant()
+  private var lastRelease = Instant.ofEpochMilli(0)
   // This equals how many milliseconds it takes to release a ticket
   private val qps = rateLimitOptions.duration.toMillis() / rateLimitOptions.count
   private val lock = Mutex()
@@ -31,15 +31,17 @@ class AcquiringRateLimiter(private val rateLimitOptions: RateLimitOptions, priva
     lock.unlock()
   }
 
-  suspend fun tryAcquire(): Boolean {
+  fun tryAcquire(): Boolean {
     if (!rateLimitOptions.enabled) {
       return true
     }
 
-    if (lock.tryLock()) {
-       return getTimeOfNextAcquire() > 0
+    return if (lock.tryLock()) {
+      val result = getTimeOfNextAcquire()
+      lock.unlock()
+      result <= 0
     } else {
-      return false
+      false
     }
   }
 
@@ -50,7 +52,7 @@ class AcquiringRateLimiter(private val rateLimitOptions: RateLimitOptions, priva
     val now = clock.instant()
     val diff = Duration.between(lastRelease, now).toMillis()
     // We assume this ticket gets consumed, this lets update out last release
-    lastRelease = now.plusMillis(diff)
+    lastRelease = lastRelease.plusMillis(diff)
     return (qps - diff).coerceAtLeast(0L)
   }
 }

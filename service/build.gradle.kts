@@ -20,6 +20,7 @@ dependencies {
   testImplementation("org.junit.jupiter:junit-jupiter-api:$junitVersion")
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junitVersion")
   testCompile(project(":test-utils"))
+  testCompile("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.3.0-M1")
   testCompile("io.ktor:ktor-client-mock-jvm:$ktorVersion")
   testCompile("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.3.2")
   testCompile("org.hamcrest:hamcrest-core:1.3")

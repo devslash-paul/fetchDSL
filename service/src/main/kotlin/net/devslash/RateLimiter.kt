@@ -1,59 +1,56 @@
 package net.devslash
 
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.Semaphore
 import java.time.Clock
 import java.time.Duration
 import java.time.Instant
-import java.util.concurrent.atomic.AtomicInteger
 
+/**
+ * This rate limiter isn't perfect but aims to ensure the rate isn't going too fast, and that the rate is smooth. This
+ * means that calls to acquire will only unblock one at a time. If two concurrent calls are made to acquire, then the
+ * first will unblock straight away. The second one will unblock after `1 / QPS` seconds.
+ *
+ * This means that the rate limiter effectively has no memory of the past, beyond the call before. This means that if
+ * there is inconsistency with how fast requests are performed, then the rate limit may be over-restrictive.
+ */
 class AcquiringRateLimiter(private val rateLimitOptions: RateLimitOptions, private val clock: Clock = Clock.systemUTC()) {
-  // how many milliseconds between each ticket release
-  // So - 100 tickets per second would be 10 ms Release time
-  private val msRelease: Long = rateLimitOptions.duration.toMillis() / rateLimitOptions.count
-  private val tickets = AtomicInteger(0)
-  private val lastUpdate = clock.instant()
-
+  private var lastRelease = clock.instant()
+  // This equals how many milliseconds it takes to release a ticket
+  private val qps = rateLimitOptions.duration.toMillis() / rateLimitOptions.count
   private val lock = Mutex()
-  private val awaitingTicket = Semaphore(1)
-  // Rolling window - take a number able to be done per 10 seconds and attempt to roll
 
   suspend fun acquire() {
     if (!rateLimitOptions.enabled) {
       return
     }
 
+    lock.lock()
+    val delayMs = getTimeOfNextAcquire()
+    delay(delayMs)
+    lock.unlock()
+  }
+
+  suspend fun tryAcquire(): Boolean {
+    if (!rateLimitOptions.enabled) {
+      return true
+    }
+
     if (lock.tryLock()) {
-      updateInternal()
-      lock.unlock()
+       return getTimeOfNextAcquire() > 0
+    } else {
+      return false
     }
-    awaitingTicket.acquire()
   }
 
-  private fun updateInternal() {
-    // We only have to do a ticket update when there's an attempt at acquiring.
+  /**
+   * This function attempts to figure out when the next update can occur. This
+   */
+  private fun getTimeOfNextAcquire(): Long {
     val now = clock.instant()
-    val diff = Duration.between(lastUpdate, now)
-    val steps = diff.toMillis() / msRelease
-    // We only advance `lastUpdate` to the amount that was given by the steps. This avoids us going under the rate limit
-    // by a small margin by a rounding error
-    lastUpdate.plusMillis(steps * msRelease)
-    repeat(steps.toInt()) {
-      awaitingTicket.release()
-    }
+    val diff = Duration.between(lastRelease, now).toMillis()
+    // We assume this ticket gets consumed, this lets update out last release
+    lastRelease = now.plusMillis(diff)
+    return (qps - diff).coerceAtLeast(0L)
   }
-
-  private suspend fun acquireInternal() {
-    // We know that maximally at one point there is a single thing attempting to get this
-    val current = tickets.getAndDecrement()
-
-    if (current > 0) {
-      // If this is the case then we did get a ticket
-      return
-    }
-    // Otherwise we technically didn't receive a ticket. Due to how this works, this means that there are zero tickets
-    // thus we have to wait for one to accumulate.
-    awaitingTicket.acquire()
-  }
-
 }

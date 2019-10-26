@@ -1,5 +1,3 @@
-val globalConf = rootProject.ext
-
 repositories {
   jcenter()
   maven("http://dl.bintray.com/kotlin/kotlin-eap")
@@ -7,18 +5,19 @@ repositories {
 
 val mockkVersion = "1.9.3"
 val junitVersion = "5.5.0"
-val kotlinVersion by extra("kotlinVersion")
+val kotlinVersion: String by project
 
 dependencies {
   compile(kotlin("stdlib", kotlinVersion))
+  compile(kotlin("reflect", kotlinVersion))
   compile(project(":api"))
   compile(project(":service"))
 
   implementation("com.google.code.gson:gson:2.3.1")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.0-M1")
 
-  testImplementation("org.junit.jupiter:junit-jupiter-api:$junitVersion")
   testImplementation("io.mockk:mockk:$mockkVersion")
+  testImplementation("org.junit.jupiter:junit-jupiter-api:$junitVersion")
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junitVersion")
 
   testCompile("org.hamcrest:hamcrest-core:1.3")

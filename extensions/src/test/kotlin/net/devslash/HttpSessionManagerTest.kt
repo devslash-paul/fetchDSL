@@ -38,7 +38,7 @@ internal class HttpSessionManagerTest : ServerTest() {
     var cookie: String? = null
     var body: String? = null
     runBlocking {
-      runHttp {
+      runHttp({followRedirects = false}) {
         call(address) {
           after {
             +object : BasicOutput {

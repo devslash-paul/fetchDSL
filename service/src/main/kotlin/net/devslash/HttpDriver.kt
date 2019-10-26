@@ -18,11 +18,11 @@ class HttpDriver(config: Config) : AutoCloseable {
 
   private val client = HttpClient(Apache) {
     engine {
-      followRedirects = config.followRedirects
       connectTimeout = config.connectTimeout
       connectionRequestTimeout = config.connectionRequestTimeout
       socketTimeout = config.socketTimeout
     }
+    followRedirects = config.followRedirects
   }
   private val mapper = ObjectMapper()
 

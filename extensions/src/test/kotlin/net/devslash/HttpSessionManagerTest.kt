@@ -13,9 +13,7 @@ import io.ktor.server.netty.Netty
 import kotlinx.coroutines.runBlocking
 import net.devslash.data.FileDataSupplier
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertTimeout
 import org.junit.jupiter.api.Test
-import java.time.Duration.ofSeconds
 import java.util.concurrent.CountDownLatch
 
 internal class HttpSessionManagerTest : ServerTest() {
@@ -69,22 +67,20 @@ internal class HttpSessionManagerTest : ServerTest() {
     start()
     val testConcurrency = 2
 
-    assertTimeout(ofSeconds(10)) {
-      val countdown = CountDownLatch(testConcurrency)
-      val path = HttpSessionManagerTest::class.java.getResource("/testfile.log").path
-      runHttp {
-        concurrency = testConcurrency
-        call(address) {
-          after {
-            +object : SimpleAfterHook {
-              override fun accept(resp: HttpResponse) {
-                countdown.countDown()
-                countdown.await()
-              }
+    val countdown = CountDownLatch(testConcurrency)
+    val path = HttpSessionManagerTest::class.java.getResource("/testfile.log").path
+    runHttp {
+      concurrency = testConcurrency
+      call(address) {
+        after {
+          +object : SimpleAfterHook {
+            override fun accept(resp: HttpResponse) {
+              countdown.countDown()
+              countdown.await()
             }
           }
-          data = FileDataSupplier(name = path)
         }
+        data = FileDataSupplier(name = path)
       }
     }
   }

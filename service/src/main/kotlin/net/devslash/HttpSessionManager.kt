@@ -64,9 +64,9 @@ class HttpSessionManager(val engine: HttpDriver, private val session: Session) :
   override fun call(call: Call, jar: CookieJar) = runBlocking {
     // Okay, so in here we're going to do the one to many calls we have to to get this to run.
     val channel: Channel<Envelope<Pair<HttpRequest, RequestData>>> =
-        Channel(session.concurrency * 2)
+            Channel(session.concurrency * 2)
     val produceThreadPool = System.getProperty("PRODUCE_THREAD_POOL_SIZE")?.toInt()
-        ?: Runtime.getRuntime().availableProcessors()
+            ?: Runtime.getRuntime().availableProcessors()
     val produceExecutor = Executors.newFixedThreadPool(produceThreadPool)
     val produceDispatcher = produceExecutor.asCoroutineDispatcher()
     launch(produceDispatcher) { produceHttp(call, jar, channel) }
@@ -79,13 +79,14 @@ class HttpSessionManager(val engine: HttpDriver, private val session: Session) :
 
     if (hasDelay) {
       println("Delay has been set to $delay ms. This means that after a call has been made, " + //
-          "there will be a delay of at least $delay ms before the beginning of the next one.\n" + //
-          "Due to a delay being set - the number of HTTP threads has been locked to 1. " + //
-          "Effectively `session.concurrency = 1`")
+              "there will be a delay of at least $delay ms before the beginning of the next one.\n" + //
+              "Due to a delay being set - the number of HTTP threads has been locked to 1. " + //
+              "Effectively `session.concurrency = 1`")
     }
+    val limiter = AcquiringRateLimiter(session.rateOptions)
 
     val threadPool = System.getProperty("HTTP_THREAD_POOL_SIZE")?.toInt()
-        ?: Runtime.getRuntime().availableProcessors() * 2
+            ?: Runtime.getRuntime().availableProcessors() * 2
     val httpThreadPool = Executors.newFixedThreadPool(if (hasDelay) 1 else threadPool)
     val dispatcher = httpThreadPool.asCoroutineDispatcher()
     semaphore.release(session.concurrency)
@@ -94,9 +95,10 @@ class HttpSessionManager(val engine: HttpDriver, private val session: Session) :
     val concurrency = if (hasDelay) 1 else session.concurrency
     repeat(concurrency) {
       jobs += launchHttpProcessor(call,
-          afterRequest,
-          channel,
-          dispatcher)
+              limiter,
+              afterRequest,
+              channel,
+              dispatcher)
     }
     jobs.joinAll()
     produceExecutor.shutdownNow()
@@ -105,6 +107,7 @@ class HttpSessionManager(val engine: HttpDriver, private val session: Session) :
   }
 
   private fun CoroutineScope.launchHttpProcessor(call: Call,
+                                                 rateLimiter: AcquiringRateLimiter,
                                                  afterRequest: List<AfterHook>,
                                                  channel: Channel<Envelope<Pair<HttpRequest, RequestData>>>,
                                                  dispatcher: CoroutineContext) = launch(dispatcher) {
@@ -112,6 +115,7 @@ class HttpSessionManager(val engine: HttpDriver, private val session: Session) :
       // ensure that this is a valid request
       if (next.shouldProceed()) {
         val contents = next.get()
+        rateLimiter.acquire()
         when (val request = makeRequest(contents.first)) {
           is Failure -> {
             handleFailure(call, channel, next, request)
@@ -120,9 +124,9 @@ class HttpSessionManager(val engine: HttpDriver, private val session: Session) :
             val resp = engine.mapResponse(request.value)
             afterRequest.forEach {
               when (it) {
-                is SimpleAfterHook            -> it.accept(resp.copy())
+                is SimpleAfterHook -> it.accept(resp.copy())
                 is ChainReceivingResponseHook -> it.accept(resp)
-                is FullDataAfterHook          -> it.accept(contents.first, resp, contents.second)
+                is FullDataAfterHook -> it.accept(contents.first, resp, contents.second)
               }
             }
           }
@@ -140,7 +144,7 @@ class HttpSessionManager(val engine: HttpDriver, private val session: Session) :
         is ChannelReceiving<*> -> {
           (it as ChannelReceiving<Contents>).accept(channel, next, request.err)
         }
-        else                   -> {
+        else -> {
           throw request.err
         }
       }

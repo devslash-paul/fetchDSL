@@ -1,6 +1,7 @@
 package net.devslash
 
 import net.devslash.err.RetryOnTransitiveError
+import java.time.Duration
 
 @DslMarker
 annotation class FetchDSL
@@ -20,6 +21,8 @@ class UnaryAddBuilder<T> {
     return hooks
   }
 }
+
+data class RateLimitOptions(val enabled: Boolean, val count: Int, val duration: Duration)
 
 @FetchDSL
 open class CallBuilder(private val url: String) {
@@ -45,14 +48,14 @@ open class CallBuilder(private val url: String) {
     body = BodyBuilder().apply(block).build()
   }
 
-  private fun mapHeaders(m: Map<String, List<Any>>?) : Map<String, List<Value>>? {
+  private fun mapHeaders(m: Map<String, List<Any>>?): Map<String, List<Value>>? {
     return m?.let { map ->
       map.map { entry ->
         entry.key to entry.value.map { value ->
           when (value) {
             is String -> StrValue(value)
-            is Value  -> value
-            else      -> throw RuntimeException()
+            is Value -> value
+            else -> throw RuntimeException()
           }
         }
       }.toMap()
@@ -61,7 +64,7 @@ open class CallBuilder(private val url: String) {
 
   fun build(): Call {
     val localHeaders = headers
-    if(localHeaders == null || !localHeaders.contains("User-Agent")) {
+    if (localHeaders == null || !localHeaders.contains("User-Agent")) {
       val set = mutableMapOf<String, List<Any>>()
       if (localHeaders != null) {
         set.putAll(localHeaders)
@@ -70,7 +73,7 @@ open class CallBuilder(private val url: String) {
       headers = set
     }
     return Call(url, mapHeaders(headers), cookieJar, type, data, body,
-         onError, preHooksList, postHooksList)
+            onError, preHooksList, postHooksList)
   }
 }
 
@@ -102,6 +105,13 @@ class SessionBuilder {
 
   var concurrency = 20
   var delay: Long? = null
+  var rateOptions: RateLimitOptions = RateLimitOptions(false, 0, Duration.ZERO)
+
+  fun rateLimit(count: Int, duration: Duration) {
+    require(!(duration.isNegative || duration.isZero)) { "Invalid duration, must be more than zero" }
+    require(count > 0) { "Count must be positive" }
+    rateOptions = RateLimitOptions(true, count, duration)
+  }
 
   fun call(url: String, block: CallBuilder.() -> Unit = {}) {
     calls.add(CallBuilder(url).apply(block).build())
@@ -116,6 +126,6 @@ class SessionBuilder {
 //    chained.add(MultiCallBuilder().apply(block).calls())
 //  }
 
-  fun build(): Session = Session(calls, concurrency, delay)
+  fun build(): Session = Session(calls, concurrency, delay, rateOptions)
 }
 

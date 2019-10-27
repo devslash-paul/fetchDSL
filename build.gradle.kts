@@ -50,12 +50,12 @@ subprojects {
     }
   }
 
-  tasks.withType(Test::class).configureEach {
-    useJUnitPlatform()
-    testLogging {
-      events("passed", "skipped", "failed")
-    }
-  }
+//  tasks.withType(Test::class).configureEach {
+//    useJUnitPlatform()
+//    testLogging {
+//      events("passed", "skipped", "failed")
+//    }
+//  }
 
   configure<BintrayExtension> {
     user = project.findProperty("bintrayUser") as String? ?: System.getenv("BINTRAY_USER")

@@ -13,7 +13,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.CoreMatchers.instanceOf
 import org.hamcrest.MatcherAssert.assertThat
-import org.junit.jupiter.api.Test
+import org.junit.Test
 import java.net.SocketTimeoutException
 
 @ExperimentalCoroutinesApi
@@ -26,8 +26,8 @@ internal class HttpDriverTest : ServerTest() {
     appEngine = embeddedServer(Netty, serverPort) {
       routing {
         get("/") {
-          delay(1200)
-          call.respond(HttpStatusCode.OK, "")
+          delay(1500)
+          call.respond(HttpStatusCode.OK, "Non_empty")
         }
       }
     }

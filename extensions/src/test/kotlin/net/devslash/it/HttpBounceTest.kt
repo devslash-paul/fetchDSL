@@ -11,9 +11,9 @@ import io.ktor.server.engine.ApplicationEngine
 import kotlinx.coroutines.runBlocking
 import net.devslash.*
 import net.devslash.pre.SkipIf
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertFalse
-import org.junit.jupiter.api.Test
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Test
 
 class HttpBounceTest : ServerTest() {
   override lateinit var appEngine: ApplicationEngine

@@ -1,8 +1,7 @@
 val kotlinVersion: String by project
 val ktorVersion: String by project
 
-val junitVersion = "5.5.0"
-apply(from = "../tests.gradle.kts")
+val junitVersion = "4.12"
 
 dependencies {
   compile(kotlin("stdlib", kotlinVersion))
@@ -17,8 +16,7 @@ dependencies {
   implementation("org.apache.httpcomponents:httpclient:4.5")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.2")
 
-  testImplementation("org.junit.jupiter:junit-jupiter-api:$junitVersion")
-  testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junitVersion")
+  testCompile("junit:junit:$junitVersion")
   testCompile(project(":test-utils"))
   testCompile("io.ktor:ktor-client-mock-jvm:$ktorVersion")
   testCompile("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.3.2")

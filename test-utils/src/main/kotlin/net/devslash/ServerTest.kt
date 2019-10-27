@@ -4,12 +4,11 @@ import io.ktor.application.Application
 import io.ktor.server.engine.ApplicationEngine
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
-import org.junit.jupiter.api.extension.AfterEachCallback
-import org.junit.jupiter.api.extension.ExtensionContext
+import org.junit.After
 import java.net.ServerSocket
 import java.util.concurrent.TimeUnit
 
-abstract class ServerTest : AfterEachCallback {
+abstract class ServerTest {
   abstract var appEngine: ApplicationEngine
   protected val serverPort: Int = ServerSocket(0).use { it.localPort }
   protected val address: String = "http://localhost:$serverPort"
@@ -18,8 +17,9 @@ abstract class ServerTest : AfterEachCallback {
     appEngine.start()
   }
 
-  override fun afterEach(context: ExtensionContext?) {
-    appEngine.stop(1000, 100, TimeUnit.MILLISECONDS)
+  @After
+  fun afterEach() {
+    appEngine.stop(1, 1, TimeUnit.MILLISECONDS)
   }
 
   fun runWith(block: Application.() -> Unit) {

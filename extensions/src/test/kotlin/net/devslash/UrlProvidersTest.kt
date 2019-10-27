@@ -2,15 +2,15 @@ package net.devslash
 
 import net.devslash.util.getCall
 import net.devslash.util.requestDataFromList
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Test
+import org.junit.Assert.assertEquals
+import org.junit.Test
 
 internal class UrlProvidersTest {
   @Test
   fun testBasicProvider() {
     val url = "http://example.com"
     val provider = getUrlProvider(
-      getCall(url = url), requestDataFromList(listOf())
+        getCall(url = url), requestDataFromList(listOf())
     )
     assertEquals(url, provider.get())
   }
@@ -18,8 +18,8 @@ internal class UrlProvidersTest {
   @Test
   fun testReplacement() {
     val provider = getUrlProvider(
-      getCall(url = "http://!1!"),
-      requestDataFromList(listOf("example.com"))
+        getCall(url = "http://!1!"),
+        requestDataFromList(listOf("example.com"))
     )
     assertEquals("http://example.com", provider.get())
   }

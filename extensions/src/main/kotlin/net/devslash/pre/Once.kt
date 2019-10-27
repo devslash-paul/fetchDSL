@@ -2,6 +2,7 @@ package net.devslash.pre
 
 import net.devslash.*
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.reflect.KClass
 import kotlin.reflect.KVisibility
 import kotlin.reflect.full.callSuspend
 import kotlin.reflect.full.declaredMemberFunctions
@@ -18,7 +19,7 @@ class Once(private val before: BeforeHook) : SessionPersistingBeforeHook {
                               data: RequestData) {
     if (flag.compareAndSet(false, true)) {
 
-      val methods = before::class
+      val methods: KClass<out BeforeHook> = before::class
       for (method in methods.declaredMemberFunctions) {
         val parameters = method.parameters
 

@@ -10,15 +10,19 @@ import io.ktor.routing.routing
 import io.ktor.server.engine.ApplicationEngine
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
+import kotlinx.coroutines.debug.junit4.CoroutinesTimeout
 import kotlinx.coroutines.runBlocking
 import net.devslash.data.FileDataSupplier
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertTimeout
-import org.junit.jupiter.api.Test
-import java.time.Duration.ofSeconds
+import org.junit.Assert.assertEquals
+import org.junit.Rule
+import org.junit.Test
 import java.util.concurrent.CountDownLatch
 
 internal class HttpSessionManagerTest : ServerTest() {
+
+  @Rule
+  @JvmField
+  public val rule = CoroutinesTimeout(5000)
 
   override lateinit var appEngine: ApplicationEngine
 
@@ -28,6 +32,7 @@ internal class HttpSessionManagerTest : ServerTest() {
       routing {
         get("/") {
           call.response.header("set-cookie", "session=abcd")
+          call.response.header("Location", "invalid")
           call.response.status(HttpStatusCode.fromValue(302))
           call.respondText("Hi there")
         }
@@ -38,7 +43,7 @@ internal class HttpSessionManagerTest : ServerTest() {
     var cookie: String? = null
     var body: String? = null
     runBlocking {
-      runHttp {
+      runHttp({}) {
         call(address) {
           after {
             +object : BasicOutput {
@@ -61,29 +66,28 @@ internal class HttpSessionManagerTest : ServerTest() {
     appEngine = embeddedServer(Netty, serverPort) {
       routing {
         get("/") {
-          call.respond("")
+          // this cannot be the empty string. That turns out to stuff up the blocking on response code.
+          call.respond("A")
         }
       }
     }
     start()
-    val cores = Runtime.getRuntime().availableProcessors()
+    val testConcurrency = 2
 
-    assertTimeout(ofSeconds(5)) {
-      val countdown = CountDownLatch(cores)
-      val path = HttpSessionManagerTest::class.java.getResource("/testfile.log").path
-      runHttp {
-        concurrency = cores
-        call(address) {
-          after {
-            +object : SimpleAfterHook {
-              override fun accept(resp: HttpResponse) {
-                countdown.countDown()
-                countdown.await()
-              }
+    val countdown = CountDownLatch(testConcurrency)
+    val path = HttpSessionManagerTest::class.java.getResource("/testfile.log").path
+    runHttp {
+      concurrency = testConcurrency
+      call(address) {
+        after {
+          +object : SimpleAfterHook {
+            override fun accept(resp: HttpResponse) {
+              countdown.countDown()
+              countdown.await()
             }
           }
-          data = FileDataSupplier(name = path)
         }
+        data = FileDataSupplier(name = path)
       }
     }
   }

@@ -5,8 +5,8 @@ import io.mockk.coEvery
 import io.mockk.mockk
 import net.devslash.data.ListDataSupplier
 import net.devslash.util.getResponseWithBody
-import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.Test
+import org.junit.Assert.assertTrue
+import org.junit.Test
 
 class DelayTest {
 

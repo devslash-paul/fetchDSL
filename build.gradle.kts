@@ -1,12 +1,21 @@
 import com.jfrog.bintray.gradle.BintrayExtension
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
-extra["kotlinVersion"] = "1.3.30"
+buildscript {
+  project.extra.apply {
+    set("kotlinVersion", "1.3.50")
+    set("ktorVersion", "1.2.4")
+  }
+
+  dependencies {
+    classpath(kotlin("gradle-plugin", version = "1.3.50"))
+  }
+}
 
 plugins {
   base
   `maven-publish`
-  kotlin("jvm") version "1.3.30" apply false
+  kotlin("jvm") version "1.3.50" apply false
   id("com.jfrog.bintray") version "1.8.4" apply false
 }
 
@@ -21,7 +30,6 @@ allprojects {
   repositories {
     jcenter()
   }
-
 }
 
 subprojects {
@@ -42,9 +50,12 @@ subprojects {
     }
   }
 
-  tasks.getting(Test::class) {
-    useJUnitPlatform()
-  }
+//  tasks.withType(Test::class).configureEach {
+//    useJUnitPlatform()
+//    testLogging {
+//      events("passed", "skipped", "failed")
+//    }
+//  }
 
   configure<BintrayExtension> {
     user = project.findProperty("bintrayUser") as String? ?: System.getenv("BINTRAY_USER")

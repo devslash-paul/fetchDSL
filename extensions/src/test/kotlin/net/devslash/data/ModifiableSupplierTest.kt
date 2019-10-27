@@ -8,9 +8,7 @@ import net.devslash.util.getResponse
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.CoreMatchers.nullValue
 import org.hamcrest.MatcherAssert.assertThat
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.Timeout
-import java.util.concurrent.TimeUnit
+import org.junit.Test
 
 internal class ModifiableSupplierTest {
   @Test
@@ -24,8 +22,7 @@ internal class ModifiableSupplierTest {
     assertThat(data.getReplacements()["!1!"], equalTo("B"))
   }
 
-  @Test
-  @Timeout(value = 300, unit = TimeUnit.MILLISECONDS)
+  @Test(timeout = 300)
   fun testEmptyRequestDataReturnsNull() = runBlocking {
     val supplier = ModifiableSupplier(ListDataSupplier(listOf<String>()))
     assertThat(supplier.getDataForRequest(), nullValue())
@@ -44,8 +41,7 @@ internal class ModifiableSupplierTest {
     Unit
   }
 
-  @Test
-  @Timeout(value = 100, unit = TimeUnit.MILLISECONDS)
+  @Test(timeout = 100)
   fun testAddedOnlyReturnedOnce() = runBlocking {
     val supplier = ModifiableSupplier(ListDataSupplier(listOf<String>()))
     supplier.add(ListBasedRequestData(listOf()))

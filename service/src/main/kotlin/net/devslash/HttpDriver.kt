@@ -3,7 +3,7 @@ package net.devslash
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.ktor.client.HttpClient
 import io.ktor.client.call.call
-import io.ktor.client.engine.HttpClientEngine
+import io.ktor.client.engine.apache.Apache
 import io.ktor.client.request.forms.FormDataContent
 import io.ktor.client.request.headers
 import io.ktor.content.ByteArrayContent
@@ -13,11 +13,24 @@ import io.ktor.http.Headers
 import io.ktor.http.Parameters
 import io.ktor.util.cio.toByteArray
 import java.net.URL
+import kotlin.collections.List
+import kotlin.collections.Map
+import kotlin.collections.component1
+import kotlin.collections.component2
+import kotlin.collections.forEach
+import kotlin.collections.mutableMapOf
+import kotlin.collections.set
 
-class HttpDriver(http: HttpClientEngine, followRedirects: Boolean = false) : AutoCloseable {
+class HttpDriver(config: Config) : AutoCloseable {
 
-  private val client = HttpClient(http) {
-    this.followRedirects = followRedirects
+  private val client = HttpClient(Apache) {
+    engine {
+      connectTimeout = config.connectTimeout
+      connectionRequestTimeout = config.connectionRequestTimeout
+      socketTimeout = config.socketTimeout
+      followRedirects = config.followRedirects
+    }
+    followRedirects = config.followRedirects
   }
   private val mapper = ObjectMapper()
 
@@ -33,14 +46,14 @@ class HttpDriver(http: HttpClientEngine, followRedirects: Boolean = false) : Aut
           }
         }
         when (req.body) {
-          is JsonBody          -> {
+          is JsonBody -> {
             body = TextContent(mapper.writeValueAsString((req.body as JsonBody).get()),
-                ContentType.Application.Json)
+                    ContentType.Application.Json)
           }
           is BasicBodyProvider -> {
             body = ByteArrayContent((req.body as BasicBodyProvider).get().toByteArray())
           }
-          is FormBody          -> body = FormDataContent(Parameters.build {
+          is FormBody -> body = FormDataContent(Parameters.build {
             val prov = req.body as FormBody
             prov.get().forEach { (key, value) ->
               value.forEach {
@@ -58,7 +71,7 @@ class HttpDriver(http: HttpClientEngine, followRedirects: Boolean = false) : Aut
 
   private fun mapType(type: HttpMethod): io.ktor.http.HttpMethod {
     return when (type) {
-      HttpMethod.GET  -> io.ktor.http.HttpMethod.Get
+      HttpMethod.GET -> io.ktor.http.HttpMethod.Get
       HttpMethod.POST -> io.ktor.http.HttpMethod.Post
       HttpMethod.DELETE -> io.ktor.http.HttpMethod.Delete
       HttpMethod.PUT -> io.ktor.http.HttpMethod.Put
@@ -71,9 +84,9 @@ class HttpDriver(http: HttpClientEngine, followRedirects: Boolean = false) : Aut
   suspend fun mapResponse(request: io.ktor.client.response.HttpResponse): HttpResponse {
     val response = request.call.response
     return HttpResponse(URL(request.call.request.url.toString()),
-        response.status.value,
-        mapHeaders(response.headers),
-        response.content.toByteArray())
+            response.status.value,
+            mapHeaders(response.headers),
+            response.content.toByteArray())
   }
 
   private fun mapHeaders(headers: Headers): Map<String, List<String>> {

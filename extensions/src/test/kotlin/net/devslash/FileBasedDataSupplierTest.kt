@@ -2,8 +2,8 @@ package net.devslash
 
 import kotlinx.coroutines.runBlocking
 import net.devslash.data.FileDataSupplier
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Test
+import org.junit.Assert.assertEquals
+import org.junit.Test
 
 internal class FileBasedDataSupplierTest {
 
@@ -35,7 +35,8 @@ internal class FileBasedDataSupplierTest {
     }
   }
 
-  @Test fun testWithTabSeparator() = runBlocking {
+  @Test
+  fun testWithTabSeparator() = runBlocking {
     val path = FileDataSupplier::class.java.getResource("/tabspaced.log").path
     val dataSupplier = FileDataSupplier(path, "-")
 

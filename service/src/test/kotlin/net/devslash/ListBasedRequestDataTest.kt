@@ -2,7 +2,7 @@ package net.devslash
 
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.MatcherAssert.assertThat
-import org.junit.jupiter.api.Test
+import org.junit.Test
 
 internal class ListBasedRequestDataTest {
 

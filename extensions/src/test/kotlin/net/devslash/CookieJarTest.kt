@@ -5,8 +5,7 @@ import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.CoreMatchers.nullValue
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.core.IsEqual.equalTo
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
+import org.junit.Test
 import java.net.URL
 
 internal class CookieJarTest {
@@ -22,7 +21,8 @@ internal class CookieJarTest {
     assertThat(standardRequest.headers["Cookie"], equalTo(listOf("A=B")))
   }
 
-  @Test fun testMultipleCaseCookieSet() {
+  @Test
+  fun testMultipleCaseCookieSet() {
     jar.accept(
         responseWithHeaders(mapOf("set-Cookie" to listOf("A=B"), "SET-COOKIE" to listOf("C=D"))))
     jar.accept(standardRequest, requestDataFromList(listOf()))

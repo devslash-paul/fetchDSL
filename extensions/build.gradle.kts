@@ -7,10 +7,6 @@ val mockkVersion = "1.9.3"
 val junitVersion = "4.12"
 val kotlinVersion: String by project
 
-//tasks.test test{
-//  useJUnitPlatform()
-//}useJUnitPlatform
-
 dependencies {
   compile(kotlin("stdlib", kotlinVersion))
   compile(kotlin("reflect", kotlinVersion))

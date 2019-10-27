@@ -2,7 +2,6 @@ val kotlinVersion: String by project
 val ktorVersion: String by project
 
 val junitVersion = "4.12"
-apply(from = "../tests.gradle.kts")
 
 dependencies {
   compile(kotlin("stdlib", kotlinVersion))

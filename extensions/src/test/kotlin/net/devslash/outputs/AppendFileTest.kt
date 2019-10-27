@@ -13,7 +13,8 @@ import java.io.File
 internal class AppendFileTest {
 
   @Rule
-  val tmpDir = TemporaryFolder()
+  @JvmField
+  public val tmpDir = TemporaryFolder()
 
   @Test
   fun testSimpleAppendTest() {

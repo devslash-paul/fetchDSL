@@ -1,12 +1,14 @@
 val kotlinVersion: String by project
 val ktorVersion: String by project
 val junitVersion: String by project
+val ktorNettyVersion: String by project
 
 dependencies {
   implementation(kotlin("stdlib", kotlinVersion))
   implementation(project(":api"))
   implementation("io.ktor:ktor-client-core:$ktorVersion")
   implementation("io.ktor:ktor-client-apache:$ktorVersion")
+  implementation("io.ktor:ktor-server-netty:$ktorNettyVersion")
 
   implementation("com.fasterxml.jackson.core:jackson-core:2.9.8")
   implementation("com.fasterxml.jackson.core:jackson-databind:2.9.8")

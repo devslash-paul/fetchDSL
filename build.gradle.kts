@@ -5,6 +5,7 @@ buildscript {
   project.extra.apply {
     set("kotlinVersion", "1.3.50")
     set("ktorVersion", "1.2.4")
+    set("junitVersion", "4.12")
   }
 
   dependencies {

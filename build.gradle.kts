@@ -16,8 +16,7 @@ plugins {
   base
   `maven-publish`
   kotlin("jvm") version "1.3.50" apply false
-  id("com.jfrog.bintray") version "1.8.4" apply false
-}
+  id("com.jfrog.bintray") version "1.8.4" apply false }
 
 repositories {
   jcenter()
@@ -25,7 +24,7 @@ repositories {
 
 allprojects {
   group = "net.devslash.fetchdsl"
-  version = "0.15.0"
+  version = "0.16.0"
 
   repositories {
     jcenter()

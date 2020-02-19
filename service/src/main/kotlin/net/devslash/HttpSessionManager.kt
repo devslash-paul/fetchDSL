@@ -17,9 +17,10 @@ class HttpSessionManager(val engine: HttpDriver, private val session: Session) :
   private lateinit var sessionManager: SessionManager
 
   fun run() {
+    val jar = CookieJar()
     engine.use {
       sessionManager = this
-      session.calls.map { call(it, CookieJar()) }
+      session.calls.map { call(it, jar) }
     }
   }
 

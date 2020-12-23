@@ -3,10 +3,14 @@ package net.devslash
 import io.ktor.client.response.HttpResponse
 import io.mockk.coEvery
 import io.mockk.mockk
-import net.devslash.data.ListDataSupplier
-import net.devslash.util.getResponseWithBody
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.net.URL
+import java.util.concurrent.atomic.AtomicInteger
+
+fun getResponseWithBody(body: ByteArray): net.devslash.HttpResponse {
+  return HttpResponse(URL("http://example.com"), 200, mapOf(), body)
+}
 
 class DelayTest {
 
@@ -25,7 +29,16 @@ class DelayTest {
     HttpSessionManager(engine, SessionBuilder().apply {
       delay = 30
       call("http://example.org") {
-        data = ListDataSupplier(listOf(1, 2))
+        data = object : RequestDataSupplier<List<String>> {
+          val count = AtomicInteger(0)
+          override suspend fun getDataForRequest(): RequestData<List<String>>? {
+            if (count.incrementAndGet() > 2) {
+              return null
+            }
+            return ListBasedRequestData(listOf())
+          }
+
+        }
       }
     }.build()).run()
 

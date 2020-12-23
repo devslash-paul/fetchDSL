@@ -1,15 +1,17 @@
 package net.devslash.it
 
-import io.ktor.application.call
-import io.ktor.http.Headers
-import io.ktor.request.receiveText
-import io.ktor.response.respondText
-import io.ktor.routing.get
-import io.ktor.routing.post
-import io.ktor.routing.routing
-import io.ktor.server.engine.ApplicationEngine
+import io.ktor.application.*
+import io.ktor.http.*
+import io.ktor.request.*
+import io.ktor.response.*
+import io.ktor.routing.*
+import io.ktor.server.engine.*
 import kotlinx.coroutines.runBlocking
 import net.devslash.*
+import net.devslash.HttpMethod
+import net.devslash.data.Capture
+import net.devslash.data.ListDataSupplier
+import net.devslash.post.LogResponse
 import net.devslash.pre.SkipIf
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -41,6 +43,27 @@ class HttpBounceTest : ServerTest() {
     }
 
     assertEquals("RESULT", bodyResult)
+  }
+
+  @Test
+  fun testDataClassBasedCall() {
+    data class TClass(@Capture("!2!") val i: Int, val a: Boolean)
+    runWith {
+      routing {
+        get("/2") {
+          call.respond(HttpStatusCode.OK, "Nice")
+        }
+      }
+    }
+
+    runHttp {
+      call<TClass>("$address/!2!") {
+        data = ListDataSupplier(listOf(TClass(2, true))) {it}
+        after {
+          +LogResponse()
+        }
+      }
+    }
   }
 
   @Test
@@ -82,8 +105,9 @@ class HttpBounceTest : ServerTest() {
     }
 
     runHttp {
-      call(address) {
-        this.headers = mapOf("A" to listOf(ProvidedValue { r -> "!1!".asReplaceableValue().get(r) + "."}), "C" to listOf("D"))
+      call<Map<String, String>>(address) {
+        this.headers =
+          mapOf("A" to listOf(ProvidedValue<Map<String, String>> { it.get()["!1!"]!! + "." }), "C" to listOf("D"))
         data = SingleUseDataSupplier(mapOf("!1!" to "Hi"))
       }
     }
@@ -106,7 +130,7 @@ class HttpBounceTest : ServerTest() {
       runHttp {
         call(address) {
           before {
-            +SkipIf { true }
+            +SkipIf<String> { true }
           }
         }
       }

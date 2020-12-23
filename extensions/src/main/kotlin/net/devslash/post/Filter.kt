@@ -13,7 +13,7 @@ class FilterBuilder {
 class Filter(private val pred: (HttpResponse) -> Boolean,
              private val builder: FilterBuilder.() -> Unit) : FullDataAfterHook {
 
-  override fun accept(req: HttpRequest, resp: HttpResponse, data: RequestData) {
+  override fun <T> accept(req: HttpRequest, resp: HttpResponse, data: RequestData<T>) {
     val current = FilterBuilder().apply(builder)
     if (pred(resp)) {
       current.posts.forEach {

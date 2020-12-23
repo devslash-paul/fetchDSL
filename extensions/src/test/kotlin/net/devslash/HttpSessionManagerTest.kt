@@ -47,7 +47,7 @@ internal class HttpSessionManagerTest : ServerTest() {
         call(address) {
           after {
             +object : BasicOutput {
-              override fun accept(req: HttpRequest, resp: HttpResponse, data: RequestData) {
+              override fun <T> accept(req: HttpRequest, resp: HttpResponse, data: RequestData<T>) {
                 cookie = resp.headers["set-cookie"]!![0]
                 body = String(resp.body)
               }

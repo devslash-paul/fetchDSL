@@ -8,7 +8,7 @@ class DefaultHeaderTest {
 
   @Test
   fun testIfNoHeaderSetThenUserAgentExists() {
-    val call = CallBuilder("http://example.com").build()
+    val call = CallBuilder<String>("http://example.com").build()
 
     assertThat(call.headers,
         equalTo(mapOf<String, List<Any>>("User-Agent" to listOf(StrValue("FetchDSL (Apache-HttpAsyncClient + Kotlin, version not set)")))))
@@ -16,7 +16,7 @@ class DefaultHeaderTest {
 
   @Test
   fun testIfUserAgentSetItIsNotOverwritten() {
-     val call = CallBuilder("http://example.com").apply {
+     val call = CallBuilder<String>("http://example.com").apply {
        headers = mapOf<String, List<Any>>("User-Agent" to listOf("OVERRIDE"))
      }.build()
 

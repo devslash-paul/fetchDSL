@@ -7,9 +7,9 @@ import java.util.concurrent.Executors
 import java.util.concurrent.Semaphore
 import kotlin.coroutines.CoroutineContext
 
-typealias Contents = Pair<HttpRequest, RequestData>
+private typealias Contents<T> = Pair<HttpRequest, RequestData<T>>
 
-class HttpSessionManager(val engine: HttpDriver, private val session: Session) : SessionManager {
+internal class HttpSessionManager(val engine: HttpDriver, private val session: Session) : SessionManager {
 
   private val semaphore = Semaphore(0)
   private var lastCall = 0L
@@ -24,38 +24,48 @@ class HttpSessionManager(val engine: HttpDriver, private val session: Session) :
     }
   }
 
-  private suspend fun produceHttp(call: Call,
-                                  jar: CookieJar, channel: Channel<Envelope<Contents>>) {
+  private suspend fun <T> produceHttp(
+    call: Call<T>,
+    jar: CookieJar, channel: Channel<Envelope<Contents<T>>>
+  ) {
     val dataSupplier = handleNoSupplier(call.dataSupplier)
 
     while (true) {
-      val data = dataSupplier.getDataForRequest() ?: break
+      // This is _relatively_ safe because the type T is captured in the build of the call. Someone using the DSL
+      // can't stuff this up
+      @Suppress("UNCHECKED_CAST")
+      val data = dataSupplier.getDataForRequest() as RequestData<T>? ?: break
       val req = mapHttpRequest(call, data)
       // Call the prerequesites
       val preRequest = call.beforeHooks.toMutableList()
       preRequest.add(jar)
 
       val shouldSkip =
-              preRequest.filter { it is SkipBeforeHook }.any { (it as SkipBeforeHook).skip(data) }
+        preRequest.filter { it is SkipBeforeHook<*> }.any { (it as SkipBeforeHook<T>).skip(data) }
       if (shouldSkip) continue
 
       preRequest.forEach {
         when (it) {
           is SimpleBeforeHook -> it.accept(req, data)
-          is SessionPersistingBeforeHook -> it.accept(sessionManager, jar, req, data)
+          is SessionPersistingBeforeHook -> it.accept(
+            sessionManager,
+            jar,
+            req,
+            data
+          )
         }
       }
       call.headers?.forEach { entry ->
         entry.value.forEach {
           val s = when (it) {
             is StrValue -> it.value
-            is ProvidedValue -> it.lambda(data)
+            is ProvidedValue<*> -> (it as ProvidedValue<T>).lambda(data)
           }
           req.addHeader(entry.key, s)
         }
       }
 
-      if(channel.offer(Envelope(Pair(req, data)))) {
+      if (channel.offer(Envelope(Pair(req, data)))) {
         continue
       } else {
         channel.send(Envelope(Pair(req, data)))
@@ -64,14 +74,15 @@ class HttpSessionManager(val engine: HttpDriver, private val session: Session) :
     channel.close()
   }
 
-  override fun call(call: Call) = call(call, CookieJar())
+  override fun <T> call(call: Call<T>) = call(call, CookieJar())
 
-  override fun call(call: Call, jar: CookieJar) = runBlocking {
+
+  override fun <T> call(call: Call<T>, jar: CookieJar) = runBlocking {
     // Okay, so in here we're going to do the one to many calls we have to to get this to run.
-    val channel: Channel<Envelope<Pair<HttpRequest, RequestData>>> =
-            Channel(session.concurrency * 2)
+    val channel: Channel<Envelope<Pair<HttpRequest, RequestData<T>>>> =
+      Channel(session.concurrency * 2)
     val produceThreadPool = System.getProperty("PRODUCE_THREAD_POOL_SIZE")?.toInt()
-            ?: Runtime.getRuntime().availableProcessors()
+      ?: Runtime.getRuntime().availableProcessors()
     val produceExecutor = Executors.newFixedThreadPool(produceThreadPool)
     val produceDispatcher = produceExecutor.asCoroutineDispatcher()
     launch(produceDispatcher) { produceHttp(call, jar, channel) }
@@ -99,11 +110,13 @@ class HttpSessionManager(val engine: HttpDriver, private val session: Session) :
     val jobs = mutableListOf<Job>()
     val concurrency = if (hasDelay) 1 else session.concurrency
     repeat(concurrency) {
-      jobs += launchHttpProcessor(call,
-              limiter,
-              afterRequest,
-              channel,
-              dispatcher)
+      jobs += launchHttpProcessor(
+        call,
+        limiter,
+        afterRequest,
+        channel,
+        dispatcher
+      )
     }
     jobs.joinAll()
     produceExecutor.shutdownNow()
@@ -111,11 +124,13 @@ class HttpSessionManager(val engine: HttpDriver, private val session: Session) :
     Unit
   }
 
-  private fun CoroutineScope.launchHttpProcessor(call: Call,
-                                                 rateLimiter: AcquiringRateLimiter,
-                                                 afterRequest: List<AfterHook>,
-                                                 channel: Channel<Envelope<Pair<HttpRequest, RequestData>>>,
-                                                 dispatcher: CoroutineContext) = launch(dispatcher) {
+  private fun <T> CoroutineScope.launchHttpProcessor(
+    call: Call<T>,
+    rateLimiter: AcquiringRateLimiter,
+    afterRequest: List<AfterHook>,
+    channel: Channel<Envelope<Pair<HttpRequest, RequestData<T>>>>,
+    dispatcher: CoroutineContext
+  ) = launch(dispatcher) {
     for (next in channel) {
       // ensure that this is a valid request
       if (next.shouldProceed()) {
@@ -140,14 +155,16 @@ class HttpSessionManager(val engine: HttpDriver, private val session: Session) :
     }
   }
 
-  private suspend fun handleFailure(call: Call,
-                                    channel: Channel<Envelope<Pair<HttpRequest, RequestData>>>,
-                                    next: Envelope<Pair<HttpRequest, RequestData>>,
-                                    request: Failure<java.lang.Exception>) {
+  private suspend fun <T> handleFailure(
+    call: Call<T>,
+    channel: Channel<Envelope<Pair<HttpRequest, RequestData<T>>>>,
+    next: Envelope<Pair<HttpRequest, RequestData<T>>>,
+    request: Failure<java.lang.Exception>
+  ) {
     call.onError?.let {
       when (it) {
         is ChannelReceiving<*> -> {
-          (it as ChannelReceiving<Contents>).accept(channel, next, request.err)
+          (it as ChannelReceiving<Contents<T>>).accept(channel, next, request.err)
         }
         else -> {
           throw request.err
@@ -156,7 +173,7 @@ class HttpSessionManager(val engine: HttpDriver, private val session: Session) :
     }
   }
 
-  private fun mapHttpRequest(call: Call, data: RequestData): HttpRequest {
+  private fun <T> mapHttpRequest(call: Call<T>, data: RequestData<T>): HttpRequest {
     val url = getUrlProvider(call, data)
     val body = getBodyProvider(call, data)
     val currentUrl = url.get()

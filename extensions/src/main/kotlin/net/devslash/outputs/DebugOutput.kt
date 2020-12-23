@@ -5,7 +5,7 @@ import net.devslash.OutputFormat
 import net.devslash.RequestData
 
 class DebugOutput : OutputFormat {
-  override fun accept(resp: HttpResponse, rep: RequestData): ByteArray? {
+  override fun <T> accept(resp: HttpResponse, rep: RequestData<T>): ByteArray? {
     return """
               ----------------
               url: ${resp.url}

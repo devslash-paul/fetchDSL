@@ -8,7 +8,7 @@ internal class SkipIfTest {
 
   @Test
   fun testSkipIf() {
-    val skip = SkipIf { true }
+    val skip = SkipIf<List<String>> { true }
     val result = skip.skip(ListBasedRequestData(listOf()))
     assertTrue(result)
   }

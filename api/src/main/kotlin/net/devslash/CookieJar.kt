@@ -6,7 +6,7 @@ import java.util.concurrent.ConcurrentHashMap
 class CookieJar : SimpleBeforeHook, SimpleAfterHook {
   private val cookies = ConcurrentHashMap(mutableMapOf<String, MutableMap<String, String>>())
 
-  override fun accept(req: HttpRequest, data: RequestData) {
+  override fun <T> accept(req: HttpRequest, data: RequestData<T>) {
     val basicURl = URL(req.url)
     val filteredUrl = "${basicURl.protocol}://${basicURl.host}"
 

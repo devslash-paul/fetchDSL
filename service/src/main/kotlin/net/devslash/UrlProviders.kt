@@ -1,12 +1,14 @@
 package net.devslash
 
-private class OverwrittenUrlProvider(private val url: String,
-                                     private val replacements: RequestData) : URLProvider {
+private class OverwrittenUrlProvider<T>(
+  private val url: String,
+  private val replacements: RequestData<T>
+) : URLProvider {
   override fun get(): String {
-    return url.asReplaceableValue().get(replacements)
+    return replacements.accept(url)
   }
 }
 
-fun getUrlProvider(call: Call, data: RequestData): URLProvider {
+internal fun <T> getUrlProvider(call: Call<T>, data: RequestData<T>): URLProvider {
   return OverwrittenUrlProvider(call.url, data)
 }

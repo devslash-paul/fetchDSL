@@ -2,8 +2,8 @@ package net.devslash.pipes
 
 import kotlinx.coroutines.runBlocking
 import net.devslash.HttpResponse
+import net.devslash.ListBasedRequestData
 import net.devslash.util.getBasicRequest
-import net.devslash.util.requestDataFromList
 import org.hamcrest.CoreMatchers.*
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Test
@@ -13,19 +13,19 @@ internal class PipeTest {
 
   @Test
   fun testPipeStartsEmpty() = runBlocking {
-    val pipe = Pipe({ _, _ -> listOf("A", "B") }, null)
+    val pipe = Pipe<Any>({ _, _ -> listOf("A", "B") }, null)
 
     assertThat(pipe.getDataForRequest(), nullValue())
   }
 
   @Test
   fun testPipeSingleCase() = runBlocking {
-    val pipe = Pipe({ r, _ -> listOf(String(r.body)) }, null)
+    val pipe = Pipe<Any>({ r, _ -> listOf(String(r.body)) }, null)
 
     pipe.accept(
         getBasicRequest(),
         HttpResponse(URL("http://"), 200, mapOf(), "result".toByteArray()),
-      requestDataFromList(listOf())
+      ListBasedRequestData<String>(listOf())
     )
 
     val data = pipe.getDataForRequest()!!
@@ -36,11 +36,11 @@ internal class PipeTest {
 
   @Test
   fun testPipeSplitsCorrectly() = runBlocking {
-    val pipe = Pipe({ _, _ -> listOf("a b c") }, " ")
+    val pipe = Pipe<Any>({ _, _ -> listOf("a b c") }, " ")
     pipe.accept(
         getBasicRequest(),
         HttpResponse(URL("http://"), 200, mapOf(), byteArrayOf()),
-      requestDataFromList(listOf())
+      ListBasedRequestData<String>(listOf())
     )
 
     val data = pipe.getDataForRequest()!!
@@ -51,11 +51,11 @@ internal class PipeTest {
   @Test
   fun testPipeCanReturnMultipleResults() = runBlocking {
     val vals = listOf("a", "b", "c")
-    val pipe = Pipe({ _, _ -> vals }, " ")
+    val pipe = Pipe<Any>({ _, _ -> vals }, " ")
     pipe.accept(
         getBasicRequest(),
         HttpResponse(URL("http://"), 200, mapOf(), byteArrayOf()),
-      requestDataFromList(listOf())
+      ListBasedRequestData<String>(listOf())
     )
 
     vals.forEach {
@@ -65,21 +65,21 @@ internal class PipeTest {
 
   @Test
   fun testPipeAcceptsMultipleAndReturnsInOrder() = runBlocking {
-    val pipe = Pipe({ r, _ -> listOf(String(r.body)) }, " ")
+    val pipe = Pipe<Any>({ r, _ -> listOf(String(r.body)) }, " ")
     pipe.accept(
         getBasicRequest(),
         HttpResponse(URL("http://"), 200, mapOf(), "a".toByteArray()),
-      requestDataFromList(listOf())
+      ListBasedRequestData<String>(listOf())
     )
     pipe.accept(
         getBasicRequest(),
         HttpResponse(URL("http://"), 200, mapOf(), "b".toByteArray()),
-      requestDataFromList(listOf())
+      ListBasedRequestData<String>(listOf())
     )
     pipe.accept(
         getBasicRequest(),
         HttpResponse(URL("http://"), 200, mapOf(), "c".toByteArray()),
-      requestDataFromList(listOf())
+      ListBasedRequestData<String>(listOf())
     )
 
     val values = listOf("a", "b", "c")

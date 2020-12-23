@@ -15,7 +15,7 @@ import kotlin.math.max
  * This means that the rate limiter effectively has no memory of the past, beyond the call before. This means that if
  * there is inconsistency with how fast requests are performed, then the rate limit may be over-restrictive.
  */
-class AcquiringRateLimiter(private val rateLimitOptions: RateLimitOptions, private val clock: Clock = Clock.systemUTC()) {
+internal class AcquiringRateLimiter(private val rateLimitOptions: RateLimitOptions, private val clock: Clock = Clock.systemUTC()) {
   private var lastRelease = Instant.ofEpochMilli(0)
   // This equals how many milliseconds it takes to release a ticket
   private val qps = rateLimitOptions.duration.toMillis() / max(1, rateLimitOptions.count)

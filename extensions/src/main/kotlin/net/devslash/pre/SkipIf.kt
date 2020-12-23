@@ -3,8 +3,8 @@ package net.devslash.pre
 import net.devslash.RequestData
 import net.devslash.SkipBeforeHook
 
-class SkipIf(private val predicate: (RequestData) -> Boolean): SkipBeforeHook {
-  override fun skip(requestData: RequestData): Boolean {
+class SkipIf<T>(private val predicate: (RequestData<T>) -> Boolean): SkipBeforeHook<T> {
+  override fun skip(requestData: RequestData<T>): Boolean {
     return predicate(requestData)
   }
 }

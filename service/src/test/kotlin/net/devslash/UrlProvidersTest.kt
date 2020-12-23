@@ -1,7 +1,5 @@
 package net.devslash
 
-import net.devslash.util.getCall
-import net.devslash.util.requestDataFromList
 import org.junit.Assert.assertEquals
 import org.junit.Test
 

@@ -17,7 +17,7 @@ buildscript {
 plugins {
   base
   `maven-publish`
-  kotlin("jvm") version "1.3.50" apply false
+  kotlin("jvm") version "1.4.20" apply false
   id("com.jfrog.bintray") version "1.8.4" apply false }
 
 repositories {
@@ -50,13 +50,6 @@ subprojects {
       jvmTarget = "1.8"
     }
   }
-
-//  tasks.withType(Test::class).configureEach {
-//    useJUnitPlatform()
-//    testLogging {
-//      events("passed", "skipped", "failed")
-//    }
-//  }
 
   configure<BintrayExtension> {
     user = project.findProperty("bintrayUser") as String? ?: System.getenv("BINTRAY_USER")

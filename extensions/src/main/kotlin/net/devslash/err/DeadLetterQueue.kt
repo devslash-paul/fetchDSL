@@ -8,15 +8,15 @@ import net.devslash.RequestData
 import java.io.File
 
 class DeadLetterQueue(filename: String,
-                      private val split: String = " ") : ChannelReceiving<Pair<HttpRequest, RequestData>> {
+                      private val split: String = " ") : ChannelReceiving<Pair<HttpRequest, RequestData<*>>> {
   private val file = File(filename)
 
   init {
     file.createNewFile()
   }
 
-  override suspend fun accept(channel: Channel<Envelope<Pair<HttpRequest, RequestData>>>,
-                              envelope: Envelope<Pair<HttpRequest, RequestData>>,
+  override suspend fun accept(channel: Channel<Envelope<Pair<HttpRequest, RequestData<*>>>>,
+                              envelope: Envelope<Pair<HttpRequest, RequestData<*>>>,
                               e: Exception) {
     val data = envelope.get().second.getReplacements()
     var builder = ""

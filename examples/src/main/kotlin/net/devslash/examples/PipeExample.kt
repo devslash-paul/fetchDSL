@@ -1,20 +1,18 @@
 package net.devslash.examples
 
-import io.ktor.application.call
-import io.ktor.response.respondText
-import io.ktor.routing.get
-import io.ktor.routing.routing
-import io.ktor.server.engine.embeddedServer
-import io.ktor.server.netty.Netty
-import net.devslash.data.FileDataSupplier
-import net.devslash.outputs.WriteFile
+import io.ktor.application.*
+import io.ktor.response.*
+import io.ktor.routing.*
+import io.ktor.server.engine.*
+import io.ktor.server.netty.*
+import net.devslash.data.ListDataSupplier
 import net.devslash.pipes.ResettablePipe
 import net.devslash.runHttp
 import java.net.ServerSocket
 import java.util.concurrent.TimeUnit
 
 fun main() {
-  val pipe = ResettablePipe({ r, _ -> listOf(String(r.body)) })
+  val pipe = ResettablePipe<String> { r, _ -> listOf(String(r.body)) }
   val port = ServerSocket(0).use { it.localPort }
   val server = embeddedServer(Netty, port) {
     routing {
@@ -27,10 +25,11 @@ fun main() {
   val address = "http://localhost:$port"
   runHttp {
     call(address) {
-      data = FileDataSupplier(this.javaClass.getResource("/in.log").path)
+      // Ok this asserting that it passesa round List types as its big object. therefore this should
+      data = ListDataSupplier(listOf("1"))
       after {
         +pipe
-        +WriteFile("!1!")
+//        +WriteFileeFile<Int>("!1!")
       }
     }
     call(address) {

@@ -1,6 +1,5 @@
 package net.devslash
 
-import net.devslash.data.ListDataSupplier
 import org.openjdk.jmh.annotations.*
 import java.util.concurrent.TimeUnit
 

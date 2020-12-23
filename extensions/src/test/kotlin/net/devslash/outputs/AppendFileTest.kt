@@ -14,7 +14,7 @@ internal class AppendFileTest {
 
   @Rule
   @JvmField
-  public val tmpDir = TemporaryFolder()
+  val tmpDir = TemporaryFolder()
 
   @Test
   fun testSimpleAppendTest() {
@@ -23,10 +23,10 @@ internal class AppendFileTest {
 
     appender.accept(getBasicRequest(),
         getResponseWithBody("abc".toByteArray()),
-        ListBasedRequestData())
+        ListBasedRequestData(listOf<String>()))
     appender.accept(getBasicRequest(),
         getResponseWithBody("def".toByteArray()),
-        ListBasedRequestData())
+        ListBasedRequestData(listOf<String>()))
 
     assertThat(file.readText(), equalTo("abc\ndef\n"))
   }

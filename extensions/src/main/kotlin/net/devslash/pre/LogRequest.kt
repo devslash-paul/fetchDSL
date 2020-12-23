@@ -5,7 +5,7 @@ import net.devslash.RequestData
 import net.devslash.SimpleBeforeHook
 
 class LogRequest : SimpleBeforeHook {
-  override fun accept(req: HttpRequest, data: RequestData) {
+  override fun <T> accept(req: HttpRequest, data: RequestData<T>) {
     println("Requesting to ${req.url}")
   }
 }

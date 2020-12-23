@@ -8,7 +8,7 @@ internal class ListBasedRequestDataTest {
 
   @Test
   fun testEmptyRequestData() {
-    val data = ListBasedRequestData(emptyList())
+    val data = ListBasedRequestData(emptyList<Any>())
     assertThat(data.getReplacements(), equalTo(emptyMap()))
   }
 

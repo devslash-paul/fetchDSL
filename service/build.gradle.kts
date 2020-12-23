@@ -2,6 +2,11 @@ val kotlinVersion: String by project
 val ktorVersion: String by project
 val junitVersion: String by project
 val ktorNettyVersion: String by project
+val mockkVersion = "1.9.3"
+
+kotlin {
+  explicitApi()
+}
 
 dependencies {
   implementation(kotlin("stdlib", kotlinVersion))
@@ -17,6 +22,7 @@ dependencies {
   implementation("org.apache.httpcomponents:httpclient:4.5")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.2")
 
+  testImplementation("io.mockk:mockk:$mockkVersion")
   testImplementation("junit:junit:$junitVersion")
   testImplementation(project(":test-utils"))
   testImplementation("io.ktor:ktor-client-mock-jvm:$ktorVersion")

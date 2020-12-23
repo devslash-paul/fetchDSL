@@ -3,28 +3,24 @@ package net.devslash.pipes
 import net.devslash.*
 import java.util.concurrent.atomic.AtomicInteger
 
-class ResettablePipe(val acceptor: (HttpResponse, RequestData) -> List<String>,
-                     private val split: String? = null) : BasicOutput, RequestDataSupplier {
+class ResettablePipe<T>(
+  val acceptor: (HttpResponse, RequestData<T>) -> List<T>
+) : BasicOutput, RequestDataSupplier<List<T>> {
 
   private val index = AtomicInteger(0)
-  private val storage = mutableListOf<String>()
+  private val storage = mutableListOf<T>()
 
-  override suspend fun getDataForRequest(): RequestData? {
+  override suspend fun getDataForRequest(): RequestData<List<T>>? {
     val currentValue = storage.getOrNull(index.getAndIncrement()) ?: return null
-
-    val line = if (split != null) {
-      currentValue.split(split)
-    } else listOf(currentValue)
-
-    return ListBasedRequestData(line)
+    return ListBasedRequestData(listOf(currentValue))
   }
 
   override fun init() {
     reset()
   }
 
-  override fun accept(req: HttpRequest, resp: HttpResponse, data: RequestData) {
-    val newResults = acceptor(resp, data)
+  override fun <K> accept(req: HttpRequest, resp: HttpResponse, data: RequestData<K>) {
+    val newResults = acceptor(resp, data as RequestData<T>)
     storage.addAll(newResults)
   }
 

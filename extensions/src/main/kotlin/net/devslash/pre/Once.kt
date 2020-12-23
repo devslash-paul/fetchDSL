@@ -13,10 +13,10 @@ class Once(private val before: BeforeHook) : SessionPersistingBeforeHook {
 
   private val flag = AtomicBoolean(false)
 
-  override suspend fun accept(sessionManager: SessionManager,
+  override suspend fun <T> accept(sessionManager: SessionManager,
                               cookieJar: CookieJar,
                               req: HttpRequest,
-                              data: RequestData) {
+                              data: RequestData<T>) {
     if (flag.compareAndSet(false, true)) {
 
       val methods: KClass<out BeforeHook> = before::class

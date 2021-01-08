@@ -165,7 +165,7 @@ class HttpSessionManager(val engine: HttpDriver, private val session: Session) :
     return HttpRequest(type, currentUrl, body)
   }
 
-  private suspend fun makeRequest(modelRequest: HttpRequest): HttpResult<io.ktor.client.response.HttpResponse, java.lang.Exception> {
+  private suspend fun makeRequest(modelRequest: HttpRequest): HttpResult<io.ktor.client.statement.HttpResponse, java.lang.Exception> {
     maybeDelay()
     val result = engine.call(modelRequest)
     lastCall = clock.millis()

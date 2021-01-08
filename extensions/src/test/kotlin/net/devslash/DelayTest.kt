@@ -1,6 +1,6 @@
 package net.devslash
 
-import io.ktor.client.response.HttpResponse
+import io.ktor.client.statement.HttpResponse
 import io.mockk.coEvery
 import io.mockk.mockk
 import net.devslash.data.ListDataSupplier

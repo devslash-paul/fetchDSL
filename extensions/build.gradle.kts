@@ -3,6 +3,7 @@ val junitVersion: String by project
 val kotlinVersion: String by project
 val ktorVersion: String by project
 val ktorNettyVersion: String by project
+val kotlinxCoroutinesVersion: String by project
 
 dependencies {
   implementation(kotlin("stdlib", kotlinVersion))
@@ -14,10 +15,10 @@ dependencies {
   implementation("io.ktor:ktor-client-core:$ktorVersion")
 
   implementation("com.google.code.gson:gson:2.3.1")
-  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.2")
+  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinxCoroutinesVersion")
 
   testImplementation("io.mockk:mockk:$mockkVersion")
-  testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-debug:1.3.2")
+  testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-debug:$kotlinxCoroutinesVersion")
   testImplementation("junit:junit:$junitVersion")
   testImplementation(project(":test-utils"))
   testImplementation("org.hamcrest:hamcrest-core:1.3")

@@ -2,16 +2,16 @@ package net.devslash
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.ktor.client.HttpClient
-import io.ktor.client.call.call
 import io.ktor.client.engine.apache.Apache
+import io.ktor.client.request.*
 import io.ktor.client.request.forms.FormDataContent
-import io.ktor.client.request.headers
+import io.ktor.client.statement.*
 import io.ktor.content.ByteArrayContent
 import io.ktor.content.TextContent
 import io.ktor.http.ContentType
 import io.ktor.http.Headers
 import io.ktor.http.Parameters
-import io.ktor.util.cio.toByteArray
+import io.ktor.util.*
 import java.net.URL
 import kotlin.collections.List
 import kotlin.collections.Map
@@ -21,7 +21,7 @@ import kotlin.collections.forEach
 import kotlin.collections.mutableMapOf
 import kotlin.collections.set
 
-class HttpDriver(config: Config) : AutoCloseable {
+public class HttpDriver(config: Config) : AutoCloseable {
 
   private val client = HttpClient(Apache) {
     engine {
@@ -34,9 +34,9 @@ class HttpDriver(config: Config) : AutoCloseable {
   }
   private val mapper = ObjectMapper()
 
-  suspend fun call(req: HttpRequest): HttpResult<io.ktor.client.response.HttpResponse, java.lang.Exception> {
+  public suspend fun call(req: HttpRequest): HttpResult<io.ktor.client.statement.HttpResponse, java.lang.Exception> {
     try {
-      val resp = client.call(req.url) {
+      val resp = client.request<io.ktor.client.statement.HttpResponse>(req.url) {
         method = mapType(req.type)
         headers {
           req.headers.forEach {
@@ -63,7 +63,7 @@ class HttpDriver(config: Config) : AutoCloseable {
           })
         }
       }
-      return Success(resp.response)
+      return Success(resp)
     } catch (e: Exception) {
       return Failure(e)
     }
@@ -81,9 +81,9 @@ class HttpDriver(config: Config) : AutoCloseable {
     }
   }
 
-  suspend fun mapResponse(request: io.ktor.client.response.HttpResponse): HttpResponse {
-    val response = request.call.response
-    return HttpResponse(URL(request.call.request.url.toString()),
+  public suspend fun mapResponse(response: io.ktor.client.statement.HttpResponse): HttpResponse {
+    val response = response.call.response
+    return HttpResponse(URL(response.call.request.url.toString()),
             response.status.value,
             mapHeaders(response.headers),
             response.content.toByteArray())

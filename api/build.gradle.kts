@@ -1,6 +1,9 @@
+val kotlinxCoroutinesVersion: String by project
+val kotlinVersion: String by project
+
 dependencies {
-  implementation(kotlin("stdlib", "1.3.30"))
+  implementation(kotlin("stdlib", kotlinVersion))
 
   implementation("org.jetbrains.kotlin:kotlin-stdlib")
-  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.2")
+  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinxCoroutinesVersion")
 }

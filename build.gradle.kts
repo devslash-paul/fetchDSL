@@ -3,10 +3,11 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 buildscript {
   project.extra.apply {
-    set("kotlinVersion", "1.3.50")
-    set("ktorVersion", "1.2.4")
+    set("kotlinVersion", "1.4.20")
+    set("ktorVersion", "1.4.1")
     set("junitVersion", "4.12")
     set("ktorNettyVersion", "1.1.4")
+    set("kotlinxCoroutinesVersion", "1.4.2")
   }
 
   dependencies {
@@ -26,7 +27,7 @@ repositories {
 
 allprojects {
   group = "net.devslash.fetchdsl"
-  version = "0.16.3"
+  version = "0.16.4"
 
   repositories {
     jcenter()

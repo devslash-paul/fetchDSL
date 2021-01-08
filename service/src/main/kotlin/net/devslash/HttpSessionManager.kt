@@ -5,6 +5,7 @@ import kotlinx.coroutines.channels.Channel
 import java.time.Clock
 import java.util.concurrent.Executors
 import java.util.concurrent.Semaphore
+import java.util.concurrent.atomic.AtomicReference
 import kotlin.coroutines.CoroutineContext
 
 typealias Contents = Pair<HttpRequest, RequestData>
@@ -20,7 +21,12 @@ class HttpSessionManager(val engine: HttpDriver, private val session: Session) :
     val jar = CookieJar()
     engine.use {
       sessionManager = this
-      session.calls.map { call(it, jar) }
+      for (call in session.calls) {
+        val res = call(call, jar)
+        if (res != null) {
+          throw RuntimeException(res)
+        }
+      }
     }
   }
 
@@ -66,12 +72,12 @@ class HttpSessionManager(val engine: HttpDriver, private val session: Session) :
 
   override fun call(call: Call) = call(call, CookieJar())
 
-  override fun call(call: Call, jar: CookieJar) = runBlocking {
+  override fun call(call: Call, jar: CookieJar) = runBlocking(Dispatchers.Default) {
     // Okay, so in here we're going to do the one to many calls we have to to get this to run.
     val channel: Channel<Envelope<Pair<HttpRequest, RequestData>>> =
-            Channel(session.concurrency * 2)
+      Channel(session.concurrency * 2)
     val produceThreadPool = System.getProperty("PRODUCE_THREAD_POOL_SIZE")?.toInt()
-            ?: Runtime.getRuntime().availableProcessors()
+      ?: Runtime.getRuntime().availableProcessors()
     val produceExecutor = Executors.newFixedThreadPool(produceThreadPool)
     val produceDispatcher = produceExecutor.asCoroutineDispatcher()
     launch(produceDispatcher) { produceHttp(call, jar, channel) }
@@ -98,44 +104,58 @@ class HttpSessionManager(val engine: HttpDriver, private val session: Session) :
 
     val jobs = mutableListOf<Job>()
     val concurrency = if (hasDelay) 1 else session.concurrency
+    val storedException = AtomicReference<Exception>(null)
     repeat(concurrency) {
-      jobs += launchHttpProcessor(call,
-              limiter,
-              afterRequest,
-              channel,
-              dispatcher)
+      jobs += launchHttpProcessor(
+        call,
+        limiter,
+        afterRequest,
+        channel,
+        dispatcher,
+        storedException
+      )
     }
     jobs.joinAll()
     produceExecutor.shutdownNow()
     httpThreadPool.shutdownNow()
-    Unit
+    storedException.get()
   }
 
-  private fun CoroutineScope.launchHttpProcessor(call: Call,
-                                                 rateLimiter: AcquiringRateLimiter,
-                                                 afterRequest: List<AfterHook>,
-                                                 channel: Channel<Envelope<Pair<HttpRequest, RequestData>>>,
-                                                 dispatcher: CoroutineContext) = launch(dispatcher) {
+  private fun CoroutineScope.launchHttpProcessor(
+    call: Call,
+    rateLimiter: AcquiringRateLimiter,
+    afterRequest: List<AfterHook>,
+    channel: Channel<Envelope<Pair<HttpRequest, RequestData>>>,
+    dispatcher: CoroutineContext,
+    storedException: AtomicReference<Exception>
+  ) = launch(dispatcher) {
     for (next in channel) {
       // ensure that this is a valid request
-      if (next.shouldProceed()) {
-        val contents = next.get()
-        rateLimiter.acquire()
-        when (val request = makeRequest(contents.first)) {
-          is Failure -> {
-            handleFailure(call, channel, next, request)
-          }
-          is Success -> {
-            val resp = engine.mapResponse(request.value)
-            afterRequest.forEach {
-              when (it) {
-                is SimpleAfterHook -> it.accept(resp.copy())
-                is ChainReceivingResponseHook -> it.accept(resp)
-                is FullDataAfterHook -> it.accept(contents.first, resp, contents.second)
+      if (storedException.get() != null) {
+        break
+      }
+      try {
+        if (next.shouldProceed()) {
+          val contents = next.get()
+          rateLimiter.acquire()
+          when (val request = makeRequest(contents.first)) {
+            is Failure -> {
+              handleFailure(call, channel, next, request)
+            }
+            is Success -> {
+              val resp = engine.mapResponse(request.value)
+              afterRequest.forEach {
+                when (it) {
+                  is SimpleAfterHook -> it.accept(resp.copy())
+                  is ChainReceivingResponseHook -> it.accept(resp)
+                  is FullDataAfterHook -> it.accept(contents.first, resp, contents.second)
+                }
               }
             }
           }
         }
+      } catch (e: Exception) {
+        storedException.set(e)
       }
     }
   }

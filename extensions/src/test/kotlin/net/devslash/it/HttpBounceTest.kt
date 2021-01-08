@@ -1,15 +1,14 @@
 package net.devslash.it
 
-import io.ktor.application.call
-import io.ktor.http.Headers
-import io.ktor.request.receiveText
-import io.ktor.response.respondText
-import io.ktor.routing.get
-import io.ktor.routing.post
-import io.ktor.routing.routing
-import io.ktor.server.engine.ApplicationEngine
+import io.ktor.application.*
+import io.ktor.http.*
+import io.ktor.request.*
+import io.ktor.response.*
+import io.ktor.routing.*
+import io.ktor.server.engine.*
 import kotlinx.coroutines.runBlocking
 import net.devslash.*
+import net.devslash.HttpMethod
 import net.devslash.pre.SkipIf
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse

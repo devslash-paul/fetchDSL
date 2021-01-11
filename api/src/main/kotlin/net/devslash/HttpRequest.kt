@@ -1,9 +1,10 @@
 package net.devslash
 
 import java.net.URL
+import java.util.*
 
 class HttpRequest(val type: HttpMethod, val url: String, val body: BodyProvider) {
-  val headers = mutableMapOf<String, MutableList<String>>()
+  val headers = TreeMap<String, MutableList<String>>(String.CASE_INSENSITIVE_ORDER)
 
   fun addHeader(name: String, value: String) {
     if (headers[name] == null) {

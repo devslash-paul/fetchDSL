@@ -1,6 +1,8 @@
 package net.devslash
 
+import java.net.HttpCookie
 import java.net.URL
+import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
 class CookieJar : SimpleBeforeHook, SimpleAfterHook {
@@ -13,10 +15,10 @@ class CookieJar : SimpleBeforeHook, SimpleAfterHook {
     synchronized(this) {
       val siteCookies = cookies[filteredUrl]
 
-      siteCookies?.let {
+      siteCookies?.let { found ->
         // defensive copy
-        val cookies = HashMap(it)
-        val cookie = cookies.map { "${it.key}=${it.value}" }.joinToString("; ")
+        val cookies = found.toList()
+        val cookie = cookies.joinToString("; ") { "${it.first}=${it.second}" }
         req.addHeader("Cookie", cookie)
       }
     }
@@ -25,17 +27,14 @@ class CookieJar : SimpleBeforeHook, SimpleAfterHook {
   override fun accept(resp: HttpResponse) {
     // we need to sort via the domain name + the security
     val filteredUrl = "${resp.url.protocol}://${resp.url.host}"
-    resp.headers.filterKeys { it.equals("Set-Cookie", true) }
-        .forEach {
-          it.value.forEach { a ->
-            val cook = a.split("=")
-            if (filteredUrl !in cookies.keys) {
-              synchronized(this) {
-                cookies[filteredUrl] = ConcurrentHashMap(mutableMapOf())
-              }
-            }
-            cookies[filteredUrl]!![cook[0]] = cook[1].split(";")[0]
-          }
-        }
+    val setCookie = resp.headers.filterKeys { it.equals("Set-Cookie", true) }
+    setCookie.flatMap { it.value }
+      .map {
+        HttpCookie.parse(it)
+      }
+      .forEach {
+        val li = cookies.computeIfAbsent(filteredUrl) { ConcurrentHashMap() }
+        li.putAll(it.map { cval -> cval.name to cval.value })
+      }
   }
 }

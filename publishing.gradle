@@ -1,19 +1,10 @@
-task sourcesJar(type: Jar) {
+task sourceJar(type: Jar) {
+  archiveClassifier.set('sources')
   from sourceSets.main.allSource
-  classifier = 'sources'
 }
 
-task javadocJar(type: Jar) {
+task packageJavadoc(type: Jar) {
+  archiveClassifier.set('javadoc')
   from javadoc
-  classifier = 'javadoc'
 }
 
-publishing {
-  publications {
-    Publication(MavenPublication) {
-      from components.java
-      artifact sourcesJar
-      artifact javadocJar
-    }
-  }
-}

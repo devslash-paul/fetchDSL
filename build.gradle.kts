@@ -1,4 +1,3 @@
-import com.jfrog.bintray.gradle.BintrayExtension
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 buildscript {
@@ -17,9 +16,10 @@ buildscript {
 
 plugins {
   base
+  kotlin("jvm") version "1.4.20" apply false
   `maven-publish`
-  kotlin("jvm") version "1.3.50" apply false
-  id("com.jfrog.bintray") version "1.8.4" apply false }
+  signing
+}
 
 repositories {
   jcenter()
@@ -27,7 +27,7 @@ repositories {
 
 allprojects {
   group = "net.devslash.fetchdsl"
-  version = "0.16.7-SNAPSHOT"
+  version = "0.16.7"
 
   repositories {
     jcenter()
@@ -38,10 +38,62 @@ subprojects {
   apply {
     plugin("maven-publish")
     plugin("java-library")
-    plugin("com.jfrog.bintray")
     plugin("org.jetbrains.kotlin.jvm")
+    plugin("org.gradle.maven")
+    plugin("org.gradle.maven-publish")
+    plugin("org.gradle.signing")
 
     from("../publishing.gradle")
+  }
+
+  publishing {
+    val userName: String? by project
+    val pw: String? by project
+    publications {
+      create<MavenPublication>("library") {
+        from(components["kotlin"])
+        artifact(tasks["sourceJar"])
+        artifact(tasks["packageJavadoc"])
+        pom {
+          name.set("fetchDSL")
+          description.set("A DSL for HTTP requests")
+          url.set("https://fetchdsl.dev")
+          licenses {
+            license {
+              name.set("MIT License")
+              url.set("http://www.opensource.org/licenses/mit-license.php")
+              distribution.set("repo")
+            }
+          }
+          developers {
+            developer {
+              id.set("devslash-paul")
+              name.set("Paul Thompson")
+              email.set("paul@devslash.net")
+            }
+          }
+          scm {
+            url.set("https://github.com/devslash-paul/fetchdsl")
+          }
+        }
+      }
+    }
+    repositories {
+      maven {
+        url = uri("https://oss.sonatype.org/service/local/staging/deploy/maven2/")
+        credentials {
+          username = userName
+          password = pw
+        }
+        authentication {
+          create<BasicAuthentication>("basic")
+        }
+      }
+    }
+  }
+
+  signing {
+    sign(publishing.publications["library"])
   }
 
   tasks.withType<KotlinCompile>().configureEach {
@@ -51,39 +103,5 @@ subprojects {
       jvmTarget = "1.8"
     }
   }
-
-//  tasks.withType(Test::class).configureEach {
-//    useJUnitPlatform()
-//    testLogging {
-//      events("passed", "skipped", "failed")
-//    }
-//  }
-
-  configure<BintrayExtension> {
-    user = project.findProperty("bintrayUser") as String? ?: System.getenv("BINTRAY_USER")
-    key = project.findProperty("bintrayApiKey") as String? ?: System.getenv("BINTRAY_API_KEY")
-
-    setPublications("Publication")
-    pkg.apply {
-      repo = "FetchDSL"
-      name = "fetchdsl"
-      setLicenses("MIT")
-      vcsUrl = "https://github.com/paulthom12345/FetchDSL"
-      attributes = emptyMap<String, String>()
-      override = true
-      publish = true
-      githubRepo = "paulthom12345/FetchDSL"
-      version.apply {
-        name = project.version.toString()
-        vcsTag = project.version.toString()
-        attributes = emptyMap<String, String>()
-      }
-    }
-  }
 }
 
-dependencies {
-  subprojects.forEach {
-    archives(it)
-  }
-}

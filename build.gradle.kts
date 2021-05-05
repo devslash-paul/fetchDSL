@@ -2,7 +2,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 buildscript {
   project.extra.apply {
-    set("kotlinVersion", "1.4.20")
+    set("kotlinVersion", "1.3.70")
     set("ktorVersion", "1.4.1")
     set("junitVersion", "4.12")
     set("ktorNettyVersion", "1.1.4")
@@ -10,13 +10,13 @@ buildscript {
   }
 
   dependencies {
-    classpath(kotlin("gradle-plugin", version = "1.3.50"))
+    classpath(kotlin("gradle-plugin", version = "1.4.20"))
   }
 }
 
 plugins {
   base
-  kotlin("jvm") version "1.4.20" apply false
+  kotlin("jvm") version "1.3.70" apply false
   `maven-publish`
   signing
 }
@@ -27,7 +27,7 @@ repositories {
 
 allprojects {
   group = "net.devslash.fetchdsl"
-  version = "0.16.7"
+  version = "0.16.10-SNAPSHOT"
 
   repositories {
     jcenter()
@@ -84,6 +84,9 @@ subprojects {
         credentials {
           username = userName
           password = pw
+        }
+        mavenContent {
+          releasesOnly()
         }
         authentication {
           create<BasicAuthentication>("basic")

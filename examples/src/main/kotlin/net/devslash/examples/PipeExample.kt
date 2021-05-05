@@ -6,6 +6,7 @@ import io.ktor.routing.get
 import io.ktor.routing.routing
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
+import net.devslash.action
 import net.devslash.data.FileDataSupplier
 import net.devslash.outputs.WriteFile
 import net.devslash.pipes.ResettablePipe
@@ -35,6 +36,16 @@ fun main() {
     }
     call(address) {
       data = pipe
+      before {
+        action {
+          println("ActionBefore")
+        }
+      }
+      after {
+        action {
+          println("ActionAfter")
+        }
+      }
     }
     call(address) {
       data = pipe

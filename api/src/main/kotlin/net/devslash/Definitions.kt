@@ -61,6 +61,51 @@ fun String.asReplaceableValue() = object : ReplaceableValue<String, RequestData>
 
 interface BeforeHook
 
+interface SimpleBeforeHook : BeforeHook {
+  fun accept(req: HttpRequest, data: RequestData)
+}
+
+data class BeforeCtx(
+  val sessionManager: SessionManager,
+  val cookieJar: CookieJar,
+  val req: HttpRequest,
+  val data: RequestData
+)
+
+data class AfterCtx(
+  val req: HttpRequest,
+  val resp: HttpResponse,
+  val data: RequestData
+)
+
+@JvmName("beforeAction")
+fun UnaryAddBuilder<BeforeHook>.action(block: BeforeCtx.() -> Unit) {
+  +object : SessionPersistingBeforeHook {
+    override suspend fun accept(
+      sessionManager: SessionManager,
+      cookieJar: CookieJar,
+      req: HttpRequest,
+      data: RequestData
+    ) {
+      BeforeCtx(sessionManager, cookieJar, req, data).apply(block)
+    }
+  }
+}
+
+/*
+Aim: Provide a CTX block that people can hook into...
+I wonder if i can find out if something is used
+probably not
+ */
+@JvmName("afterAction")
+fun UnaryAddBuilder<AfterHook>.action(block: AfterCtx.() -> Unit) {
+  +object : FullDataAfterHook {
+    override fun accept(req: HttpRequest, resp: HttpResponse, data: RequestData) {
+      AfterCtx(req, resp, data).apply(block)
+    }
+  }
+}
+
 fun (() -> Unit).toPreHook() = object : SimpleBeforeHook {
   override fun accept(req: HttpRequest, data: RequestData) {
     this@toPreHook()
@@ -68,18 +113,16 @@ fun (() -> Unit).toPreHook() = object : SimpleBeforeHook {
 }
 
 interface SessionPersistingBeforeHook : BeforeHook {
-  suspend fun accept(sessionManager: SessionManager,
-                     cookieJar: CookieJar,
-                     req: HttpRequest,
-                     data: RequestData)
+  suspend fun accept(
+    sessionManager: SessionManager,
+    cookieJar: CookieJar,
+    req: HttpRequest,
+    data: RequestData
+  )
 }
 
 interface SkipBeforeHook : BeforeHook {
   fun skip(requestData: RequestData): Boolean
-}
-
-interface SimpleBeforeHook : BeforeHook {
-  fun accept(req: HttpRequest, data: RequestData)
 }
 
 class Envelope<T>(private val message: T, private val maxRetries: Int = 3) {

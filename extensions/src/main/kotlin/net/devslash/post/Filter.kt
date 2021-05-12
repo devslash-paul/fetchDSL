@@ -10,18 +10,20 @@ class FilterBuilder {
   }
 }
 
-class Filter(private val pred: (HttpResponse) -> Boolean,
-             private val builder: FilterBuilder.() -> Unit) : FullDataAfterHook {
+class Filter(
+  private val pred: (HttpResponse) -> Boolean,
+  private val builder: FilterBuilder.() -> Unit
+) : FullDataAfterHook {
 
   override fun accept(req: HttpRequest, resp: HttpResponse, data: RequestData) {
     val current = FilterBuilder().apply(builder)
     if (pred(resp)) {
       current.posts.forEach {
         when (it) {
-          is SimpleAfterHook            -> it.accept(resp)
+          is SimpleAfterHook -> it.accept(resp)
           is ChainReceivingResponseHook -> it.accept(resp)
-          is FullDataAfterHook          -> it.accept(req, resp, data)
-          is BasicOutput                -> it.accept(req, resp, data)
+          is FullDataAfterHook -> it.accept(req, resp, data)
+          is BasicOutput -> it.accept(req, resp, data)
         }
       }
     }

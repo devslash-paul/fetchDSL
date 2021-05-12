@@ -5,8 +5,10 @@ import java.io.BufferedOutputStream
 import java.io.FileOutputStream
 import java.io.OutputStream
 
-class AppendFile(private val fileName: String,
-                 private val out: OutputFormat = DefaultOutput()) : BasicOutput {
+class AppendFile(
+  private val fileName: String,
+  private val out: OutputFormat = DefaultOutput()
+) : BasicOutput {
 
   private val lock = Object()
   private var memoizedFile: OutputStream? = null
@@ -21,8 +23,12 @@ class AppendFile(private val fileName: String,
   }
 
   override fun accept(req: HttpRequest, resp: HttpResponse, data: RequestData) {
-    val f = memoizedFile ?: BufferedOutputStream(FileOutputStream(fileName.asReplaceableValue().get(
-        data), true))
+    val filename = fileName.asReplaceableValue().get(data)
+    val f = memoizedFile ?: BufferedOutputStream(
+      FileOutputStream(
+        filename, true
+      )
+    )
 
     val output = out.accept(resp, data)
     if (output != null) {

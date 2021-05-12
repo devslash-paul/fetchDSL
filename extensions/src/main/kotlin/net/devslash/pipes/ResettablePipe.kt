@@ -17,7 +17,7 @@ class ResettablePipe(val acceptor: (HttpResponse, RequestData) -> List<String>,
       currentValue.split(split)
     } else listOf(currentValue)
 
-    return ListBasedRequestData(line)
+    return ListRequestData(line)
   }
 
   override fun init() {

@@ -2,6 +2,8 @@ package net.devslash.pipes
 
 import kotlinx.coroutines.runBlocking
 import net.devslash.HttpResponse
+import net.devslash.ListRequestData
+import net.devslash.mustGet
 import net.devslash.util.getBasicRequest
 import net.devslash.util.requestDataFromList
 import org.hamcrest.CoreMatchers.*
@@ -12,7 +14,7 @@ import java.net.URL
 internal class ResettablePipeTest {
 
   @Test
-  fun testPipeStartsEmpty() = runBlocking{
+  fun testPipeStartsEmpty() = runBlocking {
     val pipe = ResettablePipe({ _, _ -> listOf("A", "B") }, null)
 
     assertThat(pipe.getDataForRequest(), nullValue())
@@ -23,14 +25,14 @@ internal class ResettablePipeTest {
     val pipe = ResettablePipe({ r, _ -> listOf(String(r.body)) }, null)
 
     pipe.accept(
-        getBasicRequest(),
-        HttpResponse(URL("http://"), 200, mapOf(), "result".toByteArray()),
+      getBasicRequest(),
+      HttpResponse(URL("http://"), 200, mapOf(), "result".toByteArray()),
       requestDataFromList(listOf())
     )
 
     val data = pipe.getDataForRequest()!!
     assertThat(data, not(nullValue()))
-    assertThat(data.getReplacements()["!1!"], equalTo("result"))
+    assertThat(data.mustGet<List<String>>()[0], equalTo("result"))
     assertThat(pipe.getDataForRequest(), nullValue())
 
     // now reset
@@ -42,42 +44,42 @@ internal class ResettablePipeTest {
   @Test
   fun testPipeCanReturnMultipleResults() = runBlocking {
     val vals = listOf("a", "b", "c")
-    val pipe = Pipe({ _, _ -> vals }, " ")
+    val pipe = Pipe { _, _ -> vals.map { ListRequestData(listOf(it)) } }
     pipe.accept(
-        getBasicRequest(),
-        HttpResponse(URL("http://"), 200, mapOf(), byteArrayOf()),
-      requestDataFromList(listOf())
+      getBasicRequest(),
+      HttpResponse(URL("http://"), 200, mapOf(), byteArrayOf()),
+      requestDataFromList()
     )
 
     vals.forEach {
-      assertThat(pipe.getDataForRequest()!!.getReplacements(), equalTo(mapOf("!1!" to it)))
+      assertThat(pipe.getDataForRequest()!!.mustGet<List<String>>()[0], equalTo(it))
     }
   }
 
   @Test
   fun testPipeAcceptsMultipleAndReturnsInOrder() = runBlocking {
-    val pipe = Pipe({ r, _ -> listOf(String(r.body)) }, " ")
+    val pipe = Pipe { r, _ -> listOf(ListRequestData(listOf(String(r.body)))) }
     pipe.accept(
-        getBasicRequest(),
-        HttpResponse(URL("http://"), 200, mapOf(), "a".toByteArray()),
+      getBasicRequest(),
+      HttpResponse(URL("http://"), 200, mapOf(), "a".toByteArray()),
       requestDataFromList(listOf())
     )
     pipe.accept(
-        getBasicRequest(),
-        HttpResponse(URL("http://"), 200, mapOf(), "b".toByteArray()),
+      getBasicRequest(),
+      HttpResponse(URL("http://"), 200, mapOf(), "b".toByteArray()),
       requestDataFromList(listOf())
     )
     pipe.accept(
-        getBasicRequest(),
-        HttpResponse(URL("http://"), 200, mapOf(), "c".toByteArray()),
+      getBasicRequest(),
+      HttpResponse(URL("http://"), 200, mapOf(), "c".toByteArray()),
       requestDataFromList(listOf())
     )
 
     val values = listOf("a", "b", "c")
     values.forEach {
       val data = pipe.getDataForRequest()!!
-      val repl = data.getReplacements()
-      assertThat(repl, equalTo(mapOf("!1!" to it)))
+      val repl = data.mustGet<List<String>>()[0]
+      assertThat(repl, equalTo(it))
     }
 
     assertThat(pipe.getDataForRequest(), nullValue())

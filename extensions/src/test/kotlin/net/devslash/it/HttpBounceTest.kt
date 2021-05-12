@@ -59,7 +59,7 @@ class HttpBounceTest : ServerTest() {
           type = HttpMethod.POST
           headers = mapOf("A" to listOf("B"))
           body {
-            value = "TestBody"
+            value("TestBody")
           }
         }
       }
@@ -83,7 +83,7 @@ class HttpBounceTest : ServerTest() {
     runHttp {
       call(address) {
         this.headers = mapOf("A" to listOf(ProvidedValue { r -> "!1!".asReplaceableValue().get(r) + "."}), "C" to listOf("D"))
-        data = SingleUseDataSupplier(mapOf("!1!" to "Hi"))
+        data = SingleUseDataSupplier(listOf("Hi"))
       }
     }
 

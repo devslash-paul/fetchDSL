@@ -3,7 +3,8 @@ package net.devslash.data
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
-import net.devslash.ListBasedRequestData
+import net.devslash.ListRequestData
+import net.devslash.mustGet
 import net.devslash.util.getResponse
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.CoreMatchers.nullValue
@@ -16,10 +17,10 @@ internal class ModifiableSupplierTest {
     val supplier = ModifiableSupplier(ListDataSupplier(listOf("A")))
     // Simulate an initial request
     supplier.getDataForRequest()
-    supplier.add(ListBasedRequestData(listOf("B")))
+    supplier.add(ListRequestData(listOf("B")))
 
     val data = supplier.getDataForRequest()!!
-    assertThat(data.getReplacements()["!1!"], equalTo("B"))
+    assertThat(data.mustGet<List<String>>()[0], equalTo("B"))
   }
 
   @Test(timeout = 300)
@@ -44,7 +45,7 @@ internal class ModifiableSupplierTest {
   @Test(timeout = 100)
   fun testAddedOnlyReturnedOnce() = runBlocking {
     val supplier = ModifiableSupplier(ListDataSupplier(listOf<String>()))
-    supplier.add(ListBasedRequestData(listOf()))
+    supplier.add(ListRequestData(listOf<String>()))
     supplier.getDataForRequest()
     supplier.accept(getResponse())
     assertThat(supplier.getDataForRequest(), nullValue())

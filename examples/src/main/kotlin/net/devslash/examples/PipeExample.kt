@@ -1,13 +1,14 @@
 package net.devslash.examples
 
-import io.ktor.application.call
-import io.ktor.response.respondText
-import io.ktor.routing.get
-import io.ktor.routing.routing
-import io.ktor.server.engine.embeddedServer
-import io.ktor.server.netty.Netty
+import io.ktor.application.*
+import io.ktor.response.*
+import io.ktor.routing.*
+import io.ktor.server.engine.*
+import io.ktor.server.netty.*
 import net.devslash.action
 import net.devslash.data.FileDataSupplier
+import net.devslash.data.ListDataSupplier
+import net.devslash.mustGet
 import net.devslash.outputs.WriteFile
 import net.devslash.pipes.ResettablePipe
 import net.devslash.runHttp
@@ -49,6 +50,20 @@ fun main() {
     }
     call(address) {
       data = pipe
+      body {
+        formParams(mapOf("Yo" to listOf())) { form, _ -> form }
+      }
+    }
+    call<Int>(address) {
+      data = ListDataSupplier(listOf(2, 2, 3))
+      before {
+        action {
+          println(data.mustGet<String>())
+        }
+      }
+      body {
+        formParams(mapOf())
+      }
     }
   }
 

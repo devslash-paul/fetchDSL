@@ -1,21 +1,13 @@
 package net.devslash
 
 
-class BasicBodyProvider(private val body: String, val data: RequestData) : BodyProvider {
+class BasicBodyProvider(
+  private val body: String,
+  private val data: RequestData,
+  private val mapper: ValueMapper<String>
+) : BodyProvider {
   fun get(): String {
-    var copy = "" + body
-    data.getReplacements().forEach { (key, value) -> copy = copy.replace(key, value) }
-    return copy
-  }
-}
-
-class FormBody(private val body: Map<String, List<String>>,
-               private val data: RequestData) : BodyProvider {
-  fun get(): Map<String, List<String>> {
-    return body.map {
-      val entries = it.value.map { it.asReplaceableValue().get(data) }
-      it.key to entries
-    }.toMap()
+    return mapper(body, data)
   }
 }
 
@@ -40,11 +32,11 @@ fun getBodyProvider(call: Call, data: RequestData): BodyProvider {
   }
 
   if (call.body.formData != null) {
-    return FormBody(call.body.formData, data)
+    return FormBody(call.body.formData, data, call.body.formMapper!!)
   }
 
-  if (call.body.value != null) {
-    return BasicBodyProvider(call.body.value, data)
+  if (call.body.bodyValue != null) {
+    return BasicBodyProvider(call.body.bodyValue, data, call.body.bodyValueMapper!!)
   }
 
   return EmptyBodyProvider

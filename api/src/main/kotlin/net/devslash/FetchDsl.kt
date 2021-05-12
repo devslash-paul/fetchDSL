@@ -72,19 +72,74 @@ open class CallBuilder(private val url: String) {
       set["User-Agent"] = listOf("FetchDSL (Apache-HttpAsyncClient + Kotlin, version not set)")
       headers = set
     }
-    return Call(url, mapHeaders(headers), cookieJar, type, data, body,
-            onError, preHooksList, postHooksList)
+    return Call(
+      url, mapHeaders(headers), cookieJar, type, data, body,
+      onError, preHooksList, postHooksList
+    )
+  }
+}
+
+fun replaceString(changes: Map<String, String>, str: String): String {
+  var x = str
+  changes.forEach {
+    x = x.replace(it.key, it.value)
+  }
+  return x
+}
+
+typealias ValueMapper<V> = (V, RequestData) -> V
+
+val identityValueMapper: ValueMapper<String> = { v, _ -> v }
+val indexValueMapper: ValueMapper<String> = { inData, reqData ->
+  val indexes = reqData.mustGet<List<String>>().mapIndexed { index, string ->
+    "!" + (index + 1) + "!" to string
+  }.toMap()
+  inData.let { entry ->
+    return@let replaceString(indexes, entry)
   }
 }
 
 @FetchDSL
 class BodyBuilder {
-  var value: String? = null
-  var formParams: Map<String, List<String>>? = null
+  private var value: String? = null
+  private var valueMapper: ValueMapper<String>? = null
+  private var formParams: Form? = null
+  private var formMapper: ValueMapper<Map<String, List<String>>>? = null
   var jsonObject: Any? = null
   var lazyJsonObject: ((RequestData) -> Any)? = null
 
-  fun build(): HttpBody = HttpBody(value, formParams, jsonObject, lazyJsonObject)
+  // This is actually used. The receiver ensures that only the basic case can utilise a non mapped
+  // function
+  @Suppress("unused")
+  fun BodyBuilder.formParams(params: Map<String, List<String>>) {
+    formParams = params
+    formMapper = formIndexed
+  }
+
+  fun formParams(
+    params: Map<String, List<String>>,
+    mapper: ValueMapper<Map<String, List<String>>> = formIdentity
+  ) {
+    formParams = params
+    formMapper = mapper
+  }
+
+  @Suppress("unused")
+  fun BodyBuilder.value(value: String) {
+    this.value = value
+    this.valueMapper = identityValueMapper
+  }
+
+  @Suppress("unused")
+  fun value(value: String, mapper: (String, RequestData) -> String) {
+    this.value = value
+    this.valueMapper = mapper
+  }
+
+  fun build(): HttpBody {
+    return HttpBody(value, valueMapper, formParams, formMapper, jsonObject, lazyJsonObject)
+  }
+
 }
 
 @FetchDSL
@@ -111,6 +166,11 @@ class SessionBuilder {
     require(!(duration.isNegative || duration.isZero)) { "Invalid duration, must be more than zero" }
     require(count > 0) { "Count must be positive" }
     rateOptions = RateLimitOptions(true, count, duration)
+  }
+
+  @JvmName("genericCall")
+  fun <T> call(url: String, block: CallBuilder.() -> Unit = {}) {
+    calls.add(CallBuilder(url).apply(block).build())
   }
 
   fun call(url: String, block: CallBuilder.() -> Unit = {}) {

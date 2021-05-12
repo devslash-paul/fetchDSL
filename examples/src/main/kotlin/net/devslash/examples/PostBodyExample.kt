@@ -10,6 +10,8 @@ import io.ktor.server.netty.Netty
 import net.devslash.HttpMethod
 import net.devslash.outputs.DebugOutput
 import net.devslash.outputs.StdOut
+import net.devslash.post.LogResponse
+import net.devslash.pre.LogRequest
 import net.devslash.runHttp
 import java.net.ServerSocket
 
@@ -29,7 +31,10 @@ fun main() {
     call(address) {
       type = HttpMethod.POST
       body {
-        formParams = mapOf("Hi" to listOf("ho"))
+        formParams(mapOf("Hi" to listOf("ho")))
+      }
+      before {
+        +LogRequest()
       }
       after {
         +StdOut(format = DebugOutput())

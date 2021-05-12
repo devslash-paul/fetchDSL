@@ -1,24 +1,17 @@
 package net.devslash.util
 
-import io.ktor.client.engine.apache.Apache
 import net.devslash.*
 import java.net.URL
 
 fun requestDataFromList(listOf: List<String>? = null): RequestData {
   return object : RequestData {
-    override fun getReplacements(): Map<String, String> {
-      if (listOf != null) {
-        return listOf.mapIndexed { i, p ->
-          "!${i + 1}!" to p
-        }.toMap()
-      }
-
-      return mapOf()
+    override fun <T> visit(visitor: RequestVisitor<T, Any?>): T {
+      return visitor(listOf, List::class.java)
     }
   }
 }
 
-fun getBasicRequest() : HttpRequest {
+fun getBasicRequest(): HttpRequest {
   return HttpRequest(HttpMethod.GET, "https://example.com", EmptyBodyProvider)
 }
 
@@ -34,7 +27,7 @@ fun getSession(): Session {
   return SessionBuilder().build()
 }
 
-fun getResponseWithBody(body: ByteArray) : HttpResponse {
+fun getResponseWithBody(body: ByteArray): HttpResponse {
   return HttpResponse(URL("http://example.com"), 200, mapOf(), body)
 }
 

@@ -17,7 +17,7 @@ internal class FileBasedDataSupplierTest {
     for (character in expected) {
       val requestData = dataSupplier.getDataForRequest()
       // the first word is
-      assertEquals(requestData!!.getReplacements()["!1!"], character)
+      assertEquals(requestData!!.mustGet<List<String>>(), listOf(character))
     }
   }
 
@@ -30,8 +30,8 @@ internal class FileBasedDataSupplierTest {
     for (character in expected) {
       val requestData = dataSupplier.getDataForRequest()
       // the first word is
-      assertEquals(requestData!!.getReplacements()["!1!"], character.first)
-      assertEquals(requestData.getReplacements()["!2!"], character.second)
+      assertEquals(requestData!!.mustGet<List<String>>()[0], character.first)
+      assertEquals(requestData.mustGet<List<String>>()[1], character.second)
     }
   }
 
@@ -45,8 +45,8 @@ internal class FileBasedDataSupplierTest {
     for (character in expected) {
       val requestData = dataSupplier.getDataForRequest()
       // the first word is
-      assertEquals(requestData!!.getReplacements()["!1!"], character.first)
-      assertEquals(requestData.getReplacements()["!2!"], character.second)
+      assertEquals(requestData!!.mustGet<List<String>>()[0], character.first)
+      assertEquals(requestData.mustGet<List<String>>()[1], character.second)
     }
   }
 

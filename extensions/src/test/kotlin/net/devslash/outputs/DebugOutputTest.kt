@@ -1,6 +1,6 @@
 package net.devslash.outputs
 
-import net.devslash.ListBasedRequestData
+import net.devslash.ListRequestData
 import net.devslash.util.getResponseWithBody
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.MatcherAssert.assertThat
@@ -10,7 +10,7 @@ internal class DebugOutputTest {
   @Test
   fun testBasic() {
     val out = DebugOutput().accept(
-      getResponseWithBody("abc".toByteArray()), ListBasedRequestData(listOf("a", "b", "c"))
+      getResponseWithBody("abc".toByteArray()), ListRequestData(listOf("a", "b", "c"))
     )
 
     assertThat(
@@ -20,7 +20,7 @@ internal class DebugOutputTest {
            url: http://example.com
            status: 200
            headers: [{}]
-           data: {!1!=a, !2!=b, !3!=c}
+           data: [a, b, c]
            body ->
            abc
            ----------------

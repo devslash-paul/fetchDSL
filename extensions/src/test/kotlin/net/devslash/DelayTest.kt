@@ -25,7 +25,7 @@ class DelayTest {
     HttpSessionManager(engine, SessionBuilder().apply {
       delay = 30
       call("http://example.org") {
-        data = ListDataSupplier(listOf(1, 2))
+        data = ListDataSupplier(listOf(listOf("1"), listOf("2")))
       }
     }.build()).run()
 

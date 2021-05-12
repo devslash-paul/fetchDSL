@@ -2,7 +2,7 @@ rootProject.name = "fetshdsl"
 pluginManagement {
   repositories {
     maven {
-      url = uri("http://dl.bintray.com/kotlin/kotlin-eap")
+      url = uri("https://dl.bintray.com/kotlin/kotlin-eap")
     }
     mavenCentral()
     maven {

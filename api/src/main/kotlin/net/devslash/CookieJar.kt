@@ -2,7 +2,6 @@ package net.devslash
 
 import java.net.HttpCookie
 import java.net.URL
-import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
 class CookieJar : SimpleBeforeHook, SimpleAfterHook {

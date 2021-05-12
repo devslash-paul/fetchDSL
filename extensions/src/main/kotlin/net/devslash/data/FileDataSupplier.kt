@@ -1,6 +1,6 @@
 package net.devslash.data
 
-import net.devslash.ListBasedRequestData
+import net.devslash.ListRequestData
 import net.devslash.RequestData
 import net.devslash.RequestDataSupplier
 import java.io.File
@@ -12,6 +12,6 @@ class FileDataSupplier(val name: String, private val split: String = " ") : Requ
 
   override suspend fun getDataForRequest(): RequestData? {
     val ourLine = sourceFile.getOrNull(line.getAndIncrement())?.split(split)
-    return if (ourLine == null) null else ListBasedRequestData(ourLine)
+    return if (ourLine == null) null else ListRequestData(ourLine)
   }
 }

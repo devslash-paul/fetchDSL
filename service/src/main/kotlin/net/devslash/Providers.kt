@@ -9,21 +9,21 @@ interface URLProvider {
 fun handleNoSupplier(data: RequestDataSupplier?): RequestDataSupplier {
   if (data != null) {
     data.init()
-    return data
+    return data as RequestDataSupplier
   }
 
   // The default re
   return SingleUseDataSupplier()
 }
 
-class SingleUseDataSupplier(private val supply: Map<String, String> = mapOf()) : RequestDataSupplier {
+class SingleUseDataSupplier(val supply: List<String> = listOf()) : RequestDataSupplier {
   private val first = AtomicBoolean(true)
 
   override suspend fun getDataForRequest(): RequestData? {
     if (first.compareAndSet(true, false)) {
       return object : RequestData {
-        override fun getReplacements(): Map<String, String> {
-          return supply
+        override fun <T> visit(visitor: RequestVisitor<T, Any?>): T {
+          return visitor(supply, List::class.java)
         }
       }
     }

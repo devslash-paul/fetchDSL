@@ -30,8 +30,11 @@ class HttpSessionManager(val engine: HttpDriver, private val session: Session) :
     }
   }
 
-  private suspend fun produceHttp(call: Call,
-                                  jar: CookieJar, channel: Channel<Envelope<Contents>>) {
+  private suspend fun produceHttp(
+    call: Call,
+    jar: CookieJar,
+    channel: Channel<Envelope<Contents>>
+  ) {
     val dataSupplier = handleNoSupplier(call.dataSupplier)
 
     while (true) {
@@ -42,13 +45,18 @@ class HttpSessionManager(val engine: HttpDriver, private val session: Session) :
       preRequest.add(jar)
 
       val shouldSkip =
-              preRequest.filter { it is SkipBeforeHook }.any { (it as SkipBeforeHook).skip(data) }
+        preRequest.filterIsInstance<SkipBeforeHook>().any { it.skip(data) }
       if (shouldSkip) continue
 
       preRequest.forEach {
         when (it) {
           is SimpleBeforeHook -> it.accept(req, data)
-          is SessionPersistingBeforeHook -> it.accept(sessionManager, jar, req, data)
+          is SessionPersistingBeforeHook -> it.accept(
+            sessionManager,
+            jar,
+            req,
+            data
+          )
         }
       }
       call.headers?.forEach { entry ->
@@ -160,10 +168,12 @@ class HttpSessionManager(val engine: HttpDriver, private val session: Session) :
     }
   }
 
-  private suspend fun handleFailure(call: Call,
-                                    channel: Channel<Envelope<Pair<HttpRequest, RequestData>>>,
-                                    next: Envelope<Pair<HttpRequest, RequestData>>,
-                                    request: Failure<java.lang.Exception>) {
+  private suspend fun handleFailure(
+    call: Call,
+    channel: Channel<Envelope<Pair<HttpRequest, RequestData>>>,
+    next: Envelope<Pair<HttpRequest, RequestData>>,
+    request: Failure<java.lang.Exception>
+  ) {
     call.onError?.let {
       when (it) {
         is ChannelReceiving<*> -> {

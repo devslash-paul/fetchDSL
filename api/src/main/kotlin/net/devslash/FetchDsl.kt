@@ -27,6 +27,7 @@ data class RateLimitOptions(val enabled: Boolean, val count: Int, val duration: 
 @FetchDSL
 open class CallBuilder(private val url: String) {
   private var cookieJar: String? = null
+  //TODO: What if the data supplier has a type
   var data: RequestDataSupplier? = null
   var body: HttpBody? = null
   var type: HttpMethod = HttpMethod.GET

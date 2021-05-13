@@ -14,11 +14,11 @@ class AppendFile(
   private var memoizedFile: OutputStream? = null
 
   init {
-    if (fileName.contains(Regex("!\\d+!"))) {
+    memoizedFile = if (fileName.contains(Regex("!\\d+!"))) {
       // then it's non memoizable
-      memoizedFile = null
+      null
     } else {
-      memoizedFile = BufferedOutputStream(FileOutputStream(fileName, true))
+      BufferedOutputStream(FileOutputStream(fileName, true))
     }
   }
 

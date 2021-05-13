@@ -1,6 +1,9 @@
 package net.devslash
 
+import net.devslash.data.ListDataSupplier
 import org.openjdk.jmh.annotations.*
+import org.openjdk.jmh.runner.Runner
+import org.openjdk.jmh.runner.options.OptionsBuilder
 import java.util.concurrent.TimeUnit
 
 
@@ -51,5 +54,9 @@ open class Bencho {
 }
 
 fun main() {
-  Bencho().run()
+  val opt = OptionsBuilder()
+    .include(Bencho::class.java.simpleName)
+    .build()
+
+  Runner(opt).run()
 }

@@ -17,7 +17,7 @@ import java.util.concurrent.atomic.AtomicInteger
  * During this time between the last from the delegate, and the final request going through the
  * [getDataForRequest] method will block the calling thread as it's unsure of its response.
  */
-class ModifiableSupplier(private val delegate: RequestDataSupplier) : RequestDataSupplier, SimpleAfterHook {
+class ModifiableSupplier<T>(private val delegate: RequestDataSupplier<T>) : RequestDataSupplier<T>, SimpleAfterHook {
 
   private val modifiedQueue: ConcurrentLinkedQueue<RequestData> = ConcurrentLinkedQueue()
 

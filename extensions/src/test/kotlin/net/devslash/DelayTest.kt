@@ -1,27 +1,26 @@
 package net.devslash
 
-import io.ktor.client.statement.HttpResponse
-import io.mockk.coEvery
-import io.mockk.mockk
+import kotlinx.coroutines.runBlocking
 import net.devslash.data.ListDataSupplier
-import net.devslash.util.getResponseWithBody
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.net.URI
 
 class DelayTest {
-
-  @Test
-  fun testDelayCausesWaitBetweenCalls() {
-    val engine = mockk<HttpDriver>(relaxed = true)
-    val resp = mockk<HttpResponse>()
-    val times = mutableListOf<Long>()
-
-    coEvery { engine.mapResponse(any()) } returns getResponseWithBody(ByteArray(0))
-    coEvery { engine.call(any()) } answers {
+  class TimingDriver(private val times: MutableList<Long>) : Driver {
+    override suspend fun call(req: HttpRequest): HttpResult<HttpResponse, Exception> {
       times.add(System.currentTimeMillis())
-      Success(resp)
+      return Success(HttpResponse(URI("https://a"), 200, mapOf(), ByteArray(0)))
     }
 
+    override fun close() {
+    }
+  }
+
+  @Test
+  fun testDelayCausesWaitBetweenCalls() = runBlocking {
+    val times = mutableListOf<Long>()
+    val engine = TimingDriver(times)
     HttpSessionManager(engine, SessionBuilder().apply {
       delay = 30
       call("http://example.org") {
@@ -32,5 +31,4 @@ class DelayTest {
     val diff = times[1] - times[0]
     assertTrue(diff >= 30)
   }
-
 }

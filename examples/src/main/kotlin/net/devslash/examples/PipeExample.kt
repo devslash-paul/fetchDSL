@@ -16,7 +16,7 @@ import java.net.ServerSocket
 import java.util.concurrent.TimeUnit
 
 fun main() {
-  val pipe = ResettablePipe({ r, _ -> listOf(String(r.body)) })
+  val pipe = ResettablePipe<List<String>>({ r, _ -> listOf(String(r.body)) })
   val port = ServerSocket(0).use { it.localPort }
   val server = embeddedServer(Netty, port) {
     routing {
@@ -58,7 +58,7 @@ fun main() {
       data = ListDataSupplier(listOf(2, 2, 3))
       before {
         action {
-          println(data.mustGet<String>())
+          println(data.mustGet<Any?>())
         }
       }
       body {

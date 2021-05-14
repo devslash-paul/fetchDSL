@@ -6,17 +6,17 @@ interface URLProvider {
   fun get(): String
 }
 
-fun handleNoSupplier(data: RequestDataSupplier?): RequestDataSupplier {
+fun <T> handleNoSupplier(data: RequestDataSupplier<T>?): RequestDataSupplier<T> {
   if (data != null) {
     data.init()
-    return data as RequestDataSupplier
+    return data
   }
 
   // The default re
   return SingleUseDataSupplier()
 }
 
-class SingleUseDataSupplier(val supply: List<String> = listOf()) : RequestDataSupplier {
+class SingleUseDataSupplier<T>(val supply: List<String> = listOf()) : RequestDataSupplier<T> {
   private val first = AtomicBoolean(true)
 
   override suspend fun getDataForRequest(): RequestData? {

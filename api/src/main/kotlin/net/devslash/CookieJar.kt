@@ -25,7 +25,7 @@ class CookieJar : SimpleBeforeHook, SimpleAfterHook {
 
   override fun accept(resp: HttpResponse) {
     // we need to sort via the domain name + the security
-    val filteredUrl = "${resp.url.protocol}://${resp.url.host}"
+    val filteredUrl = "${resp.url.scheme}://${resp.url.host}"
     val setCookie = resp.headers.filterKeys { it.equals("Set-Cookie", true) }
     setCookie.flatMap { it.value }
       .map {

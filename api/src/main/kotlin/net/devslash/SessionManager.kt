@@ -1,6 +1,6 @@
 package net.devslash
 
 interface SessionManager {
-  fun call(call: Call, jar: CookieJar): Exception?
-  fun call(call: Call): Exception?
+  fun <T> call(call: Call<T>, jar: CookieJar): Exception?
+  fun <T> call(call: Call<T>): Exception?
 }

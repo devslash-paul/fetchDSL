@@ -46,8 +46,8 @@ open class Bencho {
   fun run() {
     runHttp {
       concurrency = 10
-      call(echo.address) {
-        data = ListDataSupplier(listOf(1..50))
+      call<Int>(echo.address) {
+        data = ListDataSupplier((1..50).toList())
       }
     }
   }

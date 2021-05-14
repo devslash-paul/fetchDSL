@@ -50,10 +50,12 @@ internal class OnceTest {
       })
 
       try {
-        o.accept(getSessionManager(),
-            getCookieJar(),
-            getBasicRequest(),
-            requestDataFromList(listOf()))
+        o.accept(
+          getSessionManager(),
+          getCookieJar(),
+          getBasicRequest(),
+          requestDataFromList(listOf())
+        )
         fail("Should have an exception")
       } catch (e: InvalidHookException) {
         // ignore
@@ -65,10 +67,12 @@ internal class OnceTest {
   fun testWorksWithComplexHook() = runBlocking {
     var count = 0
     val o = Once(object : SessionPersistingBeforeHook {
-      override suspend fun accept(sessionManager: SessionManager,
-                                  cookieJar: CookieJar,
-                                  req: HttpRequest,
-                                  data: RequestData) {
+      override suspend fun accept(
+        sessionManager: SessionManager,
+        cookieJar: CookieJar,
+        req: HttpRequest,
+        data: RequestData
+      ) {
         count++
       }
     })

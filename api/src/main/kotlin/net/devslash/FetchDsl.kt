@@ -25,10 +25,10 @@ class UnaryAddBuilder<T> {
 data class RateLimitOptions(val enabled: Boolean, val count: Int, val duration: Duration)
 
 @FetchDSL
-open class CallBuilder(private val url: String) {
+open class CallBuilder<T>(private val url: String) {
   private var cookieJar: String? = null
-  //TODO: What if the data supplier has a type
-  var data: RequestDataSupplier? = null
+
+  var data: RequestDataSupplier<T>? = null
   var body: HttpBody? = null
   var type: HttpMethod = HttpMethod.GET
   var headers: Map<String, List<Any>>? = null
@@ -63,7 +63,7 @@ open class CallBuilder(private val url: String) {
     }
   }
 
-  fun build(): Call {
+  fun build(): Call<T> {
     val localHeaders = headers
     if (localHeaders == null || !localHeaders.contains("User-Agent")) {
       val set = mutableMapOf<String, List<Any>>()
@@ -145,10 +145,10 @@ class BodyBuilder {
 
 @FetchDSL
 class MultiCallBuilder {
-  private var calls = mutableListOf<Call>()
+  private var calls = mutableListOf<Call<*>>()
 
-  fun call(url: String, block: CallBuilder.() -> Unit = {}) {
-    calls.add(CallBuilder(url).apply(block).build())
+  fun <T> call(url: String, block: CallBuilder<T>.() -> Unit = {}) {
+    calls.add(CallBuilder<T>(url).apply(block).build())
   }
 
   fun calls() = calls
@@ -156,8 +156,8 @@ class MultiCallBuilder {
 
 @FetchDSL
 class SessionBuilder {
-  private var calls = mutableListOf<Call>()
-  private val chained = mutableListOf<List<Call>>()
+  private var calls = mutableListOf<Call<*>>()
+  private val chained = mutableListOf<List<Call<*>>>()
 
   var concurrency = 20
   var delay: Long? = null
@@ -170,12 +170,12 @@ class SessionBuilder {
   }
 
   @JvmName("genericCall")
-  fun <T> call(url: String, block: CallBuilder.() -> Unit = {}) {
-    calls.add(CallBuilder(url).apply(block).build())
+  fun <T> call(url: String, block: CallBuilder<T>.() -> Unit = {}) {
+    calls.add(CallBuilder<T>(url).apply(block).build())
   }
 
-  fun call(url: String, block: CallBuilder.() -> Unit = {}) {
-    calls.add(CallBuilder(url).apply(block).build())
+  fun call(url: String, block: CallBuilder<List<String>>.() -> Unit = {}) {
+    calls.add(CallBuilder<List<String>>(url).apply(block).build())
   }
 
   // TODO: Re-enable when chaining is stable

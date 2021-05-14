@@ -7,10 +7,12 @@ import net.devslash.HttpRequest
 import net.devslash.RequestData
 import java.net.SocketTimeoutException
 
-class RetryOnTransitiveError : ChannelReceiving<Pair<HttpRequest, RequestData>> {
-  override suspend fun accept(channel: Channel<Envelope<Pair<HttpRequest, RequestData>>>,
-                              envelope: Envelope<Pair<HttpRequest, RequestData>>,
-                              e: Exception) {
+class RetryOnTransitiveError : ChannelReceiving {
+  override suspend fun accept(
+    channel: Channel<Envelope<Pair<HttpRequest, RequestData>>>,
+    envelope: Envelope<Pair<HttpRequest, RequestData>>,
+    e: Exception
+  ) {
     if (!envelope.shouldProceed()) {
       // fail after a few failures
       throw e
@@ -20,7 +22,7 @@ class RetryOnTransitiveError : ChannelReceiving<Pair<HttpRequest, RequestData>> 
         envelope.fail()
         channel.send(envelope)
       }
-      else                      -> throw e
+      else -> throw e
     }
   }
 }

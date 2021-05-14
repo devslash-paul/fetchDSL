@@ -3,9 +3,9 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 buildscript {
   project.extra.apply {
     set("kotlinVersion", "1.4.20")
-    set("ktorVersion", "1.4.1")
+    set("ktorVersion", "1.5.4")
     set("junitVersion", "4.12")
-    set("ktorNettyVersion", "1.1.4")
+    set("ktorNettyVersion", "1.5.4")
     set("kotlinxCoroutinesVersion", "1.4.2")
   }
 
@@ -21,28 +21,24 @@ plugins {
   signing
 }
 
-repositories {
-  jcenter()
-}
-
 allprojects {
   group = "net.devslash.fetchdsl"
   version = "0.16.10-SNAPSHOT"
 
   repositories {
-    jcenter()
+    mavenCentral()
   }
+
 }
+
 
 subprojects {
   apply {
     plugin("maven-publish")
     plugin("java-library")
     plugin("org.jetbrains.kotlin.jvm")
-    plugin("org.gradle.maven")
     plugin("org.gradle.maven-publish")
     plugin("org.gradle.signing")
-
     from("../publishing.gradle")
   }
 

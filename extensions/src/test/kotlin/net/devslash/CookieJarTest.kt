@@ -6,7 +6,7 @@ import org.hamcrest.CoreMatchers.nullValue
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.core.IsEqual.equalTo
 import org.junit.Test
-import java.net.URL
+import java.net.URI
 
 internal class CookieJarTest {
 
@@ -24,16 +24,19 @@ internal class CookieJarTest {
   @Test
   fun testMultipleCaseCookieSet() {
     jar.accept(
-        responseWithHeaders(mapOf("set-Cookie" to listOf("A=B"), "SET-COOKIE" to listOf("C=D"))))
+      responseWithHeaders(mapOf("set-Cookie" to listOf("A=B"), "SET-COOKIE" to listOf("C=D")))
+    )
     jar.accept(standardRequest, requestDataFromList(listOf()))
 
 
     assertThat(standardRequest.headers["Cookie"], equalTo(listOf("A=B; C=D")))
   }
 
-  @Test fun testSetMultipleOfTheSameKey() {
+  @Test
+  fun testSetMultipleOfTheSameKey() {
     jar.accept(
-        responseWithHeaders(mapOf("set-Cookie" to listOf("A=B"), "SET-COOKIE" to listOf("A=D"))))
+      responseWithHeaders(mapOf("set-Cookie" to listOf("A=B"), "SET-COOKIE" to listOf("A=D")))
+    )
     jar.accept(standardRequest, requestDataFromList(listOf()))
 
 
@@ -61,9 +64,13 @@ internal class CookieJarTest {
     jar.accept(standardRequest, requestDataFromList(listOf("A=B")))
   }
 
-  private fun responseWithHeaders(headers: Map<String, List<String>>,
-                                  url: String = "https://example.com/test") = HttpResponse(URL(url),
-      200,
-      headers,
-      "".toByteArray())
+  private fun responseWithHeaders(
+    headers: Map<String, List<String>>,
+    url: String = "https://example.com/test"
+  ) = HttpResponse(
+    URI(url),
+    200,
+    headers,
+    "".toByteArray()
+  )
 }

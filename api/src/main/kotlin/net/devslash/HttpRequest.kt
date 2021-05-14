@@ -1,6 +1,6 @@
 package net.devslash
 
-import java.net.URL
+import java.net.URI
 import java.util.*
 
 class HttpRequest(val type: HttpMethod, val url: String, val body: BodyProvider) {
@@ -15,10 +15,12 @@ class HttpRequest(val type: HttpMethod, val url: String, val body: BodyProvider)
   }
 }
 
-data class HttpResponse(var url: URL,
-                        val statusCode: Int,
-                        val headers: Map<String, List<String>>,
-                        var body: ByteArray) {
+data class HttpResponse(
+  var url: URI,
+  val statusCode: Int,
+  val headers: Map<String, List<String>>,
+  var body: ByteArray
+) {
   override fun equals(other: Any?): Boolean {
     if (this === other) return true
     if (javaClass != other?.javaClass) return false

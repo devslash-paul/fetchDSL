@@ -7,8 +7,8 @@ dependencies {
   implementation(project(":api"))
   implementation(project(":extensions"))
   implementation(project(":service"))
-  implementation("io.ktor:ktor-server-netty:$ktorNettyVersion")
 
+  implementation("io.ktor:ktor-server-netty:$ktorNettyVersion")
   implementation("com.google.code.gson:gson:2.3.1")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinxCoroutinesVersion")
 }

@@ -1,10 +1,10 @@
 task sourceJar(type: Jar) {
-  archiveClassifier.set('sources')
-  from sourceSets.main.allSource
+    archiveClassifier.set('sources')
+    from sourceSets.main.allSource
 }
 
 task packageJavadoc(type: Jar) {
-  archiveClassifier.set('javadoc')
-  from javadoc
+    archiveClassifier.set('javadoc')
+    from javadoc
 }
 

@@ -1,14 +1,12 @@
 package net.devslash
 
-import io.ktor.application.call
-import io.ktor.http.HttpStatusCode
-import io.ktor.http.headersOf
-import io.ktor.request.receiveText
-import io.ktor.response.respond
-import io.ktor.routing.get
-import io.ktor.routing.routing
-import io.ktor.server.engine.embeddedServer
-import io.ktor.server.netty.Netty
+import io.ktor.application.*
+import io.ktor.http.*
+import io.ktor.request.*
+import io.ktor.response.*
+import io.ktor.routing.*
+import io.ktor.server.engine.*
+import io.ktor.server.netty.*
 import java.io.Closeable
 import java.net.ServerSocket
 import java.util.concurrent.TimeUnit

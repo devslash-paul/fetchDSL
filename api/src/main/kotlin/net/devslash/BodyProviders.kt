@@ -17,7 +17,7 @@ class JsonBody(private val any: Any) : BodyProvider {
   }
 }
 
-fun getBodyProvider(call: Call, data: RequestData): BodyProvider {
+fun getBodyProvider(call: Call<*>, data: RequestData): BodyProvider {
   if (call.body == null) {
     return EmptyBodyProvider
   }

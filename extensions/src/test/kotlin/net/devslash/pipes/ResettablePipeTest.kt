@@ -9,24 +9,24 @@ import net.devslash.util.requestDataFromList
 import org.hamcrest.CoreMatchers.*
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Test
-import java.net.URL
+import java.net.URI
 
 internal class ResettablePipeTest {
 
   @Test
   fun testPipeStartsEmpty() = runBlocking {
-    val pipe = ResettablePipe({ _, _ -> listOf("A", "B") }, null)
+    val pipe = ResettablePipe<String>({ _, _ -> listOf("A", "B") }, null)
 
     assertThat(pipe.getDataForRequest(), nullValue())
   }
 
   @Test
   fun testPipeSingleCase() = runBlocking {
-    val pipe = ResettablePipe({ r, _ -> listOf(String(r.body)) }, null)
+    val pipe = ResettablePipe<String>({ r, _ -> listOf(String(r.body)) }, null)
 
     pipe.accept(
       getBasicRequest(),
-      HttpResponse(URL("http://"), 200, mapOf(), "result".toByteArray()),
+      HttpResponse(URI("http://a"), 200, mapOf(), "result".toByteArray()),
       requestDataFromList(listOf())
     )
 
@@ -44,10 +44,10 @@ internal class ResettablePipeTest {
   @Test
   fun testPipeCanReturnMultipleResults() = runBlocking {
     val vals = listOf("a", "b", "c")
-    val pipe = Pipe { _, _ -> vals.map { ListRequestData(listOf(it)) } }
+    val pipe = Pipe<String> { _, _ -> vals.map { ListRequestData(listOf(it)) } }
     pipe.accept(
       getBasicRequest(),
-      HttpResponse(URL("http://"), 200, mapOf(), byteArrayOf()),
+      HttpResponse(URI("http://a"), 200, mapOf(), byteArrayOf()),
       requestDataFromList()
     )
 
@@ -58,20 +58,20 @@ internal class ResettablePipeTest {
 
   @Test
   fun testPipeAcceptsMultipleAndReturnsInOrder() = runBlocking {
-    val pipe = Pipe { r, _ -> listOf(ListRequestData(listOf(String(r.body)))) }
+    val pipe = Pipe<String> { r, _ -> listOf(ListRequestData(listOf(String(r.body)))) }
     pipe.accept(
       getBasicRequest(),
-      HttpResponse(URL("http://"), 200, mapOf(), "a".toByteArray()),
+      HttpResponse(URI("http://a"), 200, mapOf(), "a".toByteArray()),
       requestDataFromList(listOf())
     )
     pipe.accept(
       getBasicRequest(),
-      HttpResponse(URL("http://"), 200, mapOf(), "b".toByteArray()),
+      HttpResponse(URI("http://a"), 200, mapOf(), "b".toByteArray()),
       requestDataFromList(listOf())
     )
     pipe.accept(
       getBasicRequest(),
-      HttpResponse(URL("http://"), 200, mapOf(), "c".toByteArray()),
+      HttpResponse(URI("http://a"), 200, mapOf(), "c".toByteArray()),
       requestDataFromList(listOf())
     )
 

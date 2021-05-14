@@ -1,19 +1,18 @@
 package net.devslash.examples
 
-import io.ktor.application.call
-import io.ktor.http.HttpStatusCode
-import io.ktor.response.respond
-import io.ktor.routing.post
-import io.ktor.routing.routing
-import io.ktor.server.engine.embeddedServer
-import io.ktor.server.netty.Netty
+import io.ktor.application.*
+import io.ktor.http.*
+import io.ktor.response.*
+import io.ktor.routing.*
+import io.ktor.server.engine.*
+import io.ktor.server.netty.*
 import net.devslash.HttpMethod
 import net.devslash.outputs.DebugOutput
 import net.devslash.outputs.StdOut
-import net.devslash.post.LogResponse
 import net.devslash.pre.LogRequest
 import net.devslash.runHttp
 import java.net.ServerSocket
+import java.util.concurrent.TimeUnit
 
 fun main() {
   val port = ServerSocket(0).use { it.localPort }
@@ -41,4 +40,5 @@ fun main() {
       }
     }
   }
+  server.stop(100, 100, TimeUnit.MILLISECONDS)
 }

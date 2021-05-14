@@ -21,12 +21,16 @@ internal class AppendFileTest {
     val file = File(tmpDir.root, "test.log")
     val appender = AppendFile(file.absolutePath)
 
-    appender.accept(getBasicRequest(),
-        getResponseWithBody("abc".toByteArray()),
-        ListRequestData(listOf<String>()))
-    appender.accept(getBasicRequest(),
-        getResponseWithBody("def".toByteArray()),
-        ListRequestData(listOf<String>()))
+    appender.accept(
+      getBasicRequest(),
+      getResponseWithBody("abc".toByteArray()),
+      ListRequestData(listOf<String>())
+    )
+    appender.accept(
+      getBasicRequest(),
+      getResponseWithBody("def".toByteArray()),
+      ListRequestData(listOf<String>())
+    )
 
     assertThat(file.readText(), equalTo("abc\ndef\n"))
   }

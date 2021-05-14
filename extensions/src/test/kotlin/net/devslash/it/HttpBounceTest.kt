@@ -46,11 +46,11 @@ class HttpBounceTest : ServerTest() {
   fun testWithBodyParams() {
     var sentBody = ""
     runWith {
-       routing {
-         post("/") {
-           sentBody = call.receiveText()
-         }
-       }
+      routing {
+        post("/") {
+          sentBody = call.receiveText()
+        }
+      }
     }
 
     runBlocking {
@@ -82,7 +82,8 @@ class HttpBounceTest : ServerTest() {
 
     runHttp {
       call(address) {
-        this.headers = mapOf("A" to listOf(ProvidedValue { r -> "!1!".asReplaceableValue().get(r) + "."}), "C" to listOf("D"))
+        this.headers =
+          mapOf("A" to listOf(ProvidedValue { r -> r.visit(ReplacingString("!1!")) + "." }), "C" to listOf("D"))
         data = SingleUseDataSupplier(listOf("Hi"))
       }
     }

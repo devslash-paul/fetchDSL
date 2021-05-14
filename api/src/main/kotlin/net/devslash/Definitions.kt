@@ -1,9 +1,6 @@
 package net.devslash
 
 import kotlinx.coroutines.channels.Channel
-import java.lang.RuntimeException
-import kotlin.properties.ReadOnlyProperty
-import kotlin.reflect.KProperty
 
 sealed class Value
 data class StrValue(val value: String) : Value()
@@ -11,25 +8,25 @@ data class ProvidedValue(val lambda: (RequestData) -> String) : Value()
 
 interface BodyProvider
 data class Session(
-  val calls: List<Call>,
+  val calls: List<Call<*>>,
   val concurrency: Int = 100,
   val delay: Long?,
   val rateOptions: RateLimitOptions
 )
 
-data class Call(
+data class Call<T>(
   val url: String,
   val headers: Map<String, List<Value>>?,
   val cookieJar: String?,
   val type: HttpMethod,
-  val dataSupplier: RequestDataSupplier?,
+  val dataSupplier: RequestDataSupplier<T>?,
   val body: HttpBody?,
   val onError: OnError?,
   val beforeHooks: List<BeforeHook>,
   val afterHooks: List<AfterHook>
 )
 
-interface RequestDataSupplier {
+interface RequestDataSupplier<T> {
   /**
    * Request data should be a closure that is safe to call on a per-request basis
    */
@@ -45,6 +42,8 @@ interface OutputFormat {
   fun accept(resp: HttpResponse, rep: RequestData): ByteArray?
 }
 
+// V is the underlying request data, class is used to find that out
+// To is return type
 typealias RequestVisitor<T, V> = (V, Class<*>) -> T
 typealias MustVisitor<T, V> = (V) -> T
 
@@ -61,10 +60,6 @@ inline fun <T, reified V> RequestData.mustVisit(crossinline visitor: MustVisitor
     if (V::class.java.isAssignableFrom(clazz)) {
       return@visit visitor(any as V)
     } else {
-      println(V::class.java.isAssignableFrom(clazz))
-      println(clazz.isAssignableFrom(V::class.java))
-      println(V::class.java.isInstance(clazz))
-      println(clazz.isInstance(V::class.java))
       throw RuntimeException("Was unable to require visitor class. Was $clazz not ${V::class.java}")
     }
   }
@@ -81,11 +76,12 @@ data class HttpBody(
   val lazyJsonObject: ((RequestData) -> Any)?
 )
 
-@Deprecated("To die soon")
+@Deprecated("Type deprecated")
 interface ReplaceableValue<T, V> {
   fun get(data: V): T
 }
 
+@Deprecated("Replaceable value should be removed, instead please use the ReplacingString instead")
 fun String.asReplaceableValue() = object : ReplaceableValue<String, RequestData> {
   override fun get(data: RequestData): String {
     val replacements = data.mustGet<List<String>>().mapIndexed { ind, t ->
@@ -136,7 +132,6 @@ Aim: Provide a CTX block that people can hook into...
 I wonder if i can find out if something is used
 probably not
 //TODO: URL !1! replaced with a functional supplier
-//TODO: Data supplier T
  */
 @JvmName("afterAction")
 fun UnaryAddBuilder<AfterHook>.action(block: AfterCtx.() -> Unit) {
@@ -174,8 +169,12 @@ class Envelope<T>(private val message: T, private val maxRetries: Int = 3) {
 }
 
 interface OnError
-interface ChannelReceiving<V> : OnError {
-  suspend fun accept(channel: Channel<Envelope<V>>, envelope: Envelope<V>, e: Exception)
+interface ChannelReceiving : OnError {
+  suspend fun accept(
+    channel: Channel<Envelope<Pair<HttpRequest, RequestData>>>,
+    envelope: Envelope<Pair<HttpRequest, RequestData>>,
+    e: Exception
+  )
 }
 
 interface AfterHook
@@ -189,7 +188,7 @@ fun (() -> Any).toPostHook(): SimpleAfterHook = object : SimpleAfterHook {
   }
 }
 
-fun  ((HttpResponse) -> Any).toPostHook(): SimpleAfterHook = object : SimpleAfterHook {
+fun ((HttpResponse) -> Any).toPostHook(): SimpleAfterHook = object : SimpleAfterHook {
   override fun accept(resp: HttpResponse) {
     this@toPostHook(resp)
   }

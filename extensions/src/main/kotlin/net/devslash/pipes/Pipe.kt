@@ -3,10 +3,10 @@ package net.devslash.pipes
 import net.devslash.*
 import java.util.concurrent.ConcurrentLinkedDeque
 
-class Pipe(
+class Pipe<T>(
   val acceptor: (HttpResponse, RequestData) -> List<RequestData>
 ) :
-  FullDataAfterHook, RequestDataSupplier {
+  FullDataAfterHook, RequestDataSupplier<T> {
 
   private val storage = ConcurrentLinkedDeque<RequestData>()
 

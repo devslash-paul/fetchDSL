@@ -5,7 +5,7 @@ import net.devslash.RequestData
 import net.devslash.RequestDataSupplier
 import java.util.concurrent.atomic.AtomicInteger
 
-class ListDataSupplier<T>(private val list: Lazy<List<T>>, private val clazz: Class<T>) : RequestDataSupplier {
+class ListDataSupplier<T>(private val list: Lazy<List<T>>, private val clazz: Class<T>) : RequestDataSupplier<T> {
   private val line = AtomicInteger(0)
 
   companion object {

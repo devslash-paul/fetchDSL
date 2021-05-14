@@ -13,21 +13,25 @@ class Once(private val before: BeforeHook) : SessionPersistingBeforeHook {
 
   private val flag = AtomicBoolean(false)
 
-  override suspend fun accept(sessionManager: SessionManager,
-                              cookieJar: CookieJar,
-                              req: HttpRequest,
-                              data: RequestData) {
+  override suspend fun accept(
+    sessionManager: SessionManager,
+    cookieJar: CookieJar,
+    req: HttpRequest,
+    data: RequestData
+  ) {
     if (flag.compareAndSet(false, true)) {
 
       val methods: KClass<out BeforeHook> = before::class
       for (method in methods.declaredMemberFunctions) {
         val parameters = method.parameters
 
-        val given = mapOf(SessionManager::class.starProjectedType to sessionManager,
-            CookieJar::class.starProjectedType to cookieJar,
-            HttpRequest::class.starProjectedType to req,
-            RequestData::class.starProjectedType to data,
-            before::class.starProjectedType to before)
+        val given = mapOf(
+          SessionManager::class.starProjectedType to sessionManager,
+          CookieJar::class.starProjectedType to cookieJar,
+          HttpRequest::class.starProjectedType to req,
+          RequestData::class.starProjectedType to data,
+          before::class.starProjectedType to before
+        )
 
         val pList = mutableListOf<Any>()
         parameters.forEach { param ->

@@ -21,7 +21,8 @@ internal class FileBasedDataSupplierTest {
     }
   }
 
-  @Test fun testFileWithMultipleWords() = runBlocking {
+  @Test
+  fun testFileWithMultipleWords() = runBlocking {
     val path = FileDataSupplier::class.java.getResource("/twowords.log").path
     val dataSupplier = FileDataSupplier(path, " ")
 

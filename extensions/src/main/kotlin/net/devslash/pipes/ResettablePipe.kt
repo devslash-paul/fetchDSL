@@ -4,8 +4,10 @@ import net.devslash.*
 import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
 
-class ResettablePipe(val acceptor: (HttpResponse, RequestData) -> List<String>,
-                     private val split: String? = null) : BasicOutput, RequestDataSupplier {
+class ResettablePipe<T>(
+  val acceptor: (HttpResponse, RequestData) -> List<String>,
+  private val split: String? = null
+) : BasicOutput, RequestDataSupplier<T> {
 
   private val index = AtomicInteger(0)
   private val storage = Collections.synchronizedList(mutableListOf<String>())

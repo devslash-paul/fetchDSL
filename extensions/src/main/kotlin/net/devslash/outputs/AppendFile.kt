@@ -1,6 +1,7 @@
 package net.devslash.outputs
 
 import net.devslash.*
+import net.devslash.ReplacingString
 import java.io.BufferedOutputStream
 import java.io.FileOutputStream
 import java.io.OutputStream
@@ -23,7 +24,7 @@ class AppendFile(
   }
 
   override fun accept(req: HttpRequest, resp: HttpResponse, data: RequestData) {
-    val filename = fileName.asReplaceableValue().get(data)
+    val filename = data.visit(ReplacingString(fileName))
     val f = memoizedFile ?: BufferedOutputStream(
       FileOutputStream(
         filename, true

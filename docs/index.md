@@ -2,17 +2,40 @@
 description: Cayman is a clean, responsive theme for GitHub Pages.
 ---
 
-FetchDSL is a compact DSL that allows for fast, clear, composable, http requests.
+FetchDSL is a compact DSL that allows for fast, easy to maintain, HTTP request scripts.
+
+The DSL runs using kotlin, ktor, and kotlinx-coroutines to provide highly parallel requests, without requiring many
+resources to run quickly.
 
 # Getting started
 
-We get started with a GET request to a resource by creating a `runHttp` context.
+The `runHttp` context is the main entrypoint for the DSL. Each instance
+of `runHttp` could be considered similar to an incognito browser window. 
+That is, within the `runHttp` block, cookies and state may be shared, 
+and as soon as the block is over, any future blocks start from a fresh
+state.
+
+Multiple `runHttp` blocks can be run at the same time in different threads.
+There is no global state.
+
+#### Making a simple call
+
+To get started with a simple call, open the `runHttp` context, and create a `call`
 
 ```kotlin
 runHttp {
-    call("https://example.com/")
+  call("https://example.com/")
 }
 ```
+
+At it most simple, this will not output anything, or provide anything in the
+request body. This is analogous to the following silent, suppressed curl call.
+
+```bash
+curl -s --output /dev/null example.com
+```
+
+#### Making multiple calls
 
 Multiple calls can be added to a single `runHttp` block. Cookies are shared with all calls in a `runHttp` block.
 
@@ -24,11 +47,29 @@ runHttp {
 }
 ```
 
+<<<<<<< HEAD
+This is quite slow, encumbering, and not very useful.
+
+One of the major advantages of _fetchDSL_ is its ability to perform many 
+thousands of requests efficiently. Even when there's changes in each
+request. To take advantage of this, we have to define a `DataSupplier`.
+
+### Changing request method
+TODO
+=======
 One of the major advantages of _fetchDSL_ is its ability to perform many thousands of requests efficiently. To take
 advantage of this, we have to define a `DataSupplier`.
+>>>>>>> origin/master
 
-# Data Suppliers
+### Adding a body
 
+<<<<<<< HEAD
+### Making multiple requests with Data Suppliers
+
+The concept of data suppliers comes from the fact that most of the time 
+when you require many requests to occur, there's usually something a 
+little different each time.
+=======
 Data suppliers are the basis for providing the data to a request. Most of the time, if you're making multiple requests,
 there'll be something about each request that's a little different. It may be the URL, the authentication, the body.
 Data suppliers enable you to alter each call slightly based on what changes are necessary.
@@ -36,14 +77,25 @@ Data suppliers enable you to alter each call slightly based on what changes are 
 For example, lets say `wwww.coolshoppingcart.com` allows you to add items to your trolley at `/addItem`. We of course
 want to add 10,000 items to our shopping cart. If we have a file that contains all of these, we can take advantage of
 the `FileDataSupplier`.
+>>>>>>> origin/master
 
-We'd put each individual item on its own line. `FileDataSupplier` creates a new set of `RequestData` for each line.
+For instance, it may be that you want to download all the HTML pages given
+a sitemap. Each time you're simply doing a GET call and saving the response,
+but the URL will change each time.
 
+Data suppliers are the basis for providing the changed data to a request. 
+
+In the following example, we'll be utilising the `FileDataSupplier`. This is a basic
+line-by-line supplier. Where each line indicates a new request, with the arguments
+for that request on the line.
+
+For example, if we were trying to add many items to our shopping cart, we may 
+have a file that contains each item.
 ```
 fish
 banana
 tissues
-...997 more lines
+...many more lines
 ```
 
 Then, to create a POST request for each of those lines, you'd simply create the following
@@ -54,7 +106,11 @@ runHttp {
     type = HttpMethod.POST
     data = FileDataSupplier("inputfile.txt")
     body {
+<<<<<<< HEAD
+      value("!1!")
+=======
       value = "!1!"
+>>>>>>> origin/master
     }
   }
 }

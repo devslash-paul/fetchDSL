@@ -4,7 +4,10 @@ import net.devslash.*
 import net.devslash.ReplacingString
 import java.io.File
 
+<<<<<<< HEAD
+=======
 
+>>>>>>> origin/master
 class WriteFile(
   private val fileName: String,
   private val out: OutputFormat = DefaultOutput()

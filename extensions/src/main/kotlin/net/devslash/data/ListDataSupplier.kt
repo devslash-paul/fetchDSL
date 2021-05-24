@@ -16,6 +16,10 @@ class ListDataSupplier<T>(private val list: Lazy<List<T>>, private val clazz: Cl
     inline operator fun <reified T> invoke(list: Lazy<List<T>>): ListDataSupplier<T> {
       return ListDataSupplier(list, T::class.java)
     }
+
+    inline fun <reified T> single(item: T): ListDataSupplier<T> {
+      return ListDataSupplier(lazy { listOf(item) }, T::class.java)
+    }
   }
 
   override suspend fun getDataForRequest(): RequestData? {

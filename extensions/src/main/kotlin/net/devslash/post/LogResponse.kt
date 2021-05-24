@@ -8,7 +8,7 @@ class DefaultResponseFormat : OutputFormat {
   }
 }
 
-class LogResponse<T>(private val format: OutputFormat = DefaultResponseFormat()) : FullDataAfterHook {
+class LogResponse(private val format: OutputFormat = DefaultResponseFormat()) : FullDataAfterHook {
   override fun accept(req: HttpRequest, resp: HttpResponse, data: RequestData) {
     format.accept(resp, data)?.let {
       println(String(it))

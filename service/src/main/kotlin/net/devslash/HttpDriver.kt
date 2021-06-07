@@ -56,6 +56,18 @@ class HttpDriver(config: Config) : Driver {
               }
             }
           })
+          is MultipartForm -> {
+            val bd = req.body as MultipartForm
+            body = MultiPartFormDataContent(formData {
+              bd.parts.forEach {
+                when (val value = it.value) {
+                  is NumberType -> append(it.key, value.i)
+                  is StringType -> append(it.key, value.i)
+                  is ByteArrayType -> append(it.key, value.i)
+                }
+              }
+            })
+          }
         }
       }
       return Success(mapResponse(resp))

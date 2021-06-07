@@ -2,6 +2,12 @@ package net.devslash
 
 import kotlinx.coroutines.channels.Channel
 
+sealed class FormTypes
+class NumberType(val i: Number) : FormTypes()
+class StringType(val i: String) : FormTypes()
+class ByteArrayType(val i: ByteArray) : FormTypes()
+data class FormPart(val key: String, val value: FormTypes)
+
 sealed class Value
 data class StrValue(val value: String) : Value()
 data class ProvidedValue(val lambda: (RequestData) -> String) : Value()

@@ -23,7 +23,7 @@ plugins {
 
 allprojects {
   group = "net.devslash.fetchdsl"
-  version = "0.17.2"
+  version = "0.18.0"
 
   repositories {
     mavenCentral()

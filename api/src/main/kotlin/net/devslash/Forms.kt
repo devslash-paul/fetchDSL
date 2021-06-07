@@ -14,6 +14,8 @@ val formIndexed: ValueMapper<Map<String, List<String>>> = { form, reqData ->
   }.toMap()
 }
 
+class MultipartForm(val parts: List<FormPart>) : BodyProvider
+
 class FormBody(
   private val body: Map<String, List<String>>,
   private val data: RequestData,

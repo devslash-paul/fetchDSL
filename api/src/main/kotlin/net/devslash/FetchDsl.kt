@@ -104,6 +104,8 @@ val indexValueMapper: ValueMapper<String> = { inData, reqData ->
 class BodyBuilder {
   private var value: String? = null
   private var valueMapper: ValueMapper<String>? = null
+  // Map later. Big day.
+  private var formParts: List<FormPart>? = null
   private var formParams: Form? = null
   private var formMapper: ValueMapper<Map<String, List<String>>>? = null
   var jsonObject: Any? = null
@@ -123,6 +125,13 @@ class BodyBuilder {
   ) {
     formParams = params
     formMapper = mapper
+  }
+
+  @Suppress("unused")
+  fun multipartForm(
+    parts: List<FormPart>
+  ) {
+      this.formParts = parts;
   }
 
   @Suppress("unused")

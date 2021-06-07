@@ -147,7 +147,7 @@ class BodyBuilder {
   }
 
   fun build(): HttpBody {
-    return HttpBody(value, valueMapper, formParams, formMapper, jsonObject, lazyJsonObject)
+    return HttpBody(value, valueMapper, formParams, formMapper, formParts, jsonObject, lazyJsonObject)
   }
 
 }

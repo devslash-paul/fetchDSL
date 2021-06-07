@@ -39,6 +39,10 @@ fun getBodyProvider(call: Call<*>, data: RequestData): BodyProvider {
     return BasicBodyProvider(call.body.bodyValue, data, call.body.bodyValueMapper!!)
   }
 
+  if(call.body.multipartForm != null) {
+    return MultipartForm(call.body.multipartForm)
+  }
+
   return EmptyBodyProvider
 }
 

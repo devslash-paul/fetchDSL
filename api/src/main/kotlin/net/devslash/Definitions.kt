@@ -78,6 +78,7 @@ data class HttpBody(
   val bodyValueMapper: ValueMapper<String>?,
   val formData: Map<String, List<String>>?,
   val formMapper: ValueMapper<Map<String, List<String>>>?,
+  val multipartForm: List<FormPart>?,
   val jsonObject: Any?,
   val lazyJsonObject: ((RequestData) -> Any)?
 )

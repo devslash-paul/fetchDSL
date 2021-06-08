@@ -39,8 +39,13 @@ fun getBodyProvider(call: Call<*>, data: RequestData): BodyProvider {
     return BasicBodyProvider(call.body.bodyValue, data, call.body.bodyValueMapper!!)
   }
 
-  if(call.body.multipartForm != null) {
+  if (call.body.multipartForm != null) {
     return MultipartForm(call.body.multipartForm)
+  }
+
+  if (call.body.lazyMultipartForm != null) {
+    val lazyMultipartForm = call.body.lazyMultipartForm
+    return MultipartForm(lazyMultipartForm(data))
   }
 
   return EmptyBodyProvider

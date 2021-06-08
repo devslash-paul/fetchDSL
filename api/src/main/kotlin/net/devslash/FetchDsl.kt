@@ -1,5 +1,8 @@
 package net.devslash
 
+//TODO: ListdataSupplier of empty strings, should just be `repeat`
+//TODO: Allow for URLs to be encoded by different types
+
 import net.devslash.err.RetryOnTransitiveError
 import java.time.Duration
 
@@ -104,8 +107,10 @@ val indexValueMapper: ValueMapper<String> = { inData, reqData ->
 class BodyBuilder {
   private var value: String? = null
   private var valueMapper: ValueMapper<String>? = null
-  // Map later. Big day.
+
   private var formParts: List<FormPart>? = null
+  private var lazyMultipartForm: (RequestData.() -> List<FormPart>)? = null
+
   private var formParams: Form? = null
   private var formMapper: ValueMapper<Map<String, List<String>>>? = null
   var jsonObject: Any? = null
@@ -131,7 +136,13 @@ class BodyBuilder {
   fun multipartForm(
     parts: List<FormPart>
   ) {
-      this.formParts = parts;
+    this.formParts = parts;
+  }
+
+  fun multipartForm(
+    lazyForm: RequestData.() -> List<FormPart>
+  ) {
+    this.lazyMultipartForm = lazyForm
   }
 
   @Suppress("unused")
@@ -147,7 +158,16 @@ class BodyBuilder {
   }
 
   fun build(): HttpBody {
-    return HttpBody(value, valueMapper, formParams, formMapper, formParts, jsonObject, lazyJsonObject)
+    return HttpBody(
+      value,
+      valueMapper,
+      formParams,
+      formMapper,
+      formParts,
+      lazyMultipartForm,
+      jsonObject,
+      lazyJsonObject
+    )
   }
 
 }

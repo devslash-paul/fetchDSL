@@ -138,12 +138,6 @@ fun UnaryAddBuilder<BeforeHook>.action(block: BeforeCtx.() -> Unit) {
   }
 }
 
-/*
-Aim: Provide a CTX block that people can hook into...
-I wonder if i can find out if something is used
-probably not
-//TODO: URL !1! replaced with a functional supplier
- */
 @JvmName("afterAction")
 fun UnaryAddBuilder<AfterHook>.action(block: AfterCtx.() -> Unit) {
   +object : FullDataAfterHook {

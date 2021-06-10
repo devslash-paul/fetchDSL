@@ -195,9 +195,9 @@ class HttpSessionManager(val engine: Driver, private val session: Session) : Ses
   }
 
   private fun <T> mapHttpRequest(call: Call<T>, data: RequestData): HttpRequest {
-    val url = getUrlProvider(call, data)
+    val getUrl = getUrlProvider(call)
     val body = getBodyProvider(call, data)
-    val currentUrl = url.get()
+    val currentUrl = getUrl(call.url, data)
     val type = call.type
 
     return HttpRequest(type, currentUrl, body)

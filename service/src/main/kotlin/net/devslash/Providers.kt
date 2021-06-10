@@ -2,9 +2,6 @@ package net.devslash
 
 import java.util.concurrent.atomic.AtomicBoolean
 
-interface URLProvider {
-  fun get(): String
-}
 
 fun <T> handleNoSupplier(data: RequestDataSupplier<T>?): RequestDataSupplier<T> {
   if (data != null) {

@@ -10,17 +10,18 @@ internal class UrlProvidersTest {
   fun testBasicProvider() {
     val url = "http://example.com"
     val provider = getUrlProvider(
-      getCall(url = url), requestDataFromList(listOf())
+      getCall(url = url)
     )
-    assertEquals(url, provider.get())
+    assertEquals(url, provider(url, requestDataFromList(listOf())))
   }
 
   @Test
   fun testReplacement() {
+    val url = "http://!1!"
     val provider = getUrlProvider(
-      getCall(url = "http://!1!"),
-      requestDataFromList(listOf("example.com"))
+      getCall(url = url),
     )
-    assertEquals("http://example.com", provider.get())
+    val data = requestDataFromList(listOf("example.com"))
+    assertEquals("http://example.com", provider(url, data))
   }
 }

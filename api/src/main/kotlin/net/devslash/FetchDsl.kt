@@ -1,8 +1,5 @@
 package net.devslash
 
-//TODO: ListdataSupplier of empty strings, should just be `repeat`
-//TODO: Allow for URLs to be encoded by different types
-
 import net.devslash.err.RetryOnTransitiveError
 import java.time.Duration
 
@@ -31,6 +28,7 @@ data class RateLimitOptions(val enabled: Boolean, val count: Int, val duration: 
 open class CallBuilder<T>(private val url: String) {
   private var cookieJar: String? = null
 
+  val urlProvider: URLProvider? = null
   var data: RequestDataSupplier<T>? = null
   var body: HttpBody? = null
   var type: HttpMethod = HttpMethod.GET
@@ -77,7 +75,7 @@ open class CallBuilder<T>(private val url: String) {
       headers = set
     }
     return Call(
-      url, mapHeaders(headers), cookieJar, type, data, body,
+      url, urlProvider, mapHeaders(headers), cookieJar, type, data, body,
       onError, preHooksList, postHooksList
     )
   }
@@ -109,7 +107,7 @@ class BodyBuilder {
   private var valueMapper: ValueMapper<String>? = null
 
   private var formParts: List<FormPart>? = null
-  private var lazyMultipartForm: (RequestData.() -> List<FormPart>)? = null
+  private var lazyMultipartForm: ((RequestData) -> List<FormPart>)? = null
 
   private var formParams: Form? = null
   private var formMapper: ValueMapper<Map<String, List<String>>>? = null

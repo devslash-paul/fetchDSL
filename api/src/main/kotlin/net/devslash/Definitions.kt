@@ -20,8 +20,11 @@ data class Session(
   val rateOptions: RateLimitOptions
 )
 
+typealias URLProvider = (String, RequestData) -> String
+
 data class Call<T>(
   val url: String,
+  val urlProvider: URLProvider?,
   val headers: Map<String, List<Value>>?,
   val cookieJar: String?,
   val type: HttpMethod,

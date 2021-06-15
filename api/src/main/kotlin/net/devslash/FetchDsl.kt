@@ -28,7 +28,7 @@ data class RateLimitOptions(val enabled: Boolean, val count: Int, val duration: 
 open class CallBuilder<T>(private val url: String) {
   private var cookieJar: String? = null
 
-  val urlProvider: URLProvider? = null
+  var urlProvider: URLProvider? = null
   var data: RequestDataSupplier<T>? = null
   var body: HttpBody? = null
   var type: HttpMethod = HttpMethod.GET

@@ -48,7 +48,7 @@ interface RequestDataSupplier<T> {
 }
 
 interface OutputFormat {
-  fun accept(resp: HttpResponse, rep: RequestData): ByteArray?
+  fun accept(resp: HttpResponse, data: RequestData): ByteArray?
 }
 
 // V is the underlying request data, class is used to find that out

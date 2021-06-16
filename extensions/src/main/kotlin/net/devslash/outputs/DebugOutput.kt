@@ -6,13 +6,13 @@ import net.devslash.RequestData
 import net.devslash.mustGet
 
 class DebugOutput : OutputFormat {
-  override fun accept(resp: HttpResponse, rep: RequestData): ByteArray? {
+  override fun accept(resp: HttpResponse, data: RequestData): ByteArray? {
     return """
               ----------------
               url: ${resp.url}
               status: ${resp.statusCode}
               headers: [${resp.headers}]
-              data: ${rep.mustGet<Any?>()}
+              data: ${data.mustGet<Any?>()}
               body ->
               ${String(resp.body)}
               ----------------

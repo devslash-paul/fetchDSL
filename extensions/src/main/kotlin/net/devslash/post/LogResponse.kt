@@ -3,7 +3,7 @@ package net.devslash.post
 import net.devslash.*
 
 class DefaultResponseFormat : OutputFormat {
-  override fun accept(resp: HttpResponse, rep: RequestData): ByteArray {
+  override fun accept(resp: HttpResponse, data: RequestData): ByteArray {
     return "Resp ${resp.url} -> ${resp.statusCode}".toByteArray()
   }
 }

@@ -17,6 +17,8 @@ buildscript {
 plugins {
   base
   kotlin("jvm") version "1.4.20" apply false
+  jacoco
+  java
   `maven-publish`
   signing
 }
@@ -36,6 +38,7 @@ subprojects {
   apply {
     plugin("maven-publish")
     plugin("java-library")
+    plugin("jacoco")
     plugin("org.jetbrains.kotlin.jvm")
     plugin("org.gradle.maven-publish")
     plugin("org.gradle.signing")
@@ -93,6 +96,14 @@ subprojects {
 
   signing {
     sign(publishing.publications["library"])
+  }
+
+  tasks.jacocoTestReport  {
+      reports {
+        html.isEnabled = false
+        xml.isEnabled = true
+        xml.destination = file("$buildDir/jacoco.xml")
+      }
   }
 
   tasks.withType<KotlinCompile>().configureEach {

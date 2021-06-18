@@ -41,4 +41,17 @@ internal class WriteFileTest {
 
         assertThat(testFile.readLines(), equalTo(listOf("Test", "output")))
     }
+
+    @Test
+    fun `Test empty output is valid`() {
+        val testFile = folder.newFile("test")
+        val write = WriteFile(testFile.absolutePath, object: OutputFormat {
+            override fun accept(resp: HttpResponse, data: RequestData): ByteArray? {
+                return null
+            }
+        })
+        write.accept(getBasicRequest(), getBasicResponse(), ListRequestData(listOf<String>()))
+
+        assertThat(testFile.readLines(), equalTo(listOf()))
+    }
 }

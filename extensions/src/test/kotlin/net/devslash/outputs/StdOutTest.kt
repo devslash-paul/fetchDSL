@@ -19,7 +19,7 @@ internal class StdOutTest {
         val byteStream = ByteArrayOutputStream()
         val out = StdOut(PrintStream(byteStream))
 
-        assertOutputMatches(out, byteStream, body)
+        assertOutputMatches(out, byteStream, "$body\n")
     }
 
     @Test
@@ -32,7 +32,17 @@ internal class StdOutTest {
             }
         })
 
-        assertOutputMatches(out, byteStream, pattern)
+        assertOutputMatches(out, byteStream, "$pattern\n")
+    }
+
+    @Test
+    fun testNullOutputValid() {
+        val byteStream = ByteArrayOutputStream()
+        val out = StdOut(PrintStream(byteStream), object : OutputFormat {
+            override fun accept(resp: HttpResponse, data: RequestData): ByteArray? = null
+        })
+
+        assertOutputMatches(out, byteStream, "")
     }
 
     private fun assertOutputMatches(out: StdOut, byteStream: ByteArrayOutputStream, actual: String) {
@@ -42,7 +52,7 @@ internal class StdOutTest {
         )
 
         assertThat(
-            actual + "\n",
+            actual,
             equalTo(String(byteStream.toByteArray()))
         )
     }

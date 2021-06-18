@@ -14,7 +14,6 @@ sealed class HeaderValue
 data class StrHeaderValue(val value: String) : HeaderValue()
 
 data class ProvidedHeaderValue(val lambda: (RequestData) -> String) : HeaderValue()
-interface BodyProvider
 
 data class Session(
   val calls: List<Call<*>>,

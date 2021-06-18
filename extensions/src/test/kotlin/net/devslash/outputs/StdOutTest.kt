@@ -19,7 +19,7 @@ internal class StdOutTest {
         val byteStream = ByteArrayOutputStream()
         val out = StdOut(PrintStream(byteStream))
 
-        assertOutputMatches(out, byteStream, "$body\n")
+        assertOutputMatches(out, byteStream, body)
     }
 
     @Test
@@ -32,7 +32,7 @@ internal class StdOutTest {
             }
         })
 
-        assertOutputMatches(out, byteStream, "$pattern\n")
+        assertOutputMatches(out, byteStream, pattern)
     }
 
     @Test
@@ -53,7 +53,7 @@ internal class StdOutTest {
 
         assertThat(
             actual,
-            equalTo(String(byteStream.toByteArray()))
+            equalTo(String(byteStream.toByteArray()).trim())
         )
     }
 

@@ -34,8 +34,6 @@ allprojects {
 
 }
 
-
-
 subprojects {
   apply {
     plugin("maven-publish")
@@ -121,6 +119,7 @@ subprojects {
   }
 
   tasks.withType<KotlinCompile>().configureEach {
+    dependsOn("writeVersionProps")
     println("Configuring $name in project ${project.name}...")
     kotlinOptions {
       suppressWarnings = false

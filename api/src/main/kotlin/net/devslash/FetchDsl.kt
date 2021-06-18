@@ -4,7 +4,7 @@ import net.devslash.err.RetryOnTransitiveError
 import java.time.Duration
 import java.util.*
 
-private object Version {
+object Version {
   val version: String
 
   init {
@@ -118,7 +118,7 @@ class BodyBuilder {
   // This is actually used. The receiver ensures that only the basic case can utilise a non mapped
   // function
   @Suppress("unused")
-  fun BodyBuilder.formParams(params: Map<String, List<String>>) {
+  fun formParams(params: Map<String, List<String>>) {
     formParams = params
     formMapper = formIndexed
   }
@@ -135,7 +135,7 @@ class BodyBuilder {
   fun multipartForm(
     parts: List<FormPart>
   ) {
-    this.formParts = parts;
+    this.formParts = parts
   }
 
   @Suppress("unused")
@@ -146,7 +146,7 @@ class BodyBuilder {
   }
 
   @Suppress("unused")
-  fun BodyBuilder.value(value: String) {
+  fun value(value: String) {
     this.value = value
     this.valueMapper = identityValueMapper
   }
@@ -180,6 +180,7 @@ class SessionBuilder {
   var delay: Long? = null
   var rateOptions: RateLimitOptions = RateLimitOptions(false, 0, Duration.ZERO)
 
+  @Suppress("unused")
   fun rateLimit(count: Int, duration: Duration) {
     require(!(duration.isNegative || duration.isZero)) { "Invalid duration, must be more than zero" }
     require(count > 0) { "Count must be positive" }

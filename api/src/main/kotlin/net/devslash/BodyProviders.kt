@@ -1,20 +1,45 @@
 package net.devslash
 
+sealed class BodyProvider
+
+typealias Form = Map<String, List<String>>
 
 class BasicBodyProvider(
   private val body: String,
   private val data: RequestData,
   private val mapper: ValueMapper<String>
-) : BodyProvider {
+) : BodyProvider() {
   fun get(): String {
     return mapper(body, data)
   }
 }
 
-class JsonBody(private val any: Any) : BodyProvider {
+class JsonBody(private val any: Any) : BodyProvider() {
   fun get(): Any {
     return any
   }
+}
+
+internal val formIdentity: ValueMapper<Map<String, List<String>>> = { form, _ -> form }
+internal val formIndexed: ValueMapper<Map<String, List<String>>> = { form, reqData ->
+  val indexes = reqData.mustGet<List<String>>().mapIndexed { index, string ->
+    "!" + (index + 1) + "!" to string
+  }.toMap()
+  form.map { entry ->
+    val key = replaceString(indexes, entry.key)
+    val value = entry.value.map { replaceString(indexes, it) }
+    return@map key to value
+  }.toMap()
+}
+
+class MultipartForm(val parts: List<FormPart>) : BodyProvider()
+
+class FormBody(
+  private val body: Map<String, List<String>>,
+  private val data: RequestData,
+  private val mapper: ValueMapper<Map<String, List<String>>>
+) : BodyProvider() {
+  fun get(): Map<String, List<String>> = mapper(body, data)
 }
 
 fun getBodyProvider(call: Call<*>, data: RequestData): BodyProvider {
@@ -51,4 +76,4 @@ fun getBodyProvider(call: Call<*>, data: RequestData): BodyProvider {
   return EmptyBodyProvider
 }
 
-object EmptyBodyProvider : BodyProvider
+object EmptyBodyProvider : BodyProvider()

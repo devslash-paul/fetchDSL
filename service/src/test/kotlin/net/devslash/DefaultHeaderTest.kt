@@ -12,7 +12,13 @@ class DefaultHeaderTest {
 
     assertThat(
       call.headers,
-      equalTo(mapOf<String, List<Any>>("User-Agent" to listOf(StrHeaderValue("FetchDSL (Apache-HttpAsyncClient + Kotlin, version not set)"))))
+      equalTo(
+        mapOf<String, List<Any>>(
+          "User-Agent" to listOf(
+            StrHeaderValue("FetchDSL (Apache-HttpAsyncClient + Kotlin, ${Version.version})")
+          )
+        )
+      )
     )
   }
 

@@ -2,17 +2,13 @@ package net.devslash
 
 import net.devslash.err.RetryOnTransitiveError
 import java.time.Duration
+import java.util.*
 
 @DslMarker
 annotation class FetchDSL
 
-enum class HttpMethod {
-  GET, POST, DELETE, PUT, HEAD, OPTIONS, PATCH
-}
-
 class UnaryAddBuilder<T> {
   private var hooks = mutableListOf<T>()
-
   operator fun T.unaryPlus() {
     hooks = (hooks + this).toMutableList()
   }
@@ -24,6 +20,10 @@ class UnaryAddBuilder<T> {
 
 data class RateLimitOptions(val enabled: Boolean, val count: Int, val duration: Duration)
 
+enum class HttpMethod {
+  GET, POST, DELETE, PUT, HEAD, OPTIONS, PATCH
+}
+
 @FetchDSL
 open class CallBuilder<T>(private val url: String) {
   private var cookieJar: String? = null
@@ -32,7 +32,7 @@ open class CallBuilder<T>(private val url: String) {
   var data: RequestDataSupplier<T>? = null
   var body: HttpBody? = null
   var type: HttpMethod = HttpMethod.GET
-  var headers: Map<String, List<Any>>? = null
+  var headers: Map<String, List<Any>> = mapOf()
   var onError: OnError? = RetryOnTransitiveError()
 
   private var preHooksList = mutableListOf<BeforeHook>()
@@ -65,18 +65,17 @@ open class CallBuilder<T>(private val url: String) {
   }
 
   fun build(): Call<T> {
-    val localHeaders = headers
-    if (localHeaders == null || !localHeaders.contains("User-Agent")) {
-      val set = mutableMapOf<String, List<Any>>()
-      if (localHeaders != null) {
-        set.putAll(localHeaders)
-      }
-      set["User-Agent"] = listOf("FetchDSL (Apache-HttpAsyncClient + Kotlin, version not set)")
-      headers = set
-    }
+    val props = Properties()
+    props.load(FetchDSL::class.java.getResourceAsStream("/version.properties"))
+    val version = props["version"]
+    val localHeaders = HashMap(headers)
+    localHeaders.putIfAbsent(
+      "User-Agent",
+      listOf("FetchDSL (Apache-HttpAsyncClient + Kotlin, $version)")
+    )
     return Call(
-      url, urlProvider, mapHeaders(headers), cookieJar, type, data, body,
-      onError, preHooksList, postHooksList
+      url, urlProvider, mapHeaders(localHeaders), type, data, body, onError,
+      preHooksList, postHooksList
     )
   }
 }

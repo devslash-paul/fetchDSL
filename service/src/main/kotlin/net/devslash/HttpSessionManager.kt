@@ -22,9 +22,8 @@ class HttpSessionManager(val engine: Driver, private val session: Session) : Ses
     engine.use {
       sessionManager = this
       for (call in session.calls) {
-        val res = call(call, jar)
-        if (res != null) {
-          throw RuntimeException(res)
+        call(call, jar)?.let {
+          throw RuntimeException(it)
         }
       }
     }
@@ -148,8 +147,8 @@ class HttpSessionManager(val engine: Driver, private val session: Session) : Ses
     storedException: AtomicReference<Exception>
   ) = launch(dispatcher) {
     for (next in channel) {
-      // ensure that this is a valid request
       if (storedException.get() != null) {
+        // Break out in the event we've detected an exception somewhere
         break
       }
       try {
@@ -157,23 +156,28 @@ class HttpSessionManager(val engine: Driver, private val session: Session) : Ses
           val contents = next.get()
           rateLimiter.acquire()
           when (val resp = makeRequest(contents.first)) {
-            is Failure -> {
-              handleFailure(call, channel, next, resp)
-            }
-            is Success -> {
-              val mappedResponse = resp.value
-              afterRequest.forEach {
-                when (it) {
-                  is SimpleAfterHook -> it.accept(mappedResponse.copy())
-                  is ChainReceivingResponseHook -> it.accept(mappedResponse)
-                  is FullDataAfterHook -> it.accept(contents.first, mappedResponse, contents.second)
-                }
-              }
-            }
+            is Failure -> handleFailure(call, channel, next, resp)
+            is Success -> handleSuccess(resp, afterRequest, contents)
           }
         }
       } catch (e: Exception) {
         storedException.set(e)
+        break
+      }
+    }
+  }
+
+  private fun handleSuccess(
+    resp: Success<HttpResponse>,
+    afterRequest: List<AfterHook>,
+    contents: Pair<HttpRequest, RequestData>
+  ) {
+    val mappedResponse = resp.value
+    afterRequest.forEach {
+      when (it) {
+        is SimpleAfterHook -> it.accept(mappedResponse.copy())
+        is ChainReceivingResponseHook -> it.accept(mappedResponse)
+        is FullDataAfterHook -> it.accept(contents.first, mappedResponse, contents.second)
       }
     }
   }
@@ -211,15 +215,13 @@ class HttpSessionManager(val engine: Driver, private val session: Session) : Ses
   }
 
   private suspend fun maybeDelay() {
-    val delay = session.delay
-    if (delay != null && delay > 0) {
+    session.delay?.let {
+      require(it > 0)
       // Then between every call, we have to have waited at least that many ms
       val diff = clock.millis() - lastCall
-      if (diff < delay) {
-        // we have to wait for the diff. Due to the fact that delays institute a single threaded
-        // system, this is safe
-        delay(delay - diff)
-      }
+      // we have to wait for the diff. Due to the fact that delays institute a single threaded
+      // system, this is safe. Negative delay returns instantly
+      delay(it - diff)
     }
   }
 }

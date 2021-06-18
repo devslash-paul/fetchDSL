@@ -26,7 +26,6 @@ data class Call<T>(
   val url: String,
   val urlProvider: URLProvider?,
   val headers: Map<String, List<Value>>?,
-  val cookieJar: String?,
   val type: HttpMethod,
   val dataSupplier: RequestDataSupplier<T>?,
   val body: HttpBody?,

@@ -1,4 +1,5 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import java.util.*
 
 buildscript {
   project.extra.apply {
@@ -32,6 +33,7 @@ allprojects {
   }
 
 }
+
 
 
 subprojects {
@@ -94,15 +96,27 @@ subprojects {
     }
   }
 
+  tasks.register("writeVersionProps") {
+    dependsOn("processResources")
+    doLast {
+      File("$buildDir/resources/main/").mkdirs()
+      File("$buildDir/resources/main/version.properties").let {
+        val p = Properties()
+        p["version"] = project.version.toString()
+        p.store(it.writer(), "Project version")
+      }
+    }
+  }
+
   signing {
     sign(publishing.publications["library"])
   }
 
-  tasks.jacocoTestReport  {
-      reports {
-        html.isEnabled = false
-        xml.isEnabled = true
-        xml.destination = file("$buildDir/jacoco.xml")
+  tasks.jacocoTestReport {
+    reports {
+      html.isEnabled = false
+      xml.isEnabled = true
+      xml.destination = file("$buildDir/jacoco.xml")
       }
   }
 

@@ -20,8 +20,8 @@ class JsonBody(private val any: Any) : BodyProvider() {
   }
 }
 
-internal val formIdentity: ValueMapper<Map<String, List<String>>> = { form, _ -> form }
-internal val formIndexed: ValueMapper<Map<String, List<String>>> = { form, reqData ->
+val formIdentity: ValueMapper<Map<String, List<String>>> = { form, _ -> form }
+val formIndexed: ValueMapper<Map<String, List<String>>> = { form, reqData ->
   val indexes = reqData.mustGet<List<String>>().mapIndexed { index, string ->
     "!" + (index + 1) + "!" to string
   }.toMap()

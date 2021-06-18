@@ -31,7 +31,7 @@ fun getResponseWithBody(body: ByteArray): HttpResponse {
   return HttpResponse(URI("http://example.com"), 200, mapOf(), body)
 }
 
-fun getResponse(): HttpResponse {
+fun getBasicResponse(): HttpResponse {
   return getResponseWithBody("Body".toByteArray())
 }
 

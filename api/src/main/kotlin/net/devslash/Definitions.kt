@@ -2,17 +2,20 @@ package net.devslash
 
 import kotlinx.coroutines.channels.Channel
 
+typealias URLProvider = (String, RequestData) -> String
+
 sealed class FormTypes
 class NumberType(val i: Number) : FormTypes()
 class StringType(val i: String) : FormTypes()
 class ByteArrayType(val i: ByteArray) : FormTypes()
+
 data class FormPart(val key: String, val value: FormTypes)
+sealed class HeaderValue
+data class StrHeaderValue(val value: String) : HeaderValue()
 
-sealed class Value
-data class StrValue(val value: String) : Value()
-data class ProvidedValue(val lambda: (RequestData) -> String) : Value()
-
+data class ProvidedHeaderValue(val lambda: (RequestData) -> String) : HeaderValue()
 interface BodyProvider
+
 data class Session(
   val calls: List<Call<*>>,
   val concurrency: Int = 100,
@@ -20,12 +23,10 @@ data class Session(
   val rateOptions: RateLimitOptions
 )
 
-typealias URLProvider = (String, RequestData) -> String
-
 data class Call<T>(
   val url: String,
   val urlProvider: URLProvider?,
-  val headers: Map<String, List<Value>>?,
+  val headers: Map<String, List<HeaderValue>>?,
   val type: HttpMethod,
   val dataSupplier: RequestDataSupplier<T>?,
   val body: HttpBody?,
@@ -166,7 +167,7 @@ interface SkipBeforeHook : BeforeHook {
 }
 
 class Envelope<T>(private val message: T, private val maxRetries: Int = 3) {
-  var current = 0
+  private var current = 0
   fun get() = message
   fun fail() = current++
   fun shouldProceed() = current < maxRetries
@@ -186,6 +187,7 @@ interface SimpleAfterHook : AfterHook {
   fun accept(resp: HttpResponse)
 }
 
+@Suppress("unused")
 fun (() -> Any).toPostHook(): SimpleAfterHook = object : SimpleAfterHook {
   override fun accept(resp: HttpResponse) {
     this@toPostHook()

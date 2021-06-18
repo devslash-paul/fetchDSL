@@ -83,7 +83,7 @@ class HttpBounceTest : ServerTest() {
     runHttp {
       call(address) {
         this.headers =
-          mapOf("A" to listOf(ProvidedValue { r -> r.visit(ReplacingString("!1!")) + "." }), "C" to listOf("D"))
+          mapOf("A" to listOf(ProvidedHeaderValue { r -> r.visit(ReplacingString("!1!")) + "." }), "C" to listOf("D"))
         data = SingleUseDataSupplier(listOf("Hi"))
       }
     }

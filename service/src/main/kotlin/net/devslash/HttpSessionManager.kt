@@ -62,8 +62,8 @@ class HttpSessionManager(val engine: Driver, private val session: Session) : Ses
         call.headers?.forEach { entry ->
           entry.value.forEach {
             val s = when (it) {
-              is StrValue -> it.value
-              is ProvidedValue -> it.lambda(data)
+              is StrHeaderValue -> it.value
+              is ProvidedHeaderValue -> it.lambda(data)
             }
             req.addHeader(entry.key, s)
           }

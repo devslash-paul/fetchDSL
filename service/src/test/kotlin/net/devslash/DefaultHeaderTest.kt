@@ -12,7 +12,7 @@ class DefaultHeaderTest {
 
     assertThat(
       call.headers,
-      equalTo(mapOf<String, List<Any>>("User-Agent" to listOf(StrValue("FetchDSL (Apache-HttpAsyncClient + Kotlin, version not set)"))))
+      equalTo(mapOf<String, List<Any>>("User-Agent" to listOf(StrHeaderValue("FetchDSL (Apache-HttpAsyncClient + Kotlin, version not set)"))))
     )
   }
 
@@ -24,7 +24,7 @@ class DefaultHeaderTest {
 
     assertThat(
       call.headers,
-      equalTo(mapOf<String, List<Any>>("User-Agent" to listOf(StrValue("OVERRIDE"))))
+      equalTo(mapOf<String, List<Any>>("User-Agent" to listOf(StrHeaderValue("OVERRIDE"))))
     )
   }
 }

@@ -4,6 +4,16 @@ import net.devslash.err.RetryOnTransitiveError
 import java.time.Duration
 import java.util.*
 
+private object Version {
+  val version: String
+
+  init {
+    val prop = Properties()
+    prop.load(FetchDSL::class.java.getResourceAsStream("/version.properties"))
+    version = requireNotNull(prop.getProperty("version"))
+  }
+}
+
 @DslMarker
 annotation class FetchDSL
 
@@ -26,8 +36,6 @@ enum class HttpMethod {
 
 @FetchDSL
 open class CallBuilder<T>(private val url: String) {
-  private var cookieJar: String? = null
-
   var urlProvider: URLProvider? = null
   var data: RequestDataSupplier<T>? = null
   var body: HttpBody? = null
@@ -50,28 +58,22 @@ open class CallBuilder<T>(private val url: String) {
     body = BodyBuilder().apply(block).build()
   }
 
-  private fun mapHeaders(m: Map<String, List<Any>>?): Map<String, List<Value>>? {
-    return m?.let { map ->
-      map.map { entry ->
-        entry.key to entry.value.map { value ->
-          when (value) {
-            is String -> StrValue(value)
-            is Value -> value
-            else -> throw RuntimeException()
-          }
+  private fun mapHeaders(map: Map<String, List<Any>>): Map<String, List<HeaderValue>> {
+    return map.mapValues { entry ->
+      entry.value.map { value ->
+        when (value) {
+          is HeaderValue -> value
+          else -> StrHeaderValue(value.toString())
         }
-      }.toMap()
+      }
     }
   }
 
   fun build(): Call<T> {
-    val props = Properties()
-    props.load(FetchDSL::class.java.getResourceAsStream("/version.properties"))
-    val version = props["version"]
     val localHeaders = HashMap(headers)
     localHeaders.putIfAbsent(
       "User-Agent",
-      listOf("FetchDSL (Apache-HttpAsyncClient + Kotlin, $version)")
+      listOf("FetchDSL (Apache-HttpAsyncClient + Kotlin, ${Version.version})")
     )
     return Call(
       url, urlProvider, mapHeaders(localHeaders), type, data, body, onError,
@@ -136,6 +138,7 @@ class BodyBuilder {
     this.formParts = parts;
   }
 
+  @Suppress("unused")
   fun multipartForm(
     lazyForm: RequestData.() -> List<FormPart>
   ) {
@@ -170,20 +173,8 @@ class BodyBuilder {
 }
 
 @FetchDSL
-class MultiCallBuilder {
-  private var calls = mutableListOf<Call<*>>()
-
-  fun <T> call(url: String, block: CallBuilder<T>.() -> Unit = {}) {
-    calls.add(CallBuilder<T>(url).apply(block).build())
-  }
-
-  fun calls() = calls
-}
-
-@FetchDSL
 class SessionBuilder {
   private var calls = mutableListOf<Call<*>>()
-  private val chained = mutableListOf<List<Call<*>>>()
 
   var concurrency = 20
   var delay: Long? = null
@@ -203,15 +194,6 @@ class SessionBuilder {
   fun call(url: String, block: CallBuilder<List<String>>.() -> Unit = {}) {
     calls.add(CallBuilder<List<String>>(url).apply(block).build())
   }
-
-  // TODO: Re-enable when chaining is stable
-//  fun chained(block: MultiCallBuilder.(prev: Previous?) -> Unit = {}) {
-//    if (chained.isNotEmpty()) {
-//      val line = chained.last().line
-//
-//    }
-//    chained.add(MultiCallBuilder().apply(block).calls())
-//  }
 
   fun build(): Session = Session(calls, concurrency, delay, rateOptions)
 }

@@ -5,6 +5,7 @@ import kotlinx.coroutines.channels.Channel
 import java.time.Clock
 import java.util.concurrent.Executors
 import java.util.concurrent.Semaphore
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.coroutines.CoroutineContext
 
@@ -79,6 +80,8 @@ class HttpSessionManager(private val engine: Driver, private val session: Sessio
     jobs.joinAll()
     produceExecutor.shutdownNow()
     httpThreadPool.shutdownNow()
+    produceExecutor.awaitTermination(100L, TimeUnit.MILLISECONDS)
+    httpThreadPool.awaitTermination(100L, TimeUnit.MILLISECONDS)
     storedException.get()
   }
 
@@ -130,14 +133,12 @@ class HttpSessionManager(private val engine: Driver, private val session: Sessio
     call: Call<T>,
     channel: Channel<Envelope<Pair<HttpRequest, RequestData>>>,
     next: Envelope<Pair<HttpRequest, RequestData>>,
-    request: Failure<java.lang.Exception>
+    exception: Failure<java.lang.Exception>
   ) {
-    call.onError?.let {
-      when (it) {
-        is ChannelReceiving -> it.accept(channel, next, request.err)
-        else -> {
-          throw request.err
-        }
+    when (val onError = call.onError) {
+      is OnErrorWithState -> onError.accept(channel, next, exception.err)
+      else -> {
+        throw exception.err
       }
     }
   }

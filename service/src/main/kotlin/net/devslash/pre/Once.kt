@@ -21,6 +21,7 @@ class Once(private val before: BeforeHook) : SessionPersistingBeforeHook {
   ) {
     if (flag.compareAndSet(false, true)) {
 
+      // TODO: Take this out
       val methods: KClass<out BeforeHook> = before::class
       for (method in methods.declaredMemberFunctions) {
         val parameters = method.parameters

@@ -11,7 +11,11 @@ fun requestDataFromList(listOf: List<String>? = null): RequestData {
   }
 }
 
-fun getBasicRequest(): HttpRequest {
+fun basicData() : RequestData {
+  return ListRequestData(listOf<String>())
+}
+
+fun basicRequest(): HttpRequest {
   return HttpRequest(HttpMethod.GET, "https://example.com", EmptyBodyProvider)
 }
 
@@ -33,7 +37,7 @@ fun getResponseWithBody(body: ByteArray): HttpResponse {
   return HttpResponse(URI("http://example.com"), 200, mapOf(), body)
 }
 
-fun getBasicResponse(): HttpResponse {
+fun basicResponse(): HttpResponse {
   return getResponseWithBody("Body".toByteArray())
 }
 

@@ -15,8 +15,6 @@ dependencies {
 
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinxCoroutinesVersion")
 
-  //TODO: Remove?
-  implementation("com.google.code.gson:gson:2.3.1")
   implementation("com.fasterxml.jackson.core:jackson-core:2.9.8")
   implementation("com.fasterxml.jackson.core:jackson-databind:2.9.8")
 

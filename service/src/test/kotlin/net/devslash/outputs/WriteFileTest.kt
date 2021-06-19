@@ -4,8 +4,8 @@ import net.devslash.HttpResponse
 import net.devslash.ListRequestData
 import net.devslash.OutputFormat
 import net.devslash.RequestData
-import net.devslash.util.getBasicRequest
-import net.devslash.util.getBasicResponse
+import net.devslash.util.basicRequest
+import net.devslash.util.basicResponse
 import org.hamcrest.CoreMatchers.equalTo
 import org.junit.Assert.assertThat
 import org.junit.Rule
@@ -22,7 +22,7 @@ internal class WriteFileTest {
     fun `Test Write File Happy Path`() {
         val testFile = folder.newFile("test")
         val write = WriteFile(testFile.absolutePath)
-        write.accept(getBasicRequest(), getBasicResponse(), ListRequestData(listOf<String>()))
+        write.accept(basicRequest(), basicResponse(), ListRequestData(listOf<String>()))
 
         assertThat(testFile.readLines(), equalTo(listOf("Body")))
     }
@@ -37,7 +37,7 @@ internal class WriteFileTest {
             }
         })
 
-        write.accept(getBasicRequest(), getBasicResponse(), ListRequestData(listOf<String>()))
+        write.accept(basicRequest(), basicResponse(), ListRequestData(listOf<String>()))
 
         assertThat(testFile.readLines(), equalTo(listOf("Test", "output")))
     }
@@ -50,7 +50,7 @@ internal class WriteFileTest {
                 return null
             }
         })
-        write.accept(getBasicRequest(), getBasicResponse(), ListRequestData(listOf<String>()))
+        write.accept(basicRequest(), basicResponse(), ListRequestData(listOf<String>()))
 
         assertThat(testFile.readLines(), equalTo(listOf()))
     }

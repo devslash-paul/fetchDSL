@@ -4,7 +4,7 @@ import net.devslash.HttpResponse
 import net.devslash.ListRequestData
 import net.devslash.OutputFormat
 import net.devslash.RequestData
-import net.devslash.util.getBasicRequest
+import net.devslash.util.basicRequest
 import net.devslash.util.getResponseWithBody
 import org.hamcrest.CoreMatchers.equalTo
 import org.junit.Assert.assertThat
@@ -47,7 +47,7 @@ internal class StdOutTest {
 
     private fun assertOutputMatches(out: StdOut, byteStream: ByteArrayOutputStream, actual: String) {
         out.accept(
-            getBasicRequest(), getResponseWithBody(body.toByteArray()),
+            basicRequest(), getResponseWithBody(body.toByteArray()),
             ListRequestData(listOf<String>())
         )
 

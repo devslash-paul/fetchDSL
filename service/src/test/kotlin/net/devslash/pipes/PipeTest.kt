@@ -4,7 +4,7 @@ import kotlinx.coroutines.runBlocking
 import net.devslash.HttpResponse
 import net.devslash.ListRequestData
 import net.devslash.mustGet
-import net.devslash.util.getBasicRequest
+import net.devslash.util.basicRequest
 import net.devslash.util.requestDataFromList
 import org.hamcrest.CoreMatchers.*
 import org.hamcrest.MatcherAssert.assertThat
@@ -25,7 +25,7 @@ internal class PipeTest {
     val pipe = Pipe<String> { r, _ -> listOf(ListRequestData(listOf(String(r.body)))) }
 
     pipe.accept(
-      getBasicRequest(),
+      basicRequest(),
       HttpResponse(URI("http://a"), 200, mapOf(), "result".toByteArray()),
       requestDataFromList(listOf())
     )
@@ -41,7 +41,7 @@ internal class PipeTest {
     val vals = listOf("a", "b", "c")
     val pipe = Pipe<String> { _, _ -> vals.map { ListRequestData(listOf(it)) } }
     pipe.accept(
-      getBasicRequest(),
+      basicRequest(),
       HttpResponse(URI("http://a"), 200, mapOf(), byteArrayOf()),
       requestDataFromList(listOf())
     )
@@ -55,17 +55,17 @@ internal class PipeTest {
   fun testPipeAcceptsMultipleAndReturnsInOrder() = runBlocking {
     val pipe = Pipe<String> { r, _ -> listOf(ListRequestData(listOf(String(r.body)))) }
     pipe.accept(
-      getBasicRequest(),
+      basicRequest(),
       HttpResponse(URI("http://a"), 200, mapOf(), "a".toByteArray()),
       requestDataFromList(listOf())
     )
     pipe.accept(
-      getBasicRequest(),
+      basicRequest(),
       HttpResponse(URI("http://a"), 200, mapOf(), "b".toByteArray()),
       requestDataFromList(listOf())
     )
     pipe.accept(
-      getBasicRequest(),
+      basicRequest(),
       HttpResponse(URI("http://a"), 200, mapOf(), "c".toByteArray()),
       requestDataFromList(listOf())
     )

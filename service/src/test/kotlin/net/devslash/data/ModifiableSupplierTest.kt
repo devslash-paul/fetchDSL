@@ -5,7 +5,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import net.devslash.ListRequestData
 import net.devslash.mustGet
-import net.devslash.util.getBasicResponse
+import net.devslash.util.basicResponse
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.CoreMatchers.nullValue
 import org.hamcrest.MatcherAssert.assertThat
@@ -36,7 +36,7 @@ internal class ModifiableSupplierTest {
     try {
       withTimeout(200) { supplier.getDataForRequest() }
     } catch (e: TimeoutCancellationException) {
-      supplier.accept(getBasicResponse())
+      supplier.accept(basicResponse())
       assertThat(supplier.getDataForRequest(), nullValue())
     }
     Unit
@@ -47,7 +47,7 @@ internal class ModifiableSupplierTest {
     val supplier = ModifiableSupplier(ListDataSupplier(listOf()))
     supplier.add(ListRequestData(listOf<String>()))
     supplier.getDataForRequest()
-    supplier.accept(getBasicResponse())
+    supplier.accept(basicResponse())
     assertThat(supplier.getDataForRequest(), nullValue())
   }
 }

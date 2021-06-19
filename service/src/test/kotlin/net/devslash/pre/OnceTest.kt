@@ -2,7 +2,7 @@ package net.devslash.pre
 
 import kotlinx.coroutines.runBlocking
 import net.devslash.*
-import net.devslash.util.getBasicRequest
+import net.devslash.util.basicRequest
 import net.devslash.util.getCookieJar
 import net.devslash.util.getSessionManager
 import net.devslash.util.requestDataFromList
@@ -17,7 +17,7 @@ internal class OnceTest {
     var count = 0
     val o = Once({ count++; Unit }.toPreHook())
 
-    o.accept(getSessionManager(), getCookieJar(), getBasicRequest(), requestDataFromList(listOf()))
+    o.accept(getSessionManager(), getCookieJar(), basicRequest(), requestDataFromList(listOf()))
 
     assertEquals(1, count)
   }
@@ -33,8 +33,8 @@ internal class OnceTest {
       }
     })
 
-    o.accept(getSessionManager(), getCookieJar(), getBasicRequest(), requestDataFromList(listOf()))
-    o.accept(getSessionManager(), getCookieJar(), getBasicRequest(), requestDataFromList(listOf()))
+    o.accept(getSessionManager(), getCookieJar(), basicRequest(), requestDataFromList(listOf()))
+    o.accept(getSessionManager(), getCookieJar(), basicRequest(), requestDataFromList(listOf()))
 
     assertEquals(1, count)
   }
@@ -53,7 +53,7 @@ internal class OnceTest {
         o.accept(
           getSessionManager(),
           getCookieJar(),
-          getBasicRequest(),
+          basicRequest(),
           requestDataFromList(listOf())
         )
         fail("Should have an exception")
@@ -77,7 +77,7 @@ internal class OnceTest {
       }
     })
 
-    o.accept(getSessionManager(), getCookieJar(), getBasicRequest(), requestDataFromList(listOf()))
+    o.accept(getSessionManager(), getCookieJar(), basicRequest(), requestDataFromList(listOf()))
 
     assertEquals(1, count)
   }

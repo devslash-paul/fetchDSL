@@ -9,7 +9,8 @@ internal class FileBasedDataSupplierTest {
 
   @Test
   fun testBasicFile() = runBlocking {
-    val path = FileDataSupplier::class.java.getResource("/test.log").path
+    val resource = FileDataSupplier::class.java.getResource("/test.log")!!
+    val path = resource.path
     val dataSupplier = FileDataSupplier(path, " ")
 
     val expected = listOf("a", "b", "c", "d")
@@ -23,7 +24,8 @@ internal class FileBasedDataSupplierTest {
 
   @Test
   fun testFileWithMultipleWords() = runBlocking {
-    val path = FileDataSupplier::class.java.getResource("/twowords.log").path
+    val resource = FileDataSupplier::class.java.getResource("/twowords.log")!!
+    val path = resource.path
     val dataSupplier = FileDataSupplier(path, " ")
 
     val expected = listOf(Pair("a", "b"), Pair("c", "d"))
@@ -38,7 +40,7 @@ internal class FileBasedDataSupplierTest {
 
   @Test
   fun testWithTabSeparator() = runBlocking {
-    val path = FileDataSupplier::class.java.getResource("/tabspaced.log").path
+    val path = FileDataSupplier::class.java.getResource("/tabspaced.log")!!.path
     val dataSupplier = FileDataSupplier(path, "-")
 
     val expected = listOf(Pair("a", "b"), Pair("c", "d"))

@@ -5,6 +5,7 @@ import java.net.URL
 import java.util.concurrent.ConcurrentHashMap
 
 // TODO: Remove from FetchDSL api
+// TODO: Make it easier to cache this inbetween runHTTP Blocks
 class CookieJar : SimpleBeforeHook, SimpleAfterHook {
   private val cookies = ConcurrentHashMap(mutableMapOf<String, MutableMap<String, String>>())
 

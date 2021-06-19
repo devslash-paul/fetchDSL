@@ -18,7 +18,7 @@ class SingleUseDataSupplier<T>(val supply: List<String> = listOf()) : RequestDat
 
   override suspend fun getDataForRequest(): RequestData? {
     if (first.compareAndSet(true, false)) {
-      return object : RequestData {
+      return object : RequestData() {
         override fun <T> visit(visitor: RequestVisitor<T, Any?>): T {
           return visitor(supply, List::class.java)
         }

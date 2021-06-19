@@ -4,7 +4,7 @@ import net.devslash.*
 import java.net.URI
 
 fun requestDataFromList(listOf: List<String>? = null): RequestData {
-  return object : RequestData {
+  return object : RequestData() {
     override fun <T> visit(visitor: RequestVisitor<T, Any?>): T {
       return visitor(listOf, List::class.java)
     }

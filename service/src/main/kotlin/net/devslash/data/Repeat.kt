@@ -13,7 +13,7 @@ class Repeat(private val repeat: Int) : RequestDataSupplier<Unit> {
     }
   }
 
-  private val unitData: RequestData = object : RequestData {
+  private val unitData: RequestData = object : RequestData() {
     override fun <T> visit(visitor: RequestVisitor<T, Any?>): T = visitor(Unit, Unit::class.java)
   }
   private val count = AtomicInteger(0)

@@ -1,6 +1,7 @@
 package net.devslash
 
 import kotlinx.coroutines.channels.Channel
+import java.util.UUID
 
 typealias URLProvider = (String, RequestData) -> String
 
@@ -55,8 +56,9 @@ interface OutputFormat {
 typealias RequestVisitor<T, V> = (V, Class<*>) -> T
 typealias MustVisitor<T, V> = (V) -> T
 
-interface RequestData {
-  fun <T> visit(visitor: RequestVisitor<T, Any?>): T
+abstract class RequestData {
+  val id = UUID.randomUUID()
+  abstract fun <T> visit(visitor: RequestVisitor<T, Any?>): T
 }
 
 inline fun <reified T> RequestData.mustGet(): T {

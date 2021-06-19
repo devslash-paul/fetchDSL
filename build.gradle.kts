@@ -45,6 +45,10 @@ subprojects {
     from("../publishing.gradle")
   }
 
+  jacoco {
+    toolVersion = "0.8.7"
+  }
+
   publishing {
     val userName: String? by project
     val pw: String? by project

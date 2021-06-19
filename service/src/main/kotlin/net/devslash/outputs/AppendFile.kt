@@ -1,7 +1,6 @@
 package net.devslash.outputs
 
 import net.devslash.*
-import net.devslash.ReplacingString
 import java.io.BufferedOutputStream
 import java.io.FileOutputStream
 import java.io.OutputStream

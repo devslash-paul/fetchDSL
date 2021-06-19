@@ -1,7 +1,6 @@
 package net.devslash.post
 
 import net.devslash.*
-import java.lang.RuntimeException
 
 class FilterBuilder {
   var afterHooks: MutableList<AfterHook> = mutableListOf()

@@ -11,16 +11,16 @@ import org.mockito.kotlin.whenever
 
 internal class HttpDriverTest {
 
-  @Test
-  fun testClientErrorReturned() = runBlocking {
-    val client = mock<HttpClientAdapter>()
-    whenever(client.request(any())).thenThrow(RuntimeException())
+   @Test
+   fun testClientErrorReturned() = runBlocking {
+      val client = mock<HttpClientAdapter>()
+      whenever(client.request(any())).thenThrow(RuntimeException())
 
-    HttpDriver(client).use {
-      val res = it.call(basicRequest())
+      HttpDriver(client).use {
+         val res = it.call(basicRequest())
 
-      assertThat(res, instanceOf(Failure::class.java))
-      assertThat((res as Failure).err, instanceOf(RuntimeException::class.java))
-    }
-  }
+         assertThat(res, instanceOf(Failure::class.java))
+         assertThat((res as Failure).err, instanceOf(RuntimeException::class.java))
+      }
+   }
 }

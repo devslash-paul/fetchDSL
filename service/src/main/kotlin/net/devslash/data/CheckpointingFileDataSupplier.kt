@@ -54,9 +54,9 @@ class CheckpointingFileDataSupplier(
     if (!checkpointFile.createNewFile()) {
       throw CheckpointException(
         "There is an existing checkpoint file at $checkpointFile. " +
-                "An existing checkpoint file may mean that an older call has failed. Resolution " +
-                "should be to either use the checkpoint file to restart the call. Or delete the" +
-                " checkpoint file."
+          "An existing checkpoint file may mean that an older call has failed. Resolution " +
+          "should be to either use the checkpoint file to restart the call. Or delete the" +
+          " checkpoint file."
       )
     }
     lines = sourceFile.readLines()

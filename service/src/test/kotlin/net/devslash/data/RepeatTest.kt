@@ -1,7 +1,8 @@
 package net.devslash.data
 
 import kotlinx.coroutines.runBlocking
-import org.junit.Assert.*
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Test
 
 internal class RepeatTest {

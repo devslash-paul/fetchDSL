@@ -51,9 +51,9 @@ class HttpSessionManager(private val engine: Driver, private val session: Sessio
     if (hasDelay) {
       println(
         "Delay has been set to $delay ms. This means that after a call has been made, " + //
-                "there will be a delay of at least $delay ms before the beginning of the next one.\n" + //
-                "Due to a delay being set - the number of HTTP threads has been locked to 1. " + //
-                "Effectively `session.concurrency = 1`"
+          "there will be a delay of at least $delay ms before the beginning of the next one.\n" + //
+          "Due to a delay being set - the number of HTTP threads has been locked to 1. " + //
+          "Effectively `session.concurrency = 1`"
       )
     }
     val limiter = AcquiringRateLimiter(session.rateOptions)

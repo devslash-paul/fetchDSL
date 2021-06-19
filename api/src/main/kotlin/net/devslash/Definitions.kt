@@ -68,7 +68,7 @@ inline fun <T, reified V> RequestData.mustVisit(crossinline visitor: MustVisitor
     if (V::class.java.isAssignableFrom(clazz)) {
       return@visit visitor(any as V)
     } else {
-      throw RuntimeException("Was unable to require visitor class. Was $clazz not ${V::class.java}")
+      throw RuntimeException("Was unable to find correct visitor class. Was $clazz not ${V::class.java}")
     }
   }
 }

@@ -13,7 +13,7 @@ jmh.jmhVersion = '1.27'
 
 dependencies {
     implementation "org.openjdk.jmh:jmh-core:1.27"
-    implementation "org.jetbrains.kotlin:kotlin-stdlib:1.4.20"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:1.5.0"
     implementation "io.ktor:ktor-server-netty:1.5.4"
 
     compile project(":api")

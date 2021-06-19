@@ -2,12 +2,6 @@ package net.devslash.pre
 
 import net.devslash.*
 import java.util.concurrent.atomic.AtomicBoolean
-import kotlin.reflect.KClass
-import kotlin.reflect.KVisibility
-import kotlin.reflect.full.callSuspend
-import kotlin.reflect.full.declaredMemberFunctions
-import kotlin.reflect.full.isSubtypeOf
-import kotlin.reflect.full.starProjectedType
 
 class Once(private val before: BeforeHook) : SessionPersistingBeforeHook {
 
@@ -20,42 +14,11 @@ class Once(private val before: BeforeHook) : SessionPersistingBeforeHook {
     data: RequestData
   ) {
     if (flag.compareAndSet(false, true)) {
-
-      // TODO: Take this out
-      val methods: KClass<out BeforeHook> = before::class
-      for (method in methods.declaredMemberFunctions) {
-        val parameters = method.parameters
-
-        val given = mapOf(
-          SessionManager::class.starProjectedType to sessionManager,
-          CookieJar::class.starProjectedType to cookieJar,
-          HttpRequest::class.starProjectedType to req,
-          RequestData::class.starProjectedType to data,
-          before::class.starProjectedType to before
-        )
-
-        val pList = mutableListOf<Any>()
-        parameters.forEach { param ->
-          given.keys.forEach {
-            if (param.type.isSubtypeOf(it)) {
-              given[it]?.let { value ->
-                pList.add(value)
-              }
-            }
-          }
-        }
-
-        if (parameters.size == pList.size && KVisibility.PUBLIC == method.visibility) {
-          if (method.isSuspend) {
-            method.callSuspend(*pList.toTypedArray())
-          } else {
-            method.call(*pList.toTypedArray())
-          }
-          return
-        }
+      when (before) {
+        is SessionPersistingBeforeHook -> before.accept(sessionManager, cookieJar, req, data)
+        is SimpleBeforeHook -> before.accept(req, data)
+        is SkipBeforeHook -> before.skip(data)
       }
-
-      throw InvalidHookException("Unable to find an appropriate hook method to call on $before")
     }
   }
 }

@@ -25,10 +25,8 @@ internal class OnceTest {
   @Test
   fun testOnlySingle() = runBlocking {
     var count = 0
-    val o = Once(object : BeforeHook {
-
-      @Suppress("unused")
-      fun invoke(@Suppress("UNUSED_PARAMETER") session: SessionManager) {
+    val o = Once(object : SimpleBeforeHook {
+      override fun accept(req: HttpRequest, data: RequestData) {
         count += 1
       }
     })
@@ -37,30 +35,6 @@ internal class OnceTest {
     o.accept(getSessionManager(), getCookieJar(), basicRequest(), requestDataFromList(listOf()))
 
     assertEquals(1, count)
-  }
-
-  @Test
-  fun testFailsWithInvalidHook() {
-    runBlocking {
-      val o = Once(object : BeforeHook {
-        // invalid as String is not available for injection
-        @Suppress("unused")
-        fun invoke(@Suppress("UNUSED_PARAMETER") s: String) {
-        }
-      })
-
-      try {
-        o.accept(
-          getSessionManager(),
-          getCookieJar(),
-          basicRequest(),
-          requestDataFromList(listOf())
-        )
-        fail("Should have an exception")
-      } catch (e: InvalidHookException) {
-        // ignore
-      }
-    }
   }
 
   @Test

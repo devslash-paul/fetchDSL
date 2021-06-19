@@ -15,8 +15,10 @@ fun basicData() : RequestData {
   return ListRequestData(listOf<String>())
 }
 
+const val basicUrl: String
+= "https://example.com"
 fun basicRequest(): HttpRequest {
-  return HttpRequest(HttpMethod.GET, "https://example.com", EmptyBodyProvider)
+  return HttpRequest(HttpMethod.GET, basicUrl, EmptyBodyProvider)
 }
 
 fun getCookieJar(): CookieJar {

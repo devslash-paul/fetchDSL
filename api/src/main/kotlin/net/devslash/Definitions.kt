@@ -103,7 +103,7 @@ fun String.asReplaceableValue() = object : ReplaceableValue<String, RequestData>
   }
 }
 
-interface BeforeHook
+sealed interface BeforeHook
 
 interface SimpleBeforeHook : BeforeHook {
   fun accept(req: HttpRequest, data: RequestData)
@@ -173,7 +173,7 @@ class Envelope<T>(private val message: T, private val maxRetries: Int = 3) {
 }
 
 interface OnError
-interface ChannelReceiving : OnError {
+interface OnErrorWithState : OnError {
   suspend fun accept(
     channel: Channel<Envelope<Pair<HttpRequest, RequestData>>>,
     envelope: Envelope<Pair<HttpRequest, RequestData>>,

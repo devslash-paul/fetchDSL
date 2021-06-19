@@ -1,90 +1,61 @@
 package net.devslash
 
-import io.ktor.application.*
-import io.ktor.http.*
-import io.ktor.response.*
-import io.ktor.routing.*
-import io.ktor.server.engine.*
-import io.ktor.server.netty.*
-import kotlinx.coroutines.debug.junit4.CoroutinesTimeout
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runBlockingTest
 import net.devslash.data.FileDataSupplier
+import net.devslash.data.Repeat
+import net.devslash.util.basicUrl
+import org.hamcrest.core.IsEqual.equalTo
 import org.junit.Assert.assertEquals
-import org.junit.Rule
+import org.junit.Assert.assertThat
 import org.junit.Test
+import java.net.URI
 import java.util.concurrent.CountDownLatch
+import java.util.concurrent.atomic.AtomicInteger
 
-internal class HttpSessionManagerTest : ServerTest() {
-
-  @Rule
-  @JvmField
-  val rule = CoroutinesTimeout(5000)
-
-  override lateinit var appEngine: ApplicationEngine
+@ExperimentalCoroutinesApi
+internal class HttpSessionManagerTest {
 
   @Test
-  fun test302Redirect() {
-    appEngine = embeddedServer(Netty, serverPort) {
-      routing {
-        get("/") {
-          call.response.header("set-cookie", "session=abcd")
-          call.response.header("Location", "invalid")
-          call.response.status(HttpStatusCode.fromValue(302))
-          call.respondText("Hi there")
-        }
-      }
-    }
-    start()
-
-    var cookie: String? = null
-    var body: String? = null
-    runBlocking {
-      runHttp({}) {
-        call(address) {
-          after {
-            +object : BasicOutput {
-              override fun accept(req: HttpRequest, resp: HttpResponse, data: RequestData) {
-                cookie = resp.headers["set-cookie"]!![0]
-                body = String(resp.body)
-              }
-            }
+  fun testBasicHttpBounce() = runBlockingTest {
+    val resp = HttpResponse(
+      URI(basicUrl),
+      200,
+      mapOf("set-cookie" to listOf("session=abcd")),
+      "Hi there".toByteArray()
+    )
+    val engine = BounceHttpDriver(resp)
+    runHttp(engine) {
+      call(basicUrl) {
+        after {
+          action {
+            val cookie = resp.headers["set-cookie"]!![0]
+            val body = String(resp.body)
+            assertEquals("session=abcd", cookie)
+            assertEquals("Hi there", body)
           }
         }
       }
     }
-
-    assertEquals("session=abcd", cookie)
-    assertEquals("Hi there", body)
   }
 
   @Test
   fun testMultiRequest() {
-    appEngine = embeddedServer(Netty, serverPort) {
-      routing {
-        get("/") {
-          // this cannot be the empty string. That turns out to stuff up the blocking on response code.
-          call.respond("A")
-        }
-      }
-    }
-    start()
-    val testConcurrency = 2
-
-    val countdown = CountDownLatch(testConcurrency)
-    val path = HttpSessionManagerTest::class.java.getResource("/testfile.log").path
-    runHttp {
+    val testConcurrency = 5
+    val repeats = 100
+    val atomicInteger = AtomicInteger(0)
+    runHttp(BounceHttpDriver()) {
       concurrency = testConcurrency
-      call(address) {
+      call<Unit>(basicUrl) {
+        data = Repeat(repeats)
         after {
-          +object : SimpleAfterHook {
-            override fun accept(resp: HttpResponse) {
-              countdown.countDown()
-              countdown.await()
-            }
+          action {
+            atomicInteger.incrementAndGet()
           }
         }
-        data = FileDataSupplier(name = path)
       }
     }
+
+    assertThat(atomicInteger.get(), equalTo(repeats))
   }
 }

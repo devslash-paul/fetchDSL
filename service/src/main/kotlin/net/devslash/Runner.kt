@@ -47,7 +47,7 @@ fun runHttp(config: ConfigBuilder.() -> Unit, block: SessionBuilder.() -> Unit) 
   return runHttp(HttpDriver(KtorClientAdapter(builtConfig)), block)
 }
 
-internal fun runHttp(engine: HttpDriver, block: SessionBuilder.() -> Unit) {
+internal fun runHttp(engine: Driver, block: SessionBuilder.() -> Unit) {
   val session = SessionBuilder().apply(block).build()
   HttpSessionManager(engine, session).run()
 }

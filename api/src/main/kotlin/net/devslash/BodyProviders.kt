@@ -1,5 +1,6 @@
 package net.devslash
 
+// TODO: This feels impl based. Create API abstraction for this?
 sealed class BodyProvider
 
 typealias Form = Map<String, List<String>>

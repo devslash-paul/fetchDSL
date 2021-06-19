@@ -8,6 +8,7 @@ class DefaultResponseFormat : OutputFormat {
   }
 }
 
+@Suppress("unused")
 class LogResponse(private val format: OutputFormat = DefaultResponseFormat()) : FullDataAfterHook {
   override fun accept(req: HttpRequest, resp: HttpResponse, data: RequestData) {
     format.accept(resp, data)?.let {

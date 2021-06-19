@@ -5,7 +5,7 @@ import java.time.Duration
 import java.time.Instant
 import java.time.ZoneId
 
-class FakeClock(var instant: Instant) : Clock() {
+class FakeClock(private var instant: Instant) : Clock() {
   override fun withZone(zone: ZoneId?): Clock {
     return this
   }
@@ -15,7 +15,7 @@ class FakeClock(var instant: Instant) : Clock() {
   }
 
   override fun instant(): Instant {
-    return instant;
+    return instant
   }
 
   fun advance(d: Duration) {

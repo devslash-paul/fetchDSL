@@ -15,6 +15,7 @@ class AppendFile(
   private var memoizedFile: OutputStream? = null
 
   init {
+    // TODO: This file relies on the string replacement engine
     memoizedFile = if (fileName.contains(Regex("!\\d+!"))) {
       // then it's non memoizable
       null

@@ -18,7 +18,7 @@ internal class HttpSessionManagerTest : ServerTest() {
 
   @Rule
   @JvmField
-  public val rule = CoroutinesTimeout(5000)
+  val rule = CoroutinesTimeout(5000)
 
   override lateinit var appEngine: ApplicationEngine
 

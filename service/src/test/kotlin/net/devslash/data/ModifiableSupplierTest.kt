@@ -25,7 +25,7 @@ internal class ModifiableSupplierTest {
 
   @Test(timeout = 300)
   fun testEmptyRequestDataReturnsNull() = runBlocking {
-    val supplier = ModifiableSupplier(ListDataSupplier(listOf<String>()))
+    val supplier = ModifiableSupplier(ListDataSupplier(listOf()))
     assertThat(supplier.getDataForRequest(), nullValue())
   }
 
@@ -44,7 +44,7 @@ internal class ModifiableSupplierTest {
 
   @Test(timeout = 100)
   fun testAddedOnlyReturnedOnce() = runBlocking {
-    val supplier = ModifiableSupplier(ListDataSupplier(listOf<String>()))
+    val supplier = ModifiableSupplier(ListDataSupplier(listOf()))
     supplier.add(ListRequestData(listOf<String>()))
     supplier.getDataForRequest()
     supplier.accept(getBasicResponse())

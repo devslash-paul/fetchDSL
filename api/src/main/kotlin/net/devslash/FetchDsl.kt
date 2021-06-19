@@ -4,6 +4,12 @@ import net.devslash.err.RetryOnTransitiveError
 import java.time.Duration
 import java.util.*
 
+/**
+ * Version contains the current version defined in the build.gradle root file.
+ *
+ * This should be used to identify the User-Agent unless explicitly overwritten as it allows for any clients to be
+ * able to easily block the DSL in the event that it is being misused against an endpoint
+ */
 object Version {
   val version: String
 
@@ -15,7 +21,7 @@ object Version {
 }
 
 @DslMarker
-annotation class FetchDSL
+private annotation class FetchDSL
 
 class UnaryAddBuilder<T> {
   private var hooks = mutableListOf<T>()
@@ -23,7 +29,7 @@ class UnaryAddBuilder<T> {
     hooks = (hooks + this).toMutableList()
   }
 
-  fun build(): MutableList<T> {
+  fun build(): List<T> {
     return hooks
   }
 }

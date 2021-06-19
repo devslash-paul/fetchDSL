@@ -28,7 +28,7 @@ internal class OnceTest {
     val o = Once(object : BeforeHook {
 
       @Suppress("unused")
-      fun invoke(@Suppress("UNUSED_PARAMETER") sess: SessionManager) {
+      fun invoke(@Suppress("UNUSED_PARAMETER") session: SessionManager) {
         count += 1
       }
     })

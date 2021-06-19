@@ -1,45 +1,26 @@
 package net.devslash
 
-import io.ktor.application.*
-import io.ktor.http.*
-import io.ktor.response.*
-import io.ktor.routing.*
-import io.ktor.server.engine.*
-import io.ktor.server.netty.*
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
+import net.devslash.util.getBasicRequest
 import org.hamcrest.CoreMatchers.instanceOf
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Test
-import java.net.SocketTimeoutException
+import org.mockito.kotlin.any
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
 
-@ExperimentalCoroutinesApi
-internal class HttpDriverTest : ServerTest() {
-
-  override lateinit var appEngine: ApplicationEngine
+internal class HttpDriverTest {
 
   @Test
-  fun testConfigureTimeout() {
-    appEngine = embeddedServer(Netty, serverPort) {
-      routing {
-        get("/") {
-          delay(1500)
-          call.respond(HttpStatusCode.OK, "Non_empty")
-        }
-      }
-    }
-    appEngine.start()
+  fun testClientErrorReturned() = runBlocking {
+    val client = mock<HttpClientAdapter>()
+    whenever(client.request(any())).thenThrow(RuntimeException())
 
-    runBlocking {
-      HttpDriver(ConfigBuilder().apply {
-        socketTimeout = 1000
-      }.build()).use {
-        val res = it.call(HttpRequest(HttpMethod.GET, address, EmptyBodyProvider))
+    HttpDriver(client).use {
+      val res = it.call(getBasicRequest())
 
-        assertThat(res, instanceOf(Failure::class.java))
-        assertThat((res as Failure).err, instanceOf(SocketTimeoutException::class.java))
-      }
+      assertThat(res, instanceOf(Failure::class.java))
+      assertThat((res as Failure).err, instanceOf(RuntimeException::class.java))
     }
   }
 }

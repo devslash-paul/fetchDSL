@@ -10,7 +10,7 @@ import kotlin.coroutines.CoroutineContext
 
 typealias Contents = Pair<HttpRequest, RequestData>
 
-class HttpSessionManager(val engine: Driver, private val session: Session) : SessionManager {
+class HttpSessionManager(private val engine: Driver, private val session: Session) : SessionManager {
 
   private val semaphore = Semaphore(0)
   private var lastCall = 0L
@@ -29,65 +29,9 @@ class HttpSessionManager(val engine: Driver, private val session: Session) : Ses
     }
   }
 
-  private suspend fun <T> produceHttp(
-    call: Call<T>,
-    jar: CookieJar,
-    channel: Channel<Envelope<Contents>>
-  ) {
-    val dataSupplier = handleNoSupplier(call.dataSupplier)
+  override fun <T> call(call: Call<T>): Exception? = call(call, CookieJar())
 
-    while (true) {
-      val data = dataSupplier.getDataForRequest() ?: break
-      val req = mapHttpRequest(call, data)
-      // Call the prerequesites
-      val preRequest = call.beforeHooks.toMutableList()
-      preRequest.add(jar)
-
-      try {
-        val shouldSkip =
-          preRequest.filterIsInstance<SkipBeforeHook>().any { it.skip(data) }
-        if (shouldSkip) continue
-
-        preRequest.forEach {
-          when (it) {
-            is SimpleBeforeHook -> it.accept(req, data)
-            is SessionPersistingBeforeHook -> it.accept(
-              sessionManager,
-              jar,
-              req,
-              data
-            )
-          }
-        }
-        call.headers?.forEach { entry ->
-          entry.value.forEach {
-            val s = when (it) {
-              is StrHeaderValue -> it.value
-              is ProvidedHeaderValue -> it.lambda(data)
-            }
-            req.addHeader(entry.key, s)
-          }
-        }
-      } catch (e: Exception) {
-        //TODO: Allow configuration of what happens here.
-        println("An exception occurred when preparing requests. Shutting down further requests")
-        e.printStackTrace()
-        channel.close()
-        return
-      }
-
-      if (channel.offer(Envelope(Pair(req, data)))) {
-        continue
-      } else {
-        channel.send(Envelope(Pair(req, data)))
-      }
-    }
-    channel.close()
-  }
-
-  override fun <T> call(call: Call<T>) = call(call, CookieJar())
-
-  override fun <T> call(call: Call<T>, jar: CookieJar) = runBlocking(Dispatchers.Default) {
+  override fun <T> call(call: Call<T>, jar: CookieJar): Exception? = runBlocking(Dispatchers.Default) {
     // Okay, so in here we're going to do the one to many calls we have to to get this to run.
     val channel: Channel<Envelope<Pair<HttpRequest, RequestData>>> =
       Channel(session.concurrency * 2)
@@ -95,7 +39,7 @@ class HttpSessionManager(val engine: Driver, private val session: Session) : Ses
       ?: Runtime.getRuntime().availableProcessors()
     val produceExecutor = Executors.newFixedThreadPool(produceThreadPool)
     val produceDispatcher = produceExecutor.asCoroutineDispatcher()
-    launch(produceDispatcher) { produceHttp(call, jar, channel) }
+    launch(produceDispatcher) { RequestProducer().produceHttp(sessionManager, call, jar, channel) }
 
     val afterRequest: MutableList<AfterHook> = mutableListOf(jar)
     afterRequest.addAll(call.afterHooks)
@@ -106,9 +50,9 @@ class HttpSessionManager(val engine: Driver, private val session: Session) : Ses
     if (hasDelay) {
       println(
         "Delay has been set to $delay ms. This means that after a call has been made, " + //
-          "there will be a delay of at least $delay ms before the beginning of the next one.\n" + //
-          "Due to a delay being set - the number of HTTP threads has been locked to 1. " + //
-          "Effectively `session.concurrency = 1`"
+                "there will be a delay of at least $delay ms before the beginning of the next one.\n" + //
+                "Due to a delay being set - the number of HTTP threads has been locked to 1. " + //
+                "Effectively `session.concurrency = 1`"
       )
     }
     val limiter = AcquiringRateLimiter(session.rateOptions)
@@ -176,7 +120,7 @@ class HttpSessionManager(val engine: Driver, private val session: Session) : Ses
     afterRequest.forEach {
       when (it) {
         is SimpleAfterHook -> it.accept(mappedResponse.copy())
-        is ChainReceivingResponseHook -> it.accept(mappedResponse)
+        is BodyMutatingAfterHook -> it.accept(mappedResponse)
         is FullDataAfterHook -> it.accept(contents.first, mappedResponse, contents.second)
       }
     }
@@ -198,14 +142,6 @@ class HttpSessionManager(val engine: Driver, private val session: Session) : Ses
     }
   }
 
-  private fun <T> mapHttpRequest(call: Call<T>, data: RequestData): HttpRequest {
-    val getUrl = getUrlProvider(call)
-    val body = getBodyProvider(call, data)
-    val currentUrl = getUrl(call.url, data)
-    val type = call.type
-
-    return HttpRequest(type, currentUrl, body)
-  }
 
   private suspend fun makeRequest(modelRequest: HttpRequest): HttpResult<HttpResponse, java.lang.Exception> {
     maybeDelay()

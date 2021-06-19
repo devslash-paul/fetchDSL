@@ -38,6 +38,7 @@ class ListDataSupplier<T>(private val list: Lazy<List<T>>, private val clazz: Cl
       lazyList: Lazy<List<T>>,
       transform: (T) -> List<String>
     ): Lazy<List<List<String>>> {
+      // TODO: Do i really need to do this?? Feels weird
       return lazy {
         object : List<List<String>> {
           override fun contains(element: List<String>): Boolean = throw UnsupportedOperationException()
@@ -70,6 +71,7 @@ class ListDataSupplier<T>(private val list: Lazy<List<T>>, private val clazz: Cl
       return ListDataSupplier(list, T::class.java)
     }
 
+    @Suppress("unused")
     inline fun <reified T> single(item: T): ListDataSupplier<T> {
       return ListDataSupplier(lazy { listOf(item) }, T::class.java)
     }

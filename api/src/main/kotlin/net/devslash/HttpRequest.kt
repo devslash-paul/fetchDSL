@@ -7,10 +7,7 @@ class HttpRequest(val type: HttpMethod, val url: String, val body: BodyProvider)
   val headers = TreeMap<String, MutableList<String>>(String.CASE_INSENSITIVE_ORDER)
 
   fun addHeader(name: String, value: String) {
-    if (headers[name] == null) {
-      headers[name] = mutableListOf()
-    }
-
+    headers.putIfAbsent(name, mutableListOf())
     headers[name]!!.add(value)
   }
 }

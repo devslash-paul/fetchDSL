@@ -17,7 +17,7 @@ class ConfigBuilder {
   var socketTimeout: Int = 10_000
 
   /**
-   * Max time to establish an HTTP connection - default 10 seconds.
+   * Max time to establish an HTTP connection - default 20 seconds.
    */
   var connectTimeout: Int = 20_000
 
@@ -43,7 +43,8 @@ fun runHttp(block: SessionBuilder.() -> Unit) {
 }
 
 fun runHttp(config: ConfigBuilder.() -> Unit, block: SessionBuilder.() -> Unit) {
-  return runHttp(HttpDriver(ConfigBuilder().apply(config).build()), block)
+  val builtConfig = ConfigBuilder().apply(config).build()
+  return runHttp(HttpDriver(KtorClientAdapter(builtConfig)), block)
 }
 
 internal fun runHttp(engine: HttpDriver, block: SessionBuilder.() -> Unit) {

@@ -1,29 +1,36 @@
 package net.devslash.post
 
 import net.devslash.*
+import java.lang.RuntimeException
 
 class FilterBuilder {
-  var posts = mutableListOf<AfterHook>()
+  var afterHooks = mutableListOf<AfterHook>()
 
   operator fun AfterHook.unaryPlus() {
-    posts = (posts + this).toMutableList()
+    afterHooks = (afterHooks + this).toMutableList()
   }
 }
 
+/**
+ * An after hook that can be provided additional hooks to call in the event that the predicate is true.
+ */
+@Suppress("unused")
 class Filter(
-  private val pred: (HttpResponse) -> Boolean,
-  private val builder: FilterBuilder.() -> Unit
+  private val predicate: (HttpResponse) -> Boolean,
+  builder: FilterBuilder.() -> Unit
 ) : FullDataAfterHook {
 
+  private val builtBlock = FilterBuilder().apply(builder)
+
   override fun accept(req: HttpRequest, resp: HttpResponse, data: RequestData) {
-    val current = FilterBuilder().apply(builder)
-    if (pred(resp)) {
-      current.posts.forEach {
+    if (predicate(resp)) {
+      builtBlock.afterHooks.forEach {
         when (it) {
           is SimpleAfterHook -> it.accept(resp)
-          is ChainReceivingResponseHook -> it.accept(resp)
+          is BodyMutatingAfterHook -> it.accept(resp)
           is FullDataAfterHook -> it.accept(req, resp, data)
           is BasicOutput -> it.accept(req, resp, data)
+          else -> throw RuntimeException("Unsupported filter hook. Filter hooks must be SimpleAfterHook, ChainReceivingResponseHook")
         }
       }
     }

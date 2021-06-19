@@ -36,6 +36,7 @@ class AcquiringRateLimiter(
     lock.unlock()
   }
 
+  // Fixme: This is all that's being tested... Rather than the original method
   fun tryAcquire(): Boolean {
     if (!rateLimitOptions.enabled) {
       return true

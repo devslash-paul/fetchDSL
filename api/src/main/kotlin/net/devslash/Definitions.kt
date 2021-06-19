@@ -25,7 +25,7 @@ data class Session(
 data class Call<T>(
   val url: String,
   val urlProvider: URLProvider?,
-  val headers: Map<String, List<HeaderValue>>?,
+  val headers: Map<String, List<HeaderValue>>,
   val type: HttpMethod,
   val dataSupplier: RequestDataSupplier<T>?,
   val body: HttpBody?,
@@ -51,7 +51,7 @@ interface OutputFormat {
 }
 
 // V is the underlying request data, class is used to find that out
-// To is return type
+// T is return type
 typealias RequestVisitor<T, V> = (V, Class<*>) -> T
 typealias MustVisitor<T, V> = (V) -> T
 
@@ -199,7 +199,7 @@ fun ((HttpResponse) -> Any).toPostHook(): SimpleAfterHook = object : SimpleAfter
   }
 }
 
-interface ChainReceivingResponseHook : AfterHook {
+interface BodyMutatingAfterHook : AfterHook {
   fun accept(resp: HttpResponse)
 }
 

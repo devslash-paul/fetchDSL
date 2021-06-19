@@ -14,7 +14,7 @@ internal class DebugOutputTest {
     )
 
     assertThat(
-      String(out!!), equalTo(
+      String(out), equalTo(
         """
            ----------------
            url: http://example.com
@@ -26,6 +26,6 @@ internal class DebugOutputTest {
            ----------------
         """.trimIndent()
       )
-    );
+    )
   }
 }

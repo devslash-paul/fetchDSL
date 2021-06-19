@@ -47,7 +47,6 @@ runHttp {
 }
 ```
 
-<<<<<<< HEAD
 This is quite slow, encumbering, and not very useful.
 
 One of the major advantages of _fetchDSL_ is its ability to perform many 
@@ -56,28 +55,14 @@ request. To take advantage of this, we have to define a `DataSupplier`.
 
 ### Changing request method
 TODO
-=======
-One of the major advantages of _fetchDSL_ is its ability to perform many thousands of requests efficiently. To take
-advantage of this, we have to define a `DataSupplier`.
->>>>>>> origin/master
 
 ### Adding a body
 
-<<<<<<< HEAD
 ### Making multiple requests with Data Suppliers
 
 The concept of data suppliers comes from the fact that most of the time 
 when you require many requests to occur, there's usually something a 
 little different each time.
-=======
-Data suppliers are the basis for providing the data to a request. Most of the time, if you're making multiple requests,
-there'll be something about each request that's a little different. It may be the URL, the authentication, the body.
-Data suppliers enable you to alter each call slightly based on what changes are necessary.
-
-For example, lets say `wwww.coolshoppingcart.com` allows you to add items to your trolley at `/addItem`. We of course
-want to add 10,000 items to our shopping cart. If we have a file that contains all of these, we can take advantage of
-the `FileDataSupplier`.
->>>>>>> origin/master
 
 For instance, it may be that you want to download all the HTML pages given
 a sitemap. Each time you're simply doing a GET call and saving the response,
@@ -106,11 +91,7 @@ runHttp {
     type = HttpMethod.POST
     data = FileDataSupplier("inputfile.txt")
     body {
-<<<<<<< HEAD
       value("!1!")
-=======
-      value = "!1!"
->>>>>>> origin/master
     }
   }
 }

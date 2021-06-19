@@ -5,7 +5,6 @@ val kotlinVersion: String by project
 dependencies {
   implementation(kotlin("stdlib", kotlinVersion))
   implementation(project(":api"))
-  implementation(project(":extensions"))
   implementation(project(":service"))
 
   implementation("io.ktor:ktor-server-netty:$ktorNettyVersion")

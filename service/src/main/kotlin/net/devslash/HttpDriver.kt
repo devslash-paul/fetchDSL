@@ -68,6 +68,8 @@ class HttpDriver(config: Config) : Driver {
               }
             })
           }
+          EmptyBodyProvider -> {/* Do nothing explicitly */
+          }
         }
       }
       return Success(mapResponse(resp))
@@ -88,7 +90,7 @@ class HttpDriver(config: Config) : Driver {
     }
   }
 
-  suspend fun mapResponse(response: io.ktor.client.statement.HttpResponse): HttpResponse {
+  private suspend fun mapResponse(response: io.ktor.client.statement.HttpResponse): HttpResponse {
     val inlineResp = response.call.response
     return HttpResponse(
       URI(inlineResp.call.request.url.toString()),
@@ -98,7 +100,7 @@ class HttpDriver(config: Config) : Driver {
     )
   }
 
-  fun mapHeaders(headers: Headers): Map<String, List<String>> {
+  private fun mapHeaders(headers: Headers): Map<String, List<String>> {
     val map = mutableMapOf<String, List<String>>()
     headers.forEach { key, value -> map[key] = value }
 

@@ -11,4 +11,4 @@ pluginManagement {
   }
 }
 
-include("api", "service", "extensions", "examples", "test-utils")
+include("api", "service", "examples", "test-utils")

@@ -7,7 +7,6 @@ import net.devslash.util.getCookieJar
 import net.devslash.util.getSessionManager
 import net.devslash.util.requestDataFromList
 import org.junit.Assert.assertEquals
-import org.junit.Assert.fail
 import org.junit.Test
 
 internal class OnceTest {

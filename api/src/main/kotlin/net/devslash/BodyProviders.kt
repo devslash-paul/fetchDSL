@@ -31,9 +31,9 @@ val formIndexed: ValueMapper<Map<String, List<String>>> = { form, reqData ->
     val indexes = reqData.mustGet<List<String>>().mapIndexed { index, string ->
       "!" + (index + 1) + "!" to string
     }.toMap()
-    form.map { entry ->
-      val key = replaceString(indexes, entry.key)
-      val value = entry.value.map { replaceString(indexes, it) }
+    form.map { (formKey, formValue) ->
+      val key = replaceString(indexes, formKey)
+      val value = formValue.map { replaceString(indexes, it) }
       return@map key to value
     }.toMap()
   }

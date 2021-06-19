@@ -11,12 +11,11 @@ fun requestDataFromList(listOf: List<String>? = null): RequestData {
   }
 }
 
-fun basicData() : RequestData {
+fun basicData(): RequestData {
   return ListRequestData(listOf<String>())
 }
 
-const val basicUrl: String
-= "https://example.com"
+const val basicUrl: String = "https://example.com"
 fun basicRequest(): HttpRequest {
   return HttpRequest(HttpMethod.GET, basicUrl, EmptyBodyProvider)
 }
@@ -43,7 +42,7 @@ fun basicResponse(): HttpResponse {
   return getResponseWithBody("Body".toByteArray())
 }
 
-fun getCall(sup: HttpBody? = null, url: String = "https://example.com") = CallBuilder<Any?>(
+fun getCall(sup: HttpBody? = null, url: String = "https://example.com"): Call<Any?> = CallBuilder<Any?>(
   url
 ).apply {
   body = sup

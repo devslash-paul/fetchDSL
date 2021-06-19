@@ -5,6 +5,7 @@ package net.devslash
  * Use `0` to specify infinite.
  * Negative value mean to use the system's default value.
  */
+@Suppress("MemberVisibilityCanBePrivate")
 class ConfigBuilder {
   /**
    * Max time between TCP packets - default 10 seconds.
@@ -24,7 +25,7 @@ class ConfigBuilder {
   /**
    * Max time for the connection manager to start a request - 20 seconds.
    */
-  var connectionRequestTimeout = 20_000
+  var connectionRequestTimeout: Int = 20_000
 
   fun build(): Config {
     return Config(followRedirects, socketTimeout, connectTimeout, connectionRequestTimeout)

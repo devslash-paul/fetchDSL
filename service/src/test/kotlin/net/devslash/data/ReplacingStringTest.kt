@@ -18,6 +18,7 @@ internal class ReplacingStringTest {
   @Test
   fun `Test replacing complex type`() {
     data class T(val i: String)
+
     val inString = "!1!"
     val out = ListRequestData(listOf(T("Hi"))).visit(ReplacingString(inString))
     assertThat(out, equalTo("T(i=Hi)"))

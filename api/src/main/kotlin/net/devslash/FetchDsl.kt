@@ -41,6 +41,7 @@ enum class HttpMethod {
 }
 
 @FetchDSL
+@Suppress("MemberVisibilityCanBePrivate")
 open class CallBuilder<T>(private val url: String) {
   var urlProvider: URLProvider? = null
   var data: RequestDataSupplier<T>? = null
@@ -108,6 +109,7 @@ val indexValueMapper: ValueMapper<String> = { inData, reqData ->
   }
 }
 
+@Suppress("MemberVisibilityCanBePrivate")
 @FetchDSL
 class BodyBuilder {
   private var value: String? = null
@@ -178,11 +180,12 @@ class BodyBuilder {
 
 }
 
+@Suppress("MemberVisibilityCanBePrivate")
 @FetchDSL
 class SessionBuilder {
   private var calls = mutableListOf<Call<*>>()
 
-  var concurrency = 20
+  var concurrency: Int = 20
   var delay: Long? = null
   var rateOptions: RateLimitOptions = RateLimitOptions(false, 0, Duration.ZERO)
 

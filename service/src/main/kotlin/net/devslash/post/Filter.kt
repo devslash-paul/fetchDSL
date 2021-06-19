@@ -4,7 +4,7 @@ import net.devslash.*
 import java.lang.RuntimeException
 
 class FilterBuilder {
-  var afterHooks = mutableListOf<AfterHook>()
+  var afterHooks: MutableList<AfterHook> = mutableListOf()
 
   operator fun AfterHook.unaryPlus() {
     afterHooks = (afterHooks + this).toMutableList()

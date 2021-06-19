@@ -1,17 +1,12 @@
 package net.devslash
 
-import io.ktor.client.statement.HttpResponse
 import io.ktor.http.*
 import io.ktor.utils.io.*
 import kotlinx.coroutines.runBlocking
 import net.devslash.util.basicUrl
 import org.hamcrest.CoreMatchers.equalTo
 import org.junit.Assert.assertThat
-import org.junit.Before
 import org.junit.Test
-import org.mockito.Answers
-import org.mockito.Mock
-import org.mockito.MockitoAnnotations
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
 import java.net.URI

@@ -1,7 +1,7 @@
 package net.devslash
 
 import kotlinx.coroutines.channels.Channel
-import java.util.UUID
+import java.util.*
 
 typealias URLProvider = (String, RequestData) -> String
 
@@ -57,7 +57,7 @@ typealias RequestVisitor<T, V> = (V, Class<*>) -> T
 typealias MustVisitor<T, V> = (V) -> T
 
 abstract class RequestData {
-  val id = UUID.randomUUID()
+  val id: UUID = UUID.randomUUID()
   abstract fun <T> visit(visitor: RequestVisitor<T, Any?>): T
 }
 
@@ -94,16 +94,17 @@ interface ReplaceableValue<T, V> {
 }
 
 @Deprecated("Replaceable value should be removed, instead please use the ReplacingString instead")
-fun String.asReplaceableValue() = object : ReplaceableValue<String, RequestData> {
-  override fun get(data: RequestData): String {
-    val replacements = data.mustGet<List<String>>().mapIndexed { ind, t ->
-      "!${ind + 1}!" to t
-    }.toMap()
-    var copy = "" + this@asReplaceableValue
-    replacements.forEach { (key, value) -> copy = copy.replace(key, value) }
-    return copy
+fun String.asReplaceableValue(): ReplaceableValue<String, RequestData> =
+  object : ReplaceableValue<String, RequestData> {
+    override fun get(data: RequestData): String {
+      val replacements = data.mustGet<List<String>>().mapIndexed { ind, t ->
+        "!${ind + 1}!" to t
+      }.toMap()
+      var copy = "" + this@asReplaceableValue
+      replacements.forEach { (key, value) -> copy = copy.replace(key, value) }
+      return copy
+    }
   }
-}
 
 sealed interface BeforeHook
 
@@ -148,7 +149,7 @@ fun UnaryAddBuilder<AfterHook>.action(block: AfterCtx.() -> Unit) {
   }
 }
 
-fun (() -> Unit).toPreHook() = object : SimpleBeforeHook {
+fun (() -> Unit).toPreHook(): SimpleBeforeHook = object : SimpleBeforeHook {
   override fun accept(req: HttpRequest, data: RequestData) {
     this@toPreHook()
   }
@@ -169,9 +170,9 @@ interface SkipBeforeHook : BeforeHook {
 
 class Envelope<T>(private val message: T, private val maxRetries: Int = 3) {
   private var current = 0
-  fun get() = message
-  fun fail() = current++
-  fun shouldProceed() = current < maxRetries
+  fun get(): T = message
+  fun fail(): Int = current++
+  fun shouldProceed(): Boolean = current < maxRetries
 }
 
 interface OnError
@@ -195,6 +196,7 @@ fun (() -> Any).toPostHook(): SimpleAfterHook = object : SimpleAfterHook {
   }
 }
 
+@Suppress("unused")
 fun ((HttpResponse) -> Any).toPostHook(): SimpleAfterHook = object : SimpleAfterHook {
   override fun accept(resp: HttpResponse) {
     this@toPostHook(resp)

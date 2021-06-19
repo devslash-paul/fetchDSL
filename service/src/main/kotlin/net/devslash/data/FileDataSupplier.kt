@@ -6,7 +6,7 @@ import net.devslash.RequestDataSupplier
 import java.io.File
 import java.util.concurrent.atomic.AtomicInteger
 
-class FileDataSupplier(val name: String, private val split: String = " ") : RequestDataSupplier<List<String>> {
+class FileDataSupplier(name: String, private val split: String = " ") : RequestDataSupplier<List<String>> {
   private val sourceFile = File(name).readLines()
   private val line = AtomicInteger(0)
 

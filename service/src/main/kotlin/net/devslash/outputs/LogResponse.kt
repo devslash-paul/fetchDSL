@@ -1,4 +1,4 @@
-package net.devslash.post
+package net.devslash.outputs
 
 import net.devslash.*
 

@@ -2,7 +2,6 @@ package net.devslash
 
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runBlockingTest
-import net.devslash.data.FileDataSupplier
 import net.devslash.data.Repeat
 import net.devslash.util.basicUrl
 import org.hamcrest.core.IsEqual.equalTo
@@ -10,7 +9,6 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThat
 import org.junit.Test
 import java.net.URI
-import java.util.concurrent.CountDownLatch
 import java.util.concurrent.atomic.AtomicInteger
 
 @ExperimentalCoroutinesApi

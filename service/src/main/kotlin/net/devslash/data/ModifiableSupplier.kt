@@ -24,7 +24,7 @@ class ModifiableSupplier<T>(private val delegate: RequestDataSupplier<T>) : Requ
   private val sentRequests = AtomicInteger(0)
   private val receivedResponses = AtomicInteger(0)
 
-  fun add(data: RequestData) = modifiedQueue.add(data)
+  fun add(data: RequestData): Boolean = modifiedQueue.add(data)
 
   override suspend fun getDataForRequest(): RequestData? {
     val data = delegate.getDataForRequest()

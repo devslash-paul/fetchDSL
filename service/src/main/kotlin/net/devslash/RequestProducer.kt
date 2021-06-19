@@ -10,13 +10,13 @@ class RequestCreator {
       val currentUrl = getUrl(call.url, data)
       val type = call.type
       val req = HttpRequest(type, currentUrl, body)
-      call.headers.forEach { entry ->
-        entry.value.map {
+      call.headers.forEach { (key, value) ->
+        value.map {
           when (it) {
             is StrHeaderValue -> it.value
             is ProvidedHeaderValue -> it.lambda(data)
           }
-        }.forEach { req.addHeader(entry.key, it) }
+        }.forEach { req.addHeader(key, it) }
       }
       return req
     }

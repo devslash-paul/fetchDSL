@@ -31,7 +31,7 @@ class ListDataSupplier<T>(private val list: Lazy<List<T>>, private val clazz: Cl
     operator fun invoke(
       ll: Lazy<List<String>>
     ): ListDataSupplier<List<String>> {
-      return invoke(ll) {listOf(it)}
+      return invoke(ll) { listOf(it) }
     }
 
     private fun <T> transformedLazyList(

@@ -30,11 +30,11 @@ internal class FileBasedDataSupplierTest {
 
     val expected = listOf(Pair("a", "b"), Pair("c", "d"))
 
-    for (character in expected) {
+    for ((first, second) in expected) {
       val requestData = dataSupplier.getDataForRequest()
       // the first word is
-      assertEquals(requestData!!.mustGet<List<String>>()[0], character.first)
-      assertEquals(requestData.mustGet<List<String>>()[1], character.second)
+      assertEquals(requestData!!.mustGet<List<String>>()[0], first)
+      assertEquals(requestData.mustGet<List<String>>()[1], second)
     }
   }
 
@@ -45,11 +45,11 @@ internal class FileBasedDataSupplierTest {
 
     val expected = listOf(Pair("a", "b"), Pair("c", "d"))
 
-    for (character in expected) {
+    for ((first, second) in expected) {
       val requestData = dataSupplier.getDataForRequest()
       // the first word is
-      assertEquals(requestData!!.mustGet<List<String>>()[0], character.first)
-      assertEquals(requestData.mustGet<List<String>>()[1], character.second)
+      assertEquals(requestData!!.mustGet<List<String>>()[0], first)
+      assertEquals(requestData.mustGet<List<String>>()[1], second)
     }
   }
 

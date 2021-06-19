@@ -2,7 +2,6 @@ package net.devslash.post
 
 import net.devslash.HttpResponse
 import net.devslash.SimpleAfterHook
-import net.devslash.post.Filter
 import net.devslash.util.basicData
 import net.devslash.util.basicRequest
 import net.devslash.util.basicResponse

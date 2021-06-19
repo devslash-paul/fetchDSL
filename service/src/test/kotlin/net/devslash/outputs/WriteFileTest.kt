@@ -14,44 +14,44 @@ import org.junit.rules.TemporaryFolder
 
 internal class WriteFileTest {
 
-    @Rule
-    @JvmField
-    val folder: TemporaryFolder = TemporaryFolder()
+  @Rule
+  @JvmField
+  val folder: TemporaryFolder = TemporaryFolder()
 
-    @Test
-    fun `Test Write File Happy Path`() {
-        val testFile = folder.newFile("test")
-        val write = WriteFile(testFile.absolutePath)
-        write.accept(basicRequest(), basicResponse(), ListRequestData(listOf<String>()))
+  @Test
+  fun `Test Write File Happy Path`() {
+    val testFile = folder.newFile("test")
+    val write = WriteFile(testFile.absolutePath)
+    write.accept(basicRequest(), basicResponse(), ListRequestData(listOf<String>()))
 
-        assertThat(testFile.readLines(), equalTo(listOf("Body")))
-    }
+    assertThat(testFile.readLines(), equalTo(listOf("Body")))
+  }
 
-    @Test
-    fun `Test custom format write file`() {
-        val testFile = folder.newFile("test")
-        val testOutput = "Test\noutput".toByteArray()
-        val write = WriteFile(testFile.absolutePath, object : OutputFormat {
-            override fun accept(resp: HttpResponse, data: RequestData): ByteArray {
-                return testOutput
-            }
-        })
+  @Test
+  fun `Test custom format write file`() {
+    val testFile = folder.newFile("test")
+    val testOutput = "Test\noutput".toByteArray()
+    val write = WriteFile(testFile.absolutePath, object : OutputFormat {
+      override fun accept(resp: HttpResponse, data: RequestData): ByteArray {
+        return testOutput
+      }
+    })
 
-        write.accept(basicRequest(), basicResponse(), ListRequestData(listOf<String>()))
+    write.accept(basicRequest(), basicResponse(), ListRequestData(listOf<String>()))
 
-        assertThat(testFile.readLines(), equalTo(listOf("Test", "output")))
-    }
+    assertThat(testFile.readLines(), equalTo(listOf("Test", "output")))
+  }
 
-    @Test
-    fun `Test empty output is valid`() {
-        val testFile = folder.newFile("test")
-        val write = WriteFile(testFile.absolutePath, object: OutputFormat {
-            override fun accept(resp: HttpResponse, data: RequestData): ByteArray? {
-                return null
-            }
-        })
-        write.accept(basicRequest(), basicResponse(), ListRequestData(listOf<String>()))
+  @Test
+  fun `Test empty output is valid`() {
+    val testFile = folder.newFile("test")
+    val write = WriteFile(testFile.absolutePath, object : OutputFormat {
+      override fun accept(resp: HttpResponse, data: RequestData): ByteArray? {
+        return null
+      }
+    })
+    write.accept(basicRequest(), basicResponse(), ListRequestData(listOf<String>()))
 
-        assertThat(testFile.readLines(), equalTo(listOf()))
-    }
+    assertThat(testFile.readLines(), equalTo(listOf()))
+  }
 }

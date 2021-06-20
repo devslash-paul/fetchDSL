@@ -4,42 +4,42 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import java.time.Clock
 import java.util.concurrent.Executors
-import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
-import kotlin.coroutines.CoroutineContext
 
 typealias Contents = Pair<HttpRequest, RequestData>
 
 class HttpSessionManager(private val engine: Driver, private val session: Session) : SessionManager {
 
-  private val produceThreadPoolSize = System.getProperty("PRODUCE_THREAD_POOL_SIZE")?.toInt()
-    ?: Runtime.getRuntime().availableProcessors()
+  private val jobThreadPool = System.getProperty("HTTP_THREAD_POOL_SIZE")?.toInt()
+    ?: Runtime.getRuntime().availableProcessors() * 2
 
-  private val semaphore = Semaphore(0)
+  private val httpThreadPool = Executors.newFixedThreadPool(jobThreadPool)
+  private val dispatcher = httpThreadPool.asCoroutineDispatcher()
+
   private var lastCall = 0L
   private val clock = Clock.systemUTC()
 
   fun run() {
     val jar = DefaultCookieJar()
-    engine.use {
+    try {
       for (call in session.calls) {
         call(call, jar)?.let {
           throw it
         }
       }
+    } finally {
+      engine.close()
+      httpThreadPool.shutdownNow()
+      httpThreadPool.awaitTermination(100L, TimeUnit.MILLISECONDS)
     }
   }
 
   override fun <T> call(call: Call<T>): Exception? = call(call, DefaultCookieJar())
 
-
   override fun <T> call(call: Call<T>, jar: CookieJar): Exception? = runBlocking(Dispatchers.Default) {
-    // Okay, so in here we're going to do the one to many calls we have to to get this to run.
-    val channel: Channel<Envelope<Pair<HttpRequest, RequestData>>> = Channel(session.concurrency * 2)
-    val produceExecutor = Executors.newFixedThreadPool(produceThreadPoolSize)
-    val produceDispatcher = produceExecutor.asCoroutineDispatcher()
-    launch(produceDispatcher) { RequestProducer().produceHttp(this@HttpSessionManager, call, jar, channel) }
+    val channel: Channel<Envelope<Contents>> = Channel(session.concurrency * 2)
+    launch(Dispatchers.IO) { RequestProducer().produceHttp(this@HttpSessionManager, call, jar, channel) }
 
     val afterRequest: MutableList<AfterHook> = mutableListOf(jar)
     afterRequest.addAll(call.afterHooks)
@@ -55,52 +55,45 @@ class HttpSessionManager(private val engine: Driver, private val session: Sessio
           "Effectively `session.concurrency = 1`"
       )
     }
+
     val limiter = AcquiringRateLimiter(session.rateOptions)
-
-    val threadPool = System.getProperty("HTTP_THREAD_POOL_SIZE")?.toInt()
-      ?: Runtime.getRuntime().availableProcessors() * 2
-    val httpThreadPool = Executors.newFixedThreadPool(if (hasDelay) 1 else threadPool)
-    val dispatcher = httpThreadPool.asCoroutineDispatcher()
-    semaphore.release(session.concurrency)
-
     val jobs = mutableListOf<Job>()
     val concurrency = if (hasDelay) 1 else session.concurrency
     val storedException = AtomicReference<Exception>(null)
+
     repeat(concurrency) {
-      jobs += launchHttpProcessor(
-        call,
-        limiter,
-        afterRequest,
-        channel,
-        dispatcher,
-        storedException
-      )
+      jobs += launch(dispatcher) {
+        launchHttpProcessor(
+          call,
+          limiter,
+          afterRequest,
+          channel,
+          storedException
+        )
+      }
     }
+
     jobs.joinAll()
-    produceExecutor.shutdownNow()
-    httpThreadPool.shutdownNow()
-    produceExecutor.awaitTermination(100L, TimeUnit.MILLISECONDS)
-    httpThreadPool.awaitTermination(100L, TimeUnit.MILLISECONDS)
     storedException.get()
   }
 
-  private fun <T> CoroutineScope.launchHttpProcessor(
+  private suspend fun <T> launchHttpProcessor(
     call: Call<T>,
     rateLimiter: AcquiringRateLimiter,
     afterRequest: List<AfterHook>,
     channel: Channel<Envelope<Pair<HttpRequest, RequestData>>>,
-    dispatcher: CoroutineContext,
     storedException: AtomicReference<Exception>
-  ) = launch(dispatcher) {
+  ) {
     for (next in channel) {
       if (storedException.get() != null) {
         // Break out in the event we've detected an exception somewhere
-        break
+        return
       }
       try {
         if (next.shouldProceed()) {
           val contents = next.get()
           rateLimiter.acquire()
+
           when (val resp = makeRequest(contents.first)) {
             is Failure -> handleFailure(call, channel, next, resp)
             is Success -> handleSuccess(resp, afterRequest, contents)
@@ -108,7 +101,7 @@ class HttpSessionManager(private val engine: Driver, private val session: Sessio
         }
       } catch (e: Exception) {
         storedException.set(e)
-        break
+        return
       }
     }
   }

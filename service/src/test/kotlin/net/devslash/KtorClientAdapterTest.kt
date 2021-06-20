@@ -6,6 +6,7 @@ internal class KtorClientAdapterTest {
 
   @Test
   fun testClientMapsParametersSuccessfully() {
+    //TODO
   }
 
 }

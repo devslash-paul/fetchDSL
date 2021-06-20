@@ -22,7 +22,7 @@ internal class OnceTest {
   }
 
   @Test
-  fun testOnlySingle() = runBlocking {
+  fun testSingleFiresOnce() = runBlocking {
     var count = 0
     val o = Once(object : SimpleBeforeHook {
       override fun accept(req: HttpRequest, data: RequestData) {

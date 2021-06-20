@@ -7,7 +7,7 @@ import io.ktor.http.HttpMethod
 import net.devslash.util.basicRequest
 import net.devslash.util.basicUrl
 import org.hamcrest.CoreMatchers.equalTo
-import org.junit.Assert.assertThat
+import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Test
 
 internal class KtorRequestMapperTest {

@@ -8,9 +8,9 @@ import org.hamcrest.core.IsEqual.equalTo
 import org.junit.Test
 import java.net.URI
 
-internal class CookieJarTest {
+internal class DefaultCookieJarTest {
 
-  private val jar: CookieJar = CookieJar()
+  private val jar: CookieJar = DefaultCookieJar()
   private val standardRequest = HttpRequest(HttpMethod.GET, "https://example.com", EmptyBodyProvider)
 
   @Test

@@ -1,6 +1,6 @@
-package net.devslash
+package net.devslash.util
 
-import net.devslash.util.basicUrl
+import net.devslash.*
 import java.net.URI
 
 class BounceHttpDriver(
@@ -8,6 +8,5 @@ class BounceHttpDriver(
 ) :
   Driver {
   override suspend fun call(req: HttpRequest): HttpResult<HttpResponse, Exception> = Success(resp)
-
   override fun close(): Unit = Unit
 }

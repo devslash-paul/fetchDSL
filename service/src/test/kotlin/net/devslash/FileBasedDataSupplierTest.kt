@@ -39,8 +39,8 @@ internal class FileBasedDataSupplierTest {
   }
 
   @Test
-  fun testWithTabSeparator() = runBlocking {
-    val path = FileDataSupplier::class.java.getResource("/tabspaced.log")!!.path
+  fun testWithCharacterSeparator() = runBlocking {
+    val path = FileDataSupplier::class.java.getResource("/charsep.log")!!.path
     val dataSupplier = FileDataSupplier(path, "-")
 
     val expected = listOf(Pair("a", "b"), Pair("c", "d"))

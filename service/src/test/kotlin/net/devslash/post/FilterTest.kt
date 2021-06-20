@@ -6,7 +6,7 @@ import net.devslash.util.basicData
 import net.devslash.util.basicRequest
 import net.devslash.util.basicResponse
 import org.hamcrest.CoreMatchers.equalTo
-import org.junit.Assert.assertThat
+import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Test
 import java.net.URI
 
@@ -41,7 +41,7 @@ internal class FilterTest {
   @Test
   fun testFilterPassesBasedOnPredicate() {
     var hit = false
-    val filter = Filter({ it.url.toASCIIString().contains("allowed") }) {
+    val filter = Filter({ it.uri.toASCIIString().contains("allowed") }) {
       +object : SimpleAfterHook {
         override fun accept(resp: HttpResponse) {
           hit = true
@@ -50,7 +50,7 @@ internal class FilterTest {
     }
 
     val resp = basicResponse()
-    resp.url = URI("http://allowed")
+    resp.uri = URI("http://allowed")
     filter.accept(basicRequest(), resp, basicData())
     assertThat(hit, equalTo(true))
   }
@@ -58,7 +58,7 @@ internal class FilterTest {
   @Test
   fun testFilterRejectsBasedOnPredicate() {
     var hit = false
-    val filter = Filter({ it.url.toASCIIString().contains("allowed") }) {
+    val filter = Filter({ it.uri.toASCIIString().contains("allowed") }) {
       +object : SimpleAfterHook {
         override fun accept(resp: HttpResponse) {
           hit = true
@@ -67,7 +67,7 @@ internal class FilterTest {
     }
 
     val resp = basicResponse()
-    resp.url = URI("http://Do_not_pass")
+    resp.uri = URI("http://Do_not_pass")
     filter.accept(basicRequest(), resp, basicData())
     assertThat(hit, equalTo(false))
   }

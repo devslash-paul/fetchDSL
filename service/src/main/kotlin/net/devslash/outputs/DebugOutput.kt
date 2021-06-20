@@ -9,7 +9,7 @@ class DebugOutput : OutputFormat {
   override fun accept(resp: HttpResponse, data: RequestData): ByteArray {
     return """
               ----------------
-              url: ${resp.url}
+              url: ${resp.uri}
               status: ${resp.statusCode}
               headers: [${resp.headers}]
               data: ${data.mustGet<Any?>()}

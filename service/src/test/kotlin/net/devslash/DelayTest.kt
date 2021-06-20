@@ -1,6 +1,5 @@
 package net.devslash
 
-import kotlinx.coroutines.runBlocking
 import net.devslash.data.ListDataSupplier
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -18,7 +17,7 @@ class DelayTest {
   }
 
   @Test
-  fun testDelayCausesWaitBetweenCalls() = runBlocking {
+  fun testDelayCausesWaitBetweenCalls() {
     val times = mutableListOf<Long>()
     val engine = TimingDriver(times)
     HttpSessionManager(engine, SessionBuilder().apply {

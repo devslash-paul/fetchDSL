@@ -5,7 +5,7 @@ import io.ktor.utils.io.*
 import kotlinx.coroutines.runBlocking
 import net.devslash.util.basicUrl
 import org.hamcrest.CoreMatchers.equalTo
-import org.junit.Assert.assertThat
+import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Test
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
@@ -21,7 +21,7 @@ internal class KtorResponseMapperTest {
     whenever(response.content).thenReturn(ByteReadChannel.Empty)
     val mapped = KtorResponseMapper { URI(basicUrl) }.mapResponse(response)
 
-    assertThat(mapped.url.toASCIIString(), equalTo(basicUrl))
+    assertThat(mapped.uri.toASCIIString(), equalTo(basicUrl))
     assertThat(mapped.body, equalTo(ByteArray(0)))
     assertThat(mapped.statusCode, equalTo(200))
     assertThat(mapped.headers, equalTo(mapOf()))
@@ -37,7 +37,7 @@ internal class KtorResponseMapperTest {
     whenever(response.content).thenReturn(ByteReadChannel(content))
     val mapped = KtorResponseMapper { URI(basicUrl) }.mapResponse(response)
 
-    assertThat(mapped.url.toASCIIString(), equalTo(basicUrl))
+    assertThat(mapped.uri.toASCIIString(), equalTo(basicUrl))
     assertThat(mapped.body, equalTo(content))
     assertThat(mapped.statusCode, equalTo(404))
     assertThat(mapped.headers, equalTo(mapOf("Test_key" to listOf("Test value"))))

@@ -21,7 +21,7 @@ fun basicRequest(): HttpRequest {
 }
 
 fun getCookieJar(): CookieJar {
-  return CookieJar()
+  return DefaultCookieJar()
 }
 
 fun getSessionManager(): SessionManager {

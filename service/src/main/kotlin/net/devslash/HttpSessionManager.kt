@@ -13,15 +13,16 @@ typealias Contents = Pair<HttpRequest, RequestData>
 
 class HttpSessionManager(private val engine: Driver, private val session: Session) : SessionManager {
 
+  private val produceThreadPoolSize = System.getProperty("PRODUCE_THREAD_POOL_SIZE")?.toInt()
+    ?: Runtime.getRuntime().availableProcessors()
+
   private val semaphore = Semaphore(0)
   private var lastCall = 0L
   private val clock = Clock.systemUTC()
-  private lateinit var sessionManager: SessionManager
 
   fun run() {
-    val jar = CookieJar()
+    val jar = DefaultCookieJar()
     engine.use {
-      sessionManager = this
       for (call in session.calls) {
         call(call, jar)?.let {
           throw RuntimeException(it)
@@ -30,17 +31,15 @@ class HttpSessionManager(private val engine: Driver, private val session: Sessio
     }
   }
 
-  override fun <T> call(call: Call<T>): Exception? = call(call, CookieJar())
+  override fun <T> call(call: Call<T>): Exception? = call(call, DefaultCookieJar())
+
 
   override fun <T> call(call: Call<T>, jar: CookieJar): Exception? = runBlocking(Dispatchers.Default) {
     // Okay, so in here we're going to do the one to many calls we have to to get this to run.
-    val channel: Channel<Envelope<Pair<HttpRequest, RequestData>>> =
-      Channel(session.concurrency * 2)
-    val produceThreadPool = System.getProperty("PRODUCE_THREAD_POOL_SIZE")?.toInt()
-      ?: Runtime.getRuntime().availableProcessors()
-    val produceExecutor = Executors.newFixedThreadPool(produceThreadPool)
+    val channel: Channel<Envelope<Pair<HttpRequest, RequestData>>> = Channel(session.concurrency * 2)
+    val produceExecutor = Executors.newFixedThreadPool(produceThreadPoolSize)
     val produceDispatcher = produceExecutor.asCoroutineDispatcher()
-    launch(produceDispatcher) { RequestProducer().produceHttp(sessionManager, call, jar, channel) }
+    launch(produceDispatcher) { RequestProducer().produceHttp(this@HttpSessionManager, call, jar, channel) }
 
     val afterRequest: MutableList<AfterHook> = mutableListOf(jar)
     afterRequest.addAll(call.afterHooks)

@@ -25,7 +25,7 @@ class HttpSessionManager(private val engine: Driver, private val session: Sessio
     engine.use {
       for (call in session.calls) {
         call(call, jar)?.let {
-          throw RuntimeException(it)
+          throw it
         }
       }
     }

@@ -29,3 +29,5 @@ jobs:
       run: ./gradlew check jacocoTestReport
     - name: Run upload
       run: bash <(curl -s https://codecov.io/bash)
+    - name: Report Codacy
+      run: bash <(curl -Ls https://coverage.codacy.com/get.sh) report -r service/build/jacoco.xml

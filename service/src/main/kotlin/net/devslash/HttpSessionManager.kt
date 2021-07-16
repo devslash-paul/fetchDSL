@@ -12,7 +12,7 @@ typealias Contents = Pair<HttpRequest, RequestData>
 class HttpSessionManager(private val engine: Driver, private val session: Session) : SessionManager {
 
   private val jobThreadPool = System.getProperty("HTTP_THREAD_POOL_SIZE")?.toInt()
-    ?: Runtime.getRuntime().availableProcessors() * 2
+      ?: Runtime.getRuntime().availableProcessors() * 2
 
   private val httpThreadPool = Executors.newFixedThreadPool(jobThreadPool)
   private val dispatcher = httpThreadPool.asCoroutineDispatcher()
@@ -21,7 +21,6 @@ class HttpSessionManager(private val engine: Driver, private val session: Sessio
   private val clock = Clock.systemUTC()
 
   fun run() {
-    val jar = DefaultCookieJar()
     try {
       for (call in session.calls) {
         call(call, jar)?.let {
@@ -49,10 +48,10 @@ class HttpSessionManager(private val engine: Driver, private val session: Sessio
 
     if (hasDelay) {
       println(
-        "Delay has been set to $delay ms. This means that after a call has been made, " + //
-          "there will be a delay of at least $delay ms before the beginning of the next one.\n" + //
-          "Due to a delay being set - the number of HTTP threads has been locked to 1. " + //
-          "Effectively `session.concurrency = 1`"
+          "Delay has been set to $delay ms. This means that after a call has been made, " + //
+              "there will be a delay of at least $delay ms before the beginning of the next one.\n" + //
+              "Due to a delay being set - the number of HTTP threads has been locked to 1. " + //
+              "Effectively `session.concurrency = 1`"
       )
     }
 
@@ -64,11 +63,11 @@ class HttpSessionManager(private val engine: Driver, private val session: Sessio
     repeat(concurrency) {
       jobs += launch(dispatcher) {
         launchHttpProcessor(
-          call,
-          limiter,
-          afterRequest,
-          channel,
-          storedException
+            call,
+            limiter,
+            afterRequest,
+            channel,
+            storedException
         )
       }
     }
@@ -78,11 +77,11 @@ class HttpSessionManager(private val engine: Driver, private val session: Sessio
   }
 
   private suspend fun <T> launchHttpProcessor(
-    call: Call<T>,
-    rateLimiter: AcquiringRateLimiter,
-    afterRequest: List<AfterHook>,
-    channel: Channel<Envelope<Pair<HttpRequest, RequestData>>>,
-    storedException: AtomicReference<Exception>
+      call: Call<T>,
+      rateLimiter: AcquiringRateLimiter,
+      afterRequest: List<AfterHook>,
+      channel: Channel<Envelope<Pair<HttpRequest, RequestData>>>,
+      storedException: AtomicReference<Exception>
   ) {
     for (next in channel) {
       if (storedException.get() != null) {
@@ -107,9 +106,9 @@ class HttpSessionManager(private val engine: Driver, private val session: Sessio
   }
 
   private fun handleSuccess(
-    resp: Success<HttpResponse>,
-    afterRequest: List<AfterHook>,
-    contents: Pair<HttpRequest, RequestData>
+      resp: Success<HttpResponse>,
+      afterRequest: List<AfterHook>,
+      contents: Pair<HttpRequest, RequestData>
   ) {
     val mappedResponse = resp.value
     afterRequest.forEach {
@@ -122,10 +121,10 @@ class HttpSessionManager(private val engine: Driver, private val session: Sessio
   }
 
   private suspend fun <T> handleFailure(
-    call: Call<T>,
-    channel: Channel<Envelope<Pair<HttpRequest, RequestData>>>,
-    next: Envelope<Pair<HttpRequest, RequestData>>,
-    exception: Failure<java.lang.Exception>
+      call: Call<T>,
+      channel: Channel<Envelope<Pair<HttpRequest, RequestData>>>,
+      next: Envelope<Pair<HttpRequest, RequestData>>,
+      exception: Failure<java.lang.Exception>
   ) {
     when (val onError = call.onError) {
       is OnErrorWithState -> onError.accept(channel, next, exception.err)

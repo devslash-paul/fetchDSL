@@ -27,7 +27,7 @@ internal class StdOutTest {
     val byteStream = ByteArrayOutputStream()
     val pattern = "test pattern"
     val out = StdOut(PrintStream(byteStream), object : OutputFormat {
-      override fun accept(resp: HttpResponse, data: RequestData): ByteArray {
+      override fun accept(resp: HttpResponse, data: RequestData<*>): ByteArray {
         return pattern.toByteArray()
       }
     })
@@ -39,7 +39,7 @@ internal class StdOutTest {
   fun testNullOutputValid() {
     val byteStream = ByteArrayOutputStream()
     val out = StdOut(PrintStream(byteStream), object : OutputFormat {
-      override fun accept(resp: HttpResponse, data: RequestData): ByteArray? = null
+      override fun accept(resp: HttpResponse, data: RequestData<*>): ByteArray? = null
     })
 
     assertOutputMatches(out, byteStream, "")

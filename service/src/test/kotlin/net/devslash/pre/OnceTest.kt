@@ -25,7 +25,7 @@ internal class OnceTest {
   fun testSingleFiresOnce() = runBlocking {
     var count = 0
     val o = Once(object : SimpleBeforeHook {
-      override fun accept(req: HttpRequest, data: RequestData) {
+      override fun accept(req: HttpRequest, data: RequestData<*>) {
         count += 1
       }
     })
@@ -44,7 +44,7 @@ internal class OnceTest {
         sessionManager: SessionManager,
         cookieJar: CookieJar,
         req: HttpRequest,
-        data: RequestData
+        data: RequestData<*>
       ) {
         count++
       }

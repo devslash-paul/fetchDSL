@@ -23,7 +23,7 @@ object Version {
 @DslMarker
 private annotation class FetchDSL
 
-class UnaryAddBuilder<T> {
+class UnaryAddBuilder<V, T> {
   private var hooks = mutableListOf<T>()
   operator fun T.unaryPlus() {
     hooks = (hooks + this).toMutableList()
@@ -53,12 +53,12 @@ open class CallBuilder<T>(private val url: String) {
   private var preHooksList = mutableListOf<BeforeHook>()
   private var postHooksList = mutableListOf<AfterHook>()
 
-  fun before(block: UnaryAddBuilder<BeforeHook>.() -> Unit) {
-    preHooksList.addAll(UnaryAddBuilder<BeforeHook>().apply(block).build())
+  fun before(block: UnaryAddBuilder<T, BeforeHook>.() -> Unit) {
+    preHooksList.addAll(UnaryAddBuilder<T, BeforeHook>().apply(block).build())
   }
 
-  fun after(block: UnaryAddBuilder<AfterHook>.() -> Unit) {
-    postHooksList.addAll(UnaryAddBuilder<AfterHook>().apply(block).build())
+  fun after(block: UnaryAddBuilder<T, AfterHook>.() -> Unit) {
+    postHooksList.addAll(UnaryAddBuilder<T, AfterHook>().apply(block).build())
   }
 
   fun body(block: BodyBuilder.() -> Unit) {
@@ -97,7 +97,7 @@ fun replaceString(changes: Map<String, String>, str: String): String {
   return x
 }
 
-typealias ValueMapper<V> = (V, RequestData) -> V
+typealias ValueMapper<V> = (V, RequestData<*>) -> V
 
 val identityValueMapper: ValueMapper<String> = { v, _ -> v }
 val indexValueMapper: ValueMapper<String> = { inData, reqData ->
@@ -116,12 +116,12 @@ class BodyBuilder {
   private var valueMapper: ValueMapper<String>? = null
 
   private var formParts: List<FormPart>? = null
-  private var lazyMultipartForm: ((RequestData) -> List<FormPart>)? = null
+  private var lazyMultipartForm: ((RequestData<*>) -> List<FormPart>)? = null
 
   private var formParams: Form? = null
   private var formMapper: ValueMapper<Map<String, List<String>>>? = null
   var jsonObject: Any? = null
-  var lazyJsonObject: ((RequestData) -> Any)? = null
+  var lazyJsonObject: ((RequestData<*>) -> Any)? = null
 
   // This is actually used. The receiver ensures that only the basic case can utilise a non mapped
   // function
@@ -148,7 +148,7 @@ class BodyBuilder {
 
   @Suppress("unused")
   fun multipartForm(
-    lazyForm: RequestData.() -> List<FormPart>
+    lazyForm: RequestData<*>.() -> List<FormPart>
   ) {
     this.lazyMultipartForm = lazyForm
   }
@@ -160,7 +160,7 @@ class BodyBuilder {
   }
 
   @Suppress("unused")
-  fun value(value: String, mapper: (String, RequestData) -> String) {
+  fun value(value: String, mapper: (String, RequestData<*>) -> String) {
     this.value = value
     this.valueMapper = mapper
   }

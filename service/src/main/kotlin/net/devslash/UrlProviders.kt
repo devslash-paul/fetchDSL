@@ -1,6 +1,6 @@
 package net.devslash
 
-fun defaultUrlProvider(url: String, data: RequestData): String {
+fun defaultUrlProvider(url: String, data: RequestData<*>): String {
   if (url.contains("!")) {
     return data.visit(ReplacingString(url))
   }

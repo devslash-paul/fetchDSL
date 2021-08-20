@@ -1,6 +1,6 @@
 package net.devslash
 
-class ListRequestData<T>(private val parts: T, private val type: Class<T>) : RequestData() {
+class ListRequestData<T>(private val parts: T, private val type: Class<T>) : RequestData<T>() {
   companion object {
     inline operator fun <reified T> invoke(parts: T): ListRequestData<T> {
       return ListRequestData(parts, T::class.java)

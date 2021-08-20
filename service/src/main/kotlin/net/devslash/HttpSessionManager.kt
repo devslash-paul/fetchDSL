@@ -7,7 +7,7 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 
-typealias Contents = Pair<HttpRequest, RequestData>
+typealias Contents = Pair<HttpRequest, RequestData<*>>
 
 class HttpSessionManager(private val engine: Driver, private val session: Session) : SessionManager {
 
@@ -21,6 +21,7 @@ class HttpSessionManager(private val engine: Driver, private val session: Sessio
   private val clock = Clock.systemUTC()
 
   fun run() {
+    val jar = DefaultCookieJar()
     try {
       for (call in session.calls) {
         call(call, jar)?.let {
@@ -80,7 +81,7 @@ class HttpSessionManager(private val engine: Driver, private val session: Sessio
       call: Call<T>,
       rateLimiter: AcquiringRateLimiter,
       afterRequest: List<AfterHook>,
-      channel: Channel<Envelope<Pair<HttpRequest, RequestData>>>,
+      channel: Channel<Envelope<Pair<HttpRequest, RequestData<*>>>>,
       storedException: AtomicReference<Exception>
   ) {
     for (next in channel) {
@@ -108,7 +109,7 @@ class HttpSessionManager(private val engine: Driver, private val session: Sessio
   private fun handleSuccess(
       resp: Success<HttpResponse>,
       afterRequest: List<AfterHook>,
-      contents: Pair<HttpRequest, RequestData>
+      contents: Pair<HttpRequest, RequestData<*>>
   ) {
     val mappedResponse = resp.value
     afterRequest.forEach {
@@ -122,8 +123,8 @@ class HttpSessionManager(private val engine: Driver, private val session: Sessio
 
   private suspend fun <T> handleFailure(
       call: Call<T>,
-      channel: Channel<Envelope<Pair<HttpRequest, RequestData>>>,
-      next: Envelope<Pair<HttpRequest, RequestData>>,
+      channel: Channel<Envelope<Pair<HttpRequest, RequestData<*>>>>,
+      next: Envelope<Pair<HttpRequest, RequestData<*>>>,
       exception: Failure<java.lang.Exception>
   ) {
     when (val onError = call.onError) {

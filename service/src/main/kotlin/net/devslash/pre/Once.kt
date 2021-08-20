@@ -11,7 +11,7 @@ class Once(private val before: BeforeHook) : SessionPersistingBeforeHook {
     sessionManager: SessionManager,
     cookieJar: CookieJar,
     req: HttpRequest,
-    data: RequestData
+    data: RequestData<*>
   ) {
     if (flag.compareAndSet(false, true)) {
       when (before) {

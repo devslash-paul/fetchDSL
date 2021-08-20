@@ -32,7 +32,7 @@ internal class WriteFileTest {
     val testFile = folder.newFile("test")
     val testOutput = "Test\noutput".toByteArray()
     val write = WriteFile(testFile.absolutePath, object : OutputFormat {
-      override fun accept(resp: HttpResponse, data: RequestData): ByteArray {
+      override fun accept(resp: HttpResponse, data: RequestData<*>): ByteArray {
         return testOutput
       }
     })
@@ -46,7 +46,7 @@ internal class WriteFileTest {
   fun `Test empty output is valid`() {
     val testFile = folder.newFile("test")
     val write = WriteFile(testFile.absolutePath, object : OutputFormat {
-      override fun accept(resp: HttpResponse, data: RequestData): ByteArray? {
+      override fun accept(resp: HttpResponse, data: RequestData<*>): ByteArray? {
         return null
       }
     })

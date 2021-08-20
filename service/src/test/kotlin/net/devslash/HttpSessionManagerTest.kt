@@ -18,10 +18,10 @@ internal class HttpSessionManagerTest {
   @Test
   fun testBasicHttpBounce() = runBlockingTest {
     val resp = HttpResponse(
-      URI(basicUrl),
-      200,
-      mapOf("set-cookie" to listOf("session=abcd")),
-      "Hi there".toByteArray()
+        URI(basicUrl),
+        200,
+        mapOf("set-cookie" to listOf("session=abcd")),
+        "Hi there".toByteArray()
     )
     val engine = BounceHttpDriver(resp)
     runHttp(engine) {

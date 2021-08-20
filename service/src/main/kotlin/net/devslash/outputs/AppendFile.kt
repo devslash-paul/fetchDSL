@@ -23,7 +23,7 @@ class AppendFile(
     }
   }
 
-  override fun accept(req: HttpRequest, resp: HttpResponse, data: RequestData) {
+  override fun accept(req: HttpRequest, resp: HttpResponse, data: RequestData<*>) {
     val filename = data.visit(ReplacingString(fileName))
     val f = memoizedFile ?: BufferedOutputStream(
       FileOutputStream(

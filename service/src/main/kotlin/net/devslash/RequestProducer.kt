@@ -4,7 +4,7 @@ import kotlinx.coroutines.channels.Channel
 
 class RequestCreator {
   companion object {
-    fun <T> getRequestFor(call: Call<T>, data: RequestData): HttpRequest {
+    fun <T> getRequestFor(call: Call<T>, data: RequestData<*>): HttpRequest {
       val getUrl = getUrlProvider(call)
       val body = getBodyProvider(call, data)
       val currentUrl = getUrl(call.url, data)
@@ -32,9 +32,9 @@ class RequestProducer {
   ) {
     val dataSupplier = handleNoSupplier(call.dataSupplier)
 
-    var nextData: RequestData? = dataSupplier.getDataForRequest()
+    var nextData: RequestData<*>? = dataSupplier.getDataForRequest()
     while (nextData != null) {
-      val data: RequestData = nextData
+      val data: RequestData<*> = nextData
       val req = RequestCreator.getRequestFor(call, data)
 
       val preRequest = call.beforeHooks + jar

@@ -4,15 +4,15 @@ import net.devslash.*
 import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
 
-class ResettablePipe<T>(
-  val acceptor: (HttpResponse, RequestData) -> List<String>,
+class ResettablePipe(
+  val acceptor: (HttpResponse, RequestData<*>) -> List<String>,
   private val split: String? = null
-) : BasicOutput, RequestDataSupplier<T> {
+) : BasicOutput, RequestDataSupplier<List<String>> {
 
   private val index = AtomicInteger(0)
   private val storage = Collections.synchronizedList(mutableListOf<String>())
 
-  override suspend fun getDataForRequest(): RequestData? {
+  override suspend fun getDataForRequest(): RequestData<List<String>>? {
     val currentValue = storage.getOrNull(index.getAndIncrement()) ?: return null
 
     val line = if (split != null) {
@@ -26,7 +26,7 @@ class ResettablePipe<T>(
     reset()
   }
 
-  override fun accept(req: HttpRequest, resp: HttpResponse, data: RequestData) {
+  override fun accept(req: HttpRequest, resp: HttpResponse, data: RequestData<*>) {
     val newResults = acceptor(resp, data)
     storage.addAll(newResults)
   }

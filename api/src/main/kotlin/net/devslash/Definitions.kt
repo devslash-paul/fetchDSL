@@ -3,7 +3,7 @@ package net.devslash
 import kotlinx.coroutines.channels.Channel
 import java.util.*
 
-typealias URLProvider = (String, RequestData) -> String
+typealias URLProvider = (String, RequestData<*>) -> String
 
 sealed class FormTypes
 class NumberType(val i: Number) : FormTypes()
@@ -14,7 +14,7 @@ data class FormPart(val key: String, val value: FormTypes)
 sealed class HeaderValue
 data class StrHeaderValue(val value: String) : HeaderValue()
 
-data class ProvidedHeaderValue(val lambda: (RequestData) -> String) : HeaderValue()
+data class ProvidedHeaderValue(val lambda: (RequestData<*>) -> String) : HeaderValue()
 
 data class Session(
   val calls: List<Call<*>>,
@@ -39,7 +39,7 @@ interface RequestDataSupplier<T> {
   /**
    * Request data should be a closure that is safe to call on a per-request basis
    */
-  suspend fun getDataForRequest(): RequestData?
+  suspend fun getDataForRequest(): RequestData<T>?
 
   fun init() {
     // By default this is empty, but implementors can be assured that on a per-call basis, this
@@ -48,7 +48,7 @@ interface RequestDataSupplier<T> {
 }
 
 interface OutputFormat {
-  fun accept(resp: HttpResponse, data: RequestData): ByteArray?
+  fun accept(resp: HttpResponse, data: RequestData<*>): ByteArray?
 }
 
 // V is the underlying request data, class is used to find that out
@@ -56,16 +56,20 @@ interface OutputFormat {
 typealias RequestVisitor<T, V> = (V, Class<*>) -> T
 typealias MustVisitor<T, V> = (V) -> T
 
-abstract class RequestData {
+abstract class RequestData<T> {
   val id: UUID = UUID.randomUUID()
   abstract fun <T> visit(visitor: RequestVisitor<T, Any?>): T
 }
 
-inline fun <reified T> RequestData.mustGet(): T {
+inline fun <reified T> RequestData<*>.mustGet(): T {
   return this.mustVisit<T, T> { a -> a }
 }
 
-inline fun <T, reified V> RequestData.mustVisit(crossinline visitor: MustVisitor<T, V>): T {
+inline fun <reified T> RequestData<T>.value(): T {
+  return this.mustGet()
+}
+
+inline fun <T, reified V> RequestData<*>.mustVisit(crossinline visitor: MustVisitor<T, V>): T {
   return visit { any, clazz ->
     if (V::class.java.isAssignableFrom(clazz)) {
       return@visit visitor(any as V)
@@ -83,9 +87,9 @@ data class HttpBody(
   val formData: Map<String, List<String>>?,
   val formMapper: ValueMapper<Map<String, List<String>>>?,
   val multipartForm: List<FormPart>?,
-  val lazyMultipartForm: (RequestData.() -> List<FormPart>)?,
+  val lazyMultipartForm: (RequestData<*>.() -> List<FormPart>)?,
   val jsonObject: Any?,
-  val lazyJsonObject: ((RequestData) -> Any)?
+  val lazyJsonObject: ((RequestData<*>) -> Any)?
 )
 
 @Deprecated("Type deprecated")
@@ -94,9 +98,9 @@ interface ReplaceableValue<T, V> {
 }
 
 @Deprecated("Replaceable value should be removed, instead please use the ReplacingString instead")
-fun String.asReplaceableValue(): ReplaceableValue<String, RequestData> =
-  object : ReplaceableValue<String, RequestData> {
-    override fun get(data: RequestData): String {
+fun String.asReplaceableValue(): ReplaceableValue<String, RequestData<*>> =
+  object : ReplaceableValue<String, RequestData<*>> {
+    override fun get(data: RequestData<*>): String {
       val replacements = data.mustGet<List<String>>().mapIndexed { ind, t ->
         "!${ind + 1}!" to t
       }.toMap()
@@ -109,30 +113,30 @@ fun String.asReplaceableValue(): ReplaceableValue<String, RequestData> =
 sealed interface BeforeHook
 
 interface SimpleBeforeHook : BeforeHook {
-  fun accept(req: HttpRequest, data: RequestData)
+  fun accept(req: HttpRequest, data: RequestData<*>)
 }
 
-data class BeforeCtx(
+data class BeforeCtx<T>(
   val sessionManager: SessionManager,
   val cookieJar: CookieJar,
   val req: HttpRequest,
-  val data: RequestData
+  val data: RequestData<T>
 )
 
-data class AfterCtx(
+data class AfterCtx<T>(
   val req: HttpRequest,
   val resp: HttpResponse,
-  val data: RequestData
+  val data: RequestData<T>
 )
 
 @JvmName("beforeAction")
-fun UnaryAddBuilder<BeforeHook>.action(block: BeforeCtx.() -> Unit) {
-  +object : SessionPersistingBeforeHook {
+fun <T> UnaryAddBuilder<T, BeforeHook>.action(block: BeforeCtx<T>.() -> Unit) {
+  +object : ResolvedSessionPersistingBeforeHook<T> {
     override suspend fun accept(
       sessionManager: SessionManager,
       cookieJar: CookieJar,
       req: HttpRequest,
-      data: RequestData
+      data: RequestData<T>
     ) {
       // Safe cast due to usage
       BeforeCtx(sessionManager, cookieJar, req, data).apply(block)
@@ -141,16 +145,16 @@ fun UnaryAddBuilder<BeforeHook>.action(block: BeforeCtx.() -> Unit) {
 }
 
 @JvmName("afterAction")
-fun UnaryAddBuilder<AfterHook>.action(block: AfterCtx.() -> Unit) {
-  +object : FullDataAfterHook {
-    override fun accept(req: HttpRequest, resp: HttpResponse, data: RequestData) {
+fun <T> UnaryAddBuilder<T, AfterHook>.action(block: AfterCtx<T>.() -> Unit) {
+  +object : ResolvedFullDataAfterHook<T> {
+    override fun accept(req: HttpRequest, resp: HttpResponse, data: RequestData<T>) {
       AfterCtx(req, resp, data).apply(block)
     }
   }
 }
 
 fun (() -> Unit).toPreHook(): SimpleBeforeHook = object : SimpleBeforeHook {
-  override fun accept(req: HttpRequest, data: RequestData) {
+  override fun accept(req: HttpRequest, data: RequestData<*>) {
     this@toPreHook()
   }
 }
@@ -160,12 +164,21 @@ interface SessionPersistingBeforeHook : BeforeHook {
     sessionManager: SessionManager,
     cookieJar: CookieJar,
     req: HttpRequest,
-    data: RequestData
+    data: RequestData<*>
+  )
+}
+
+interface ResolvedSessionPersistingBeforeHook<T> : BeforeHook {
+  suspend fun accept(
+      sessionManager: SessionManager,
+      cookieJar: CookieJar,
+      req: HttpRequest,
+      data: RequestData<T>
   )
 }
 
 interface SkipBeforeHook : BeforeHook {
-  fun skip(requestData: RequestData): Boolean
+  fun skip(requestData: RequestData<*>): Boolean
 }
 
 class Envelope<T>(private val message: T, private val maxRetries: Int = 3) {
@@ -178,8 +191,8 @@ class Envelope<T>(private val message: T, private val maxRetries: Int = 3) {
 interface OnError
 interface OnErrorWithState : OnError {
   suspend fun accept(
-    channel: Channel<Envelope<Pair<HttpRequest, RequestData>>>,
-    envelope: Envelope<Pair<HttpRequest, RequestData>>,
+    channel: Channel<Envelope<Pair<HttpRequest, RequestData<*>>>>,
+    envelope: Envelope<Pair<HttpRequest, RequestData<*>>>,
     e: Exception
   )
 }
@@ -208,7 +221,11 @@ interface BodyMutatingAfterHook : AfterHook {
 }
 
 interface FullDataAfterHook : AfterHook {
-  fun accept(req: HttpRequest, resp: HttpResponse, data: RequestData)
+  fun accept(req: HttpRequest, resp: HttpResponse, data: RequestData<*>)
+}
+
+interface ResolvedFullDataAfterHook<T> : AfterHook {
+  fun accept(req: HttpRequest, resp: HttpResponse, data: RequestData<T>)
 }
 
 sealed class HttpResult<out T, out E>

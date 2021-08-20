@@ -16,9 +16,9 @@ fun <T> handleNoSupplier(data: RequestDataSupplier<T>?): RequestDataSupplier<T> 
 class SingleUseDataSupplier<T>(val supply: List<String> = listOf()) : RequestDataSupplier<T> {
   private val first = AtomicBoolean(true)
 
-  override suspend fun getDataForRequest(): RequestData? {
+  override suspend fun getDataForRequest(): RequestData<T>? {
     if (first.compareAndSet(true, false)) {
-      return object : RequestData() {
+      return object : RequestData<T>() {
         override fun <T> visit(visitor: RequestVisitor<T, Any?>): T {
           return visitor(supply, List::class.java)
         }

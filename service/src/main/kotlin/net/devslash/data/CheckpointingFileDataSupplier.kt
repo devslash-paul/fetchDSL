@@ -72,7 +72,7 @@ class CheckpointingFileDataSupplier(
     }
   }
 
-  override suspend fun getDataForRequest(): RequestData? {
+  override suspend fun getDataForRequest(): RequestData<List<String>>? {
     val currentLine = line.getAndIncrement()
     if (currentLine >= lines.size) {
       return null
@@ -83,7 +83,7 @@ class CheckpointingFileDataSupplier(
     return data
   }
 
-  override fun accept(req: HttpRequest, resp: HttpResponse, data: RequestData) {
+  override fun accept(req: HttpRequest, resp: HttpResponse, data: RequestData<*>) {
     val succeeded = checkpointPredicate.invoke(AfterCtx(req, resp, data))
     val currentLine = inflightRequests.getValue(data.id)
     inflightRequests.remove(data.id)
@@ -94,8 +94,8 @@ class CheckpointingFileDataSupplier(
   }
 
   override suspend fun accept(
-    channel: Channel<Envelope<Pair<HttpRequest, RequestData>>>,
-    envelope: Envelope<Pair<HttpRequest, RequestData>>,
+    channel: Channel<Envelope<Pair<HttpRequest, RequestData<*>>>>,
+    envelope: Envelope<Pair<HttpRequest, RequestData<*>>>,
     e: Exception
   ) {
     val id = envelope.get().second.id
@@ -130,6 +130,6 @@ class CheckpointingFileDataSupplier(
   }
 }
 
-typealias CheckpointPredicate = AfterCtx.() -> Boolean
+typealias CheckpointPredicate = AfterCtx<*>.() -> Boolean
 
 val defaultCheckpointPredicate: CheckpointPredicate = { resp.statusCode == 200 }

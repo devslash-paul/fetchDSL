@@ -77,7 +77,7 @@ class ListDataSupplier<T>(private val list: Lazy<List<T>>, private val clazz: Cl
     }
   }
 
-  override suspend fun getDataForRequest(): RequestData? {
+  override suspend fun getDataForRequest(): RequestData<T>? {
     val index = line.getAndIncrement()
     val obj = list.value.getOrNull(index) ?: return null
     return ListRequestData(obj, clazz)

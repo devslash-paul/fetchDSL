@@ -4,17 +4,17 @@ import net.devslash.*
 import java.util.concurrent.ConcurrentLinkedDeque
 
 class Pipe<T>(
-  val acceptor: (HttpResponse, RequestData) -> List<RequestData>
+  val acceptor: (HttpResponse, RequestData<T>) -> List<RequestData<T>>
 ) :
-  FullDataAfterHook, RequestDataSupplier<T> {
+  ResolvedFullDataAfterHook<T>, RequestDataSupplier<T> {
 
-  private val storage = ConcurrentLinkedDeque<RequestData>()
+  private val storage = ConcurrentLinkedDeque<RequestData<T>>()
 
-  override suspend fun getDataForRequest(): RequestData? {
+  override suspend fun getDataForRequest(): RequestData<T>? {
     return storage.poll() ?: return null
   }
 
-  override fun accept(req: HttpRequest, resp: HttpResponse, data: RequestData) {
+  override fun accept(req: HttpRequest, resp: HttpResponse, data: RequestData<T>) {
     val newResults = acceptor(resp, data)
     storage.addAll(newResults)
   }

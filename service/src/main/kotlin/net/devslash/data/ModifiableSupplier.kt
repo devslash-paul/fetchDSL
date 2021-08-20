@@ -19,14 +19,14 @@ import java.util.concurrent.atomic.AtomicInteger
  */
 class ModifiableSupplier<T>(private val delegate: RequestDataSupplier<T>) : RequestDataSupplier<T>, SimpleAfterHook {
 
-  private val modifiedQueue: ConcurrentLinkedQueue<RequestData> = ConcurrentLinkedQueue()
+  private val modifiedQueue: ConcurrentLinkedQueue<RequestData<T>> = ConcurrentLinkedQueue()
 
   private val sentRequests = AtomicInteger(0)
   private val receivedResponses = AtomicInteger(0)
 
-  fun add(data: RequestData): Boolean = modifiedQueue.add(data)
+  fun add(data: RequestData<T>): Boolean = modifiedQueue.add(data)
 
-  override suspend fun getDataForRequest(): RequestData? {
+  override suspend fun getDataForRequest(): RequestData<T>? {
     val data = delegate.getDataForRequest()
     if (data != null) {
       // we'll send a request, thus count.
@@ -45,7 +45,7 @@ class ModifiableSupplier<T>(private val delegate: RequestDataSupplier<T>) : Requ
   /**
    * In this case, there was no obvious candidate. Thus we want to wait until a request comes
    */
-  private suspend fun waitOrNull(): RequestData? {
+  private suspend fun waitOrNull(): RequestData<T>? {
     while (sentRequests.get() > receivedResponses.get()) {
       // Attempt to find one, if you don't get it then block until there's some output returned
       val result = modifiedQueue.poll()

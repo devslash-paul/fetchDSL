@@ -15,14 +15,14 @@ internal class PipeTest {
 
   @Test
   fun testPipeStartsEmpty() = runBlocking {
-    val pipe = Pipe<String> { _, _ -> listOf(ListRequestData(listOf("A", "B"))) }
+    val pipe = Pipe<List<String>> { _, _ -> listOf(ListRequestData(listOf("A", "B"))) }
 
     assertThat(pipe.getDataForRequest(), nullValue())
   }
 
   @Test
   fun testPipeSingleCase() = runBlocking {
-    val pipe = Pipe<String> { r, _ -> listOf(ListRequestData(listOf(String(r.body)))) }
+    val pipe = Pipe<List<String>> { r, _ -> listOf(ListRequestData(listOf(String(r.body)))) }
 
     pipe.accept(
       basicRequest(),
@@ -39,7 +39,7 @@ internal class PipeTest {
   @Test
   fun testPipeCanReturnMultipleResults() = runBlocking {
     val vals = listOf("a", "b", "c")
-    val pipe = Pipe<String> { _, _ -> vals.map { ListRequestData(listOf(it)) } }
+    val pipe = Pipe<List<String>> { _, _ -> vals.map { ListRequestData(listOf(it)) } }
     pipe.accept(
       basicRequest(),
       HttpResponse(URI("http://a"), 200, mapOf(), byteArrayOf()),
@@ -53,7 +53,7 @@ internal class PipeTest {
 
   @Test
   fun testPipeAcceptsMultipleAndReturnsInOrder() = runBlocking {
-    val pipe = Pipe<String> { r, _ -> listOf(ListRequestData(listOf(String(r.body)))) }
+    val pipe = Pipe<List<String>> { r, _ -> listOf(ListRequestData(listOf(String(r.body)))) }
     pipe.accept(
       basicRequest(),
       HttpResponse(URI("http://a"), 200, mapOf(), "a".toByteArray()),

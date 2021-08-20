@@ -3,15 +3,15 @@ package net.devslash.util
 import net.devslash.*
 import java.net.URI
 
-fun requestDataFromList(listOf: List<String>? = null): RequestData {
-  return object : RequestData() {
+fun requestDataFromList(listOf: List<String>? = null): RequestData<List<String>> {
+  return object : RequestData<List<String>>() {
     override fun <T> visit(visitor: RequestVisitor<T, Any?>): T {
       return visitor(listOf, List::class.java)
     }
   }
 }
 
-fun basicData(): RequestData {
+fun basicData(): RequestData<*> {
   return ListRequestData(listOf<String>())
 }
 

@@ -10,7 +10,7 @@ class FileDataSupplier(name: String, private val split: String = " ") : RequestD
   private val sourceFile = File(name).readLines()
   private val line = AtomicInteger(0)
 
-  override suspend fun getDataForRequest(): RequestData? {
+  override suspend fun getDataForRequest(): RequestData<List<String>>? {
     val ourLine = sourceFile.getOrNull(line.getAndIncrement())?.split(split)
     return if (ourLine == null) null else ListRequestData(ourLine)
   }

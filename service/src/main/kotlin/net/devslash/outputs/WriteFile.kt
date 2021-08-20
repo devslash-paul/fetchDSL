@@ -9,7 +9,7 @@ class WriteFile(
 ) : BasicOutput {
   private val lock = Object()
 
-  override fun accept(req: HttpRequest, resp: HttpResponse, data: RequestData) {
+  override fun accept(req: HttpRequest, resp: HttpResponse, data: RequestData<*>) {
     synchronized(lock) {
       val f = File(data.visit(ReplacingString(fileName)))
       val output = out.accept(resp, data)

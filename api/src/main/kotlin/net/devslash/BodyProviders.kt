@@ -7,7 +7,7 @@ typealias Form = Map<String, List<String>>
 
 class BasicBodyProvider(
   private val body: String,
-  private val data: RequestData,
+  private val data: RequestData<*>,
   private val mapper: ValueMapper<String>
 ) : BodyProvider() {
   fun get(): String {
@@ -43,13 +43,13 @@ class MultipartForm(val parts: List<FormPart>) : BodyProvider()
 
 class FormBody(
   private val body: Map<String, List<String>>,
-  private val data: RequestData,
+  private val data: RequestData<*>,
   private val mapper: ValueMapper<Map<String, List<String>>>
 ) : BodyProvider() {
   fun get(): Map<String, List<String>> = mapper(body, data)
 }
 
-fun getBodyProvider(call: Call<*>, data: RequestData): BodyProvider {
+fun getBodyProvider(call: Call<*>, data: RequestData<*>): BodyProvider {
   if (call.body == null) {
     return EmptyBodyProvider
   }

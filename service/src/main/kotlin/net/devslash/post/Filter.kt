@@ -21,7 +21,7 @@ class Filter(
 
   private val builtBlock = FilterBuilder().apply(builder)
 
-  override fun accept(req: HttpRequest, resp: HttpResponse, data: RequestData) {
+  override fun accept(req: HttpRequest, resp: HttpResponse, data: RequestData<*>) {
     if (predicate(resp)) {
       builtBlock.afterHooks.forEach {
         when (it) {

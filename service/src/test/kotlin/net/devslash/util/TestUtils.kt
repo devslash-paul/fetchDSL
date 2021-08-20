@@ -47,3 +47,9 @@ fun getCall(sup: HttpBody? = null, url: String = "https://example.com"): Call<An
 ).apply {
   body = sup
 }.build()
+
+fun <T> getTypedCall(sup: HttpBody? = null, url: String = "https://example.com"): Call<T> = CallBuilder<T>(
+    url
+).apply {
+  body = sup
+}.build()

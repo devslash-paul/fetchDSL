@@ -43,7 +43,7 @@ enum class HttpMethod {
 @FetchDSL
 @Suppress("MemberVisibilityCanBePrivate")
 open class CallBuilder<T>(private val url: String) {
-  var urlProvider: URLProvider? = null
+  var urlProvider: URLProvider<T>? = null
   var data: RequestDataSupplier<T>? = null
   var body: HttpBody? = null
   var type: HttpMethod = HttpMethod.GET

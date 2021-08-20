@@ -3,7 +3,7 @@ package net.devslash
 import kotlinx.coroutines.channels.Channel
 import java.util.*
 
-typealias URLProvider = (String, RequestData<*>) -> String
+typealias URLProvider<T> = (String, RequestData<T>) -> String
 
 sealed class FormTypes
 class NumberType(val i: Number) : FormTypes()
@@ -25,7 +25,7 @@ data class Session(
 
 data class Call<T>(
   val url: String,
-  val urlProvider: URLProvider?,
+  val urlProvider: URLProvider<T>?,
   val headers: Map<String, List<HeaderValue>>,
   val type: HttpMethod,
   val dataSupplier: RequestDataSupplier<T>?,

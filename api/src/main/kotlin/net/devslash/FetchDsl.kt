@@ -89,6 +89,8 @@ open class CallBuilder<T>(private val url: String = "") {
     this.urlProvider = urlProvider
   }
 
+  // A call local concurrency limit
+  val concurrency: Int? = null
   var urlProvider: URLProvider<T>? = null
   var data: RequestDataSupplier<T>? = null
   var body: HttpBody? = null
@@ -129,7 +131,7 @@ open class CallBuilder<T>(private val url: String = "") {
         listOf("FetchDSL (Apache-HttpAsyncClient + Kotlin, ${Version.version})")
     )
     return Call(
-        url, urlProvider, mapHeaders(localHeaders), type, data, body, onError,
+        url, urlProvider, concurrency, mapHeaders(localHeaders), type, data, body, onError,
         preHooksList, postHooksList
     )
   }

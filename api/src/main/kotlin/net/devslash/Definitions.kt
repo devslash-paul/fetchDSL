@@ -26,6 +26,7 @@ data class Session(
 data class Call<T>(
     val url: String,
     val urlProvider: URLProvider<T>?,
+    val concurrency: Int?,
     val headers: Map<String, List<HeaderValue>>,
     val type: HttpMethod,
     val dataSupplier: RequestDataSupplier<T>?,

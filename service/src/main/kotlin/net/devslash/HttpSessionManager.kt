@@ -2,7 +2,6 @@ package net.devslash
 
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
-import java.lang.ClassCastException
 import java.lang.RuntimeException
 import java.time.Clock
 import java.util.concurrent.Executors
@@ -60,7 +59,9 @@ class HttpSessionManager(private val engine: Driver, private val session: Sessio
 
     val limiter = AcquiringRateLimiter(session.rateOptions)
     val jobs = mutableListOf<Job>()
-    val concurrency = if (hasDelay) 1 else session.concurrency
+
+    // Take the call concurrency before defaulting to the session concurrency
+    val concurrency = if (hasDelay) 1 else call.concurrency ?: session.concurrency
     val storedException = AtomicReference<Exception>(null)
 
     repeat(concurrency) {

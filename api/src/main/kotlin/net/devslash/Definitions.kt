@@ -17,22 +17,22 @@ data class StrHeaderValue(val value: String) : HeaderValue()
 data class ProvidedHeaderValue(val lambda: (RequestData<*>) -> String) : HeaderValue()
 
 data class Session(
-  val calls: List<Call<*>>,
-  val concurrency: Int = 100,
-  val delay: Long?,
-  val rateOptions: RateLimitOptions
+    val calls: List<Call<*>>,
+    val concurrency: Int = 100,
+    val delay: Long?,
+    val rateOptions: RateLimitOptions
 )
 
 data class Call<T>(
-  val url: String,
-  val urlProvider: URLProvider<T>?,
-  val headers: Map<String, List<HeaderValue>>,
-  val type: HttpMethod,
-  val dataSupplier: RequestDataSupplier<T>?,
-  val body: HttpBody?,
-  val onError: OnError?,
-  val beforeHooks: List<BeforeHook>,
-  val afterHooks: List<AfterHook>
+    val url: String,
+    val urlProvider: URLProvider<T>?,
+    val headers: Map<String, List<HeaderValue>>,
+    val type: HttpMethod,
+    val dataSupplier: RequestDataSupplier<T>?,
+    val body: HttpBody?,
+    val onError: OnError?,
+    val beforeHooks: List<BeforeHook>,
+    val afterHooks: List<AfterHook>
 )
 
 interface RequestDataSupplier<T> {
@@ -59,14 +59,11 @@ typealias MustVisitor<T, V> = (V) -> T
 abstract class RequestData<T> {
   val id: UUID = UUID.randomUUID()
   abstract fun <T> visit(visitor: RequestVisitor<T, Any?>): T
+  abstract fun get(): T
 }
 
 inline fun <reified T> RequestData<*>.mustGet(): T {
   return this.mustVisit<T, T> { a -> a }
-}
-
-inline fun <reified T> RequestData<T>.value(): T {
-  return this.mustGet()
 }
 
 inline fun <T, reified V> RequestData<*>.mustVisit(crossinline visitor: MustVisitor<T, V>): T {
@@ -82,14 +79,14 @@ inline fun <T, reified V> RequestData<*>.mustVisit(crossinline visitor: MustVisi
 interface BasicOutput : FullDataAfterHook
 
 data class HttpBody(
-  val bodyValue: String?,
-  val bodyValueMapper: ValueMapper<String>?,
-  val formData: Map<String, List<String>>?,
-  val formMapper: ValueMapper<Map<String, List<String>>>?,
-  val multipartForm: List<FormPart>?,
-  val lazyMultipartForm: (RequestData<*>.() -> List<FormPart>)?,
-  val jsonObject: Any?,
-  val lazyJsonObject: ((RequestData<*>) -> Any)?
+    val bodyValue: String?,
+    val bodyValueMapper: ValueMapper<String>?,
+    val formData: Map<String, List<String>>?,
+    val formMapper: ValueMapper<Map<String, List<String>>>?,
+    val multipartForm: List<FormPart>?,
+    val lazyMultipartForm: (RequestData<*>.() -> List<FormPart>)?,
+    val jsonObject: Any?,
+    val lazyJsonObject: ((RequestData<*>) -> Any)?
 )
 
 @Deprecated("Type deprecated")
@@ -97,46 +94,67 @@ interface ReplaceableValue<T, V> {
   fun get(data: V): T
 }
 
-@Deprecated("Replaceable value should be removed, instead please use the ReplacingString instead")
+@Deprecated("Replaceable value should be removed, instead please use ReplacingString instead")
 fun String.asReplaceableValue(): ReplaceableValue<String, RequestData<*>> =
-  object : ReplaceableValue<String, RequestData<*>> {
-    override fun get(data: RequestData<*>): String {
-      val replacements = data.mustGet<List<String>>().mapIndexed { ind, t ->
-        "!${ind + 1}!" to t
-      }.toMap()
-      var copy = "" + this@asReplaceableValue
-      replacements.forEach { (key, value) -> copy = copy.replace(key, value) }
-      return copy
+    object : ReplaceableValue<String, RequestData<*>> {
+      override fun get(data: RequestData<*>): String {
+        val replacements = data.mustGet<List<String>>().mapIndexed { ind, t ->
+          "!${ind + 1}!" to t
+        }.toMap()
+        var copy = "" + this@asReplaceableValue
+        replacements.forEach { (key, value) -> copy = copy.replace(key, value) }
+        return copy
+      }
     }
-  }
 
 sealed interface BeforeHook
-
 interface SimpleBeforeHook : BeforeHook {
   fun accept(req: HttpRequest, data: RequestData<*>)
 }
 
+interface SkipBeforeHook : BeforeHook {
+  fun skip(requestData: RequestData<*>): Boolean
+}
+
+interface SessionPersistingBeforeHook : BeforeHook {
+  suspend fun accept(
+      sessionManager: SessionManager,
+      cookieJar: CookieJar,
+      req: HttpRequest,
+      data: RequestData<*>
+  )
+}
+
+interface ResolvedSessionPersistingBeforeHook<T> : BeforeHook {
+  suspend fun accept(
+      sessionManager: SessionManager,
+      cookieJar: CookieJar,
+      req: HttpRequest,
+      data: T
+  )
+}
+
 data class BeforeCtx<T>(
-  val sessionManager: SessionManager,
-  val cookieJar: CookieJar,
-  val req: HttpRequest,
-  val data: RequestData<T>
+    val sessionManager: SessionManager,
+    val cookieJar: CookieJar,
+    val req: HttpRequest,
+    val data: T
 )
 
 data class AfterCtx<T>(
-  val req: HttpRequest,
-  val resp: HttpResponse,
-  val data: RequestData<T>
+    val req: HttpRequest,
+    val resp: HttpResponse,
+    val data: T
 )
 
 @JvmName("beforeAction")
 fun <T> UnaryAddBuilder<T, BeforeHook>.action(block: BeforeCtx<T>.() -> Unit) {
   +object : ResolvedSessionPersistingBeforeHook<T> {
     override suspend fun accept(
-      sessionManager: SessionManager,
-      cookieJar: CookieJar,
-      req: HttpRequest,
-      data: RequestData<T>
+        sessionManager: SessionManager,
+        cookieJar: CookieJar,
+        req: HttpRequest,
+        data: T
     ) {
       // Safe cast due to usage
       BeforeCtx(sessionManager, cookieJar, req, data).apply(block)
@@ -147,7 +165,7 @@ fun <T> UnaryAddBuilder<T, BeforeHook>.action(block: BeforeCtx<T>.() -> Unit) {
 @JvmName("afterAction")
 fun <T> UnaryAddBuilder<T, AfterHook>.action(block: AfterCtx<T>.() -> Unit) {
   +object : ResolvedFullDataAfterHook<T> {
-    override fun accept(req: HttpRequest, resp: HttpResponse, data: RequestData<T>) {
+    override fun accept(req: HttpRequest, resp: HttpResponse, data: T) {
       AfterCtx(req, resp, data).apply(block)
     }
   }
@@ -159,27 +177,6 @@ fun (() -> Unit).toPreHook(): SimpleBeforeHook = object : SimpleBeforeHook {
   }
 }
 
-interface SessionPersistingBeforeHook : BeforeHook {
-  suspend fun accept(
-    sessionManager: SessionManager,
-    cookieJar: CookieJar,
-    req: HttpRequest,
-    data: RequestData<*>
-  )
-}
-
-interface ResolvedSessionPersistingBeforeHook<T> : BeforeHook {
-  suspend fun accept(
-      sessionManager: SessionManager,
-      cookieJar: CookieJar,
-      req: HttpRequest,
-      data: RequestData<T>
-  )
-}
-
-interface SkipBeforeHook : BeforeHook {
-  fun skip(requestData: RequestData<*>): Boolean
-}
 
 class Envelope<T>(private val message: T, private val maxRetries: Int = 3) {
   private var current = 0
@@ -190,16 +187,32 @@ class Envelope<T>(private val message: T, private val maxRetries: Int = 3) {
 
 interface OnError
 interface OnErrorWithState : OnError {
-  suspend fun accept(
-    channel: Channel<Envelope<Pair<HttpRequest, RequestData<*>>>>,
-    envelope: Envelope<Pair<HttpRequest, RequestData<*>>>,
-    e: Exception
+  suspend fun <T> accept(
+      channel: Channel<Envelope<Pair<HttpRequest, RequestData<T>>>>,
+      envelope: Envelope<Pair<HttpRequest, RequestData<T>>>,
+      e: Exception
   )
 }
 
-interface AfterHook
+sealed interface AfterHook
 interface SimpleAfterHook : AfterHook {
   fun accept(resp: HttpResponse)
+}
+
+interface BodyMutatingAfterHook : AfterHook {
+  fun accept(resp: HttpResponse)
+}
+
+interface FullDataAfterHook : AfterHook {
+  fun accept(req: HttpRequest, resp: HttpResponse, data: RequestData<*>)
+}
+
+/**
+ * Used to reify request data into its real type without requiring visitor use.
+ * Can be used incorrectly without compilation warnings - use with care.
+ */
+interface ResolvedFullDataAfterHook<T> : AfterHook {
+  fun accept(req: HttpRequest, resp: HttpResponse, data: T)
 }
 
 @Suppress("unused")
@@ -216,17 +229,6 @@ fun ((HttpResponse) -> Any).toPostHook(): SimpleAfterHook = object : SimpleAfter
   }
 }
 
-interface BodyMutatingAfterHook : AfterHook {
-  fun accept(resp: HttpResponse)
-}
-
-interface FullDataAfterHook : AfterHook {
-  fun accept(req: HttpRequest, resp: HttpResponse, data: RequestData<*>)
-}
-
-interface ResolvedFullDataAfterHook<T> : AfterHook {
-  fun accept(req: HttpRequest, resp: HttpResponse, data: RequestData<T>)
-}
 
 sealed class HttpResult<out T, out E>
 data class Success<out T>(val value: T) : HttpResult<T, Nothing>()

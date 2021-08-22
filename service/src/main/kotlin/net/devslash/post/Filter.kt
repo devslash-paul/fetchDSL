@@ -28,6 +28,7 @@ class Filter(
           is SimpleAfterHook -> it.accept(resp)
           is BodyMutatingAfterHook -> it.accept(resp)
           is FullDataAfterHook -> it.accept(req, resp, data)
+          is ResolvedFullDataAfterHook<*> -> TODO("Resolved data hook not implemented for Filter")
           is BasicOutput -> it.accept(req, resp, data)
           else -> throw RuntimeException("Unsupported filter hook. Filter hooks must be SimpleAfterHook, ChainReceivingResponseHook")
         }

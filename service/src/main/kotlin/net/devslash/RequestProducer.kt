@@ -28,7 +28,7 @@ class RequestProducer {
     sessionManager: SessionManager,
     call: Call<T>,
     jar: CookieJar,
-    channel: Channel<Envelope<Contents>>
+    channel: Channel<Envelope<Contents<T>>>
   ) {
     val dataSupplier = handleNoSupplier(call.dataSupplier)
 

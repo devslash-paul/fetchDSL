@@ -25,6 +25,7 @@ private annotation class FetchDSL
 
 class UnaryAddBuilder<V, T> {
   private var hooks = mutableListOf<T>()
+
   operator fun T.unaryPlus() {
     hooks = (hooks + this).toMutableList()
   }

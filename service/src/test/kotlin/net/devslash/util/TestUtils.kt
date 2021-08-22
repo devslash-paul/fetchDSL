@@ -8,6 +8,8 @@ fun requestDataFromList(listOf: List<String>? = null): RequestData<List<String>>
     override fun <T> visit(visitor: RequestVisitor<T, Any?>): T {
       return visitor(listOf, List::class.java)
     }
+
+    override fun get(): List<String> = listOf!!
   }
 }
 

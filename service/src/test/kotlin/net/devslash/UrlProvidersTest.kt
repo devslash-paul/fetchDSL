@@ -32,7 +32,7 @@ internal class UrlProvidersTest {
     val t = T("Expected")
     val builder = CallBuilder<T>("")
     builder.urlProvider = { _, b ->
-      b.value().s
+      b.get().s
     }
 
     val urlProvider = getUrlProvider(builder.build())

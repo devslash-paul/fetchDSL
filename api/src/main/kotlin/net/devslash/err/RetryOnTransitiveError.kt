@@ -8,9 +8,9 @@ import net.devslash.RequestData
 import java.net.SocketTimeoutException
 
 class RetryOnTransitiveError : OnErrorWithState {
-  override suspend fun accept(
-    channel: Channel<Envelope<Pair<HttpRequest, RequestData<*>>>>,
-    envelope: Envelope<Pair<HttpRequest, RequestData<*>>>,
+  override suspend fun <T> accept(
+    channel: Channel<Envelope<Pair<HttpRequest, RequestData<T>>>>,
+    envelope: Envelope<Pair<HttpRequest, RequestData<T>>>,
     e: Exception
   ) {
     if (!envelope.shouldProceed()) {

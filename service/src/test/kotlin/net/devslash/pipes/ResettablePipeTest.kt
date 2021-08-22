@@ -48,7 +48,7 @@ internal class ResettablePipeTest {
     pipe.accept(
       basicRequest(),
       HttpResponse(URI("http://a"), 200, mapOf(), byteArrayOf()),
-      requestDataFromList()
+      listOf()
     )
 
     vals.forEach {
@@ -62,17 +62,17 @@ internal class ResettablePipeTest {
     pipe.accept(
       basicRequest(),
       HttpResponse(URI("http://a"), 200, mapOf(), "a".toByteArray()),
-      requestDataFromList(listOf())
+      listOf()
     )
     pipe.accept(
       basicRequest(),
       HttpResponse(URI("http://a"), 200, mapOf(), "b".toByteArray()),
-      requestDataFromList(listOf())
+      listOf()
     )
     pipe.accept(
       basicRequest(),
       HttpResponse(URI("http://a"), 200, mapOf(), "c".toByteArray()),
-      requestDataFromList(listOf())
+      listOf()
     )
 
     val values = listOf("a", "b", "c")

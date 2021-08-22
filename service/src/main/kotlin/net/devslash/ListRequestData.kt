@@ -13,6 +13,10 @@ class ListRequestData<T>(private val parts: T, private val type: Class<T>) : Req
 
   override fun <T> visit(visitor: RequestVisitor<T, Any?>): T = visitor(parts, type)
 
+  override fun get(): T {
+    return parts
+  }
+
   override fun equals(other: Any?): Boolean {
     if (this === other) return true
     if (javaClass != other?.javaClass) return false

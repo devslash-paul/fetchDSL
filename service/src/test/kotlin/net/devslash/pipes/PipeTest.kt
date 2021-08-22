@@ -5,7 +5,6 @@ import net.devslash.HttpResponse
 import net.devslash.ListRequestData
 import net.devslash.mustGet
 import net.devslash.util.basicRequest
-import net.devslash.util.requestDataFromList
 import org.hamcrest.CoreMatchers.*
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Test
@@ -27,7 +26,7 @@ internal class PipeTest {
     pipe.accept(
       basicRequest(),
       HttpResponse(URI("http://a"), 200, mapOf(), "result".toByteArray()),
-      requestDataFromList(listOf())
+      listOf()
     )
 
     val data = pipe.getDataForRequest()!!
@@ -43,7 +42,7 @@ internal class PipeTest {
     pipe.accept(
       basicRequest(),
       HttpResponse(URI("http://a"), 200, mapOf(), byteArrayOf()),
-      requestDataFromList(listOf())
+      listOf()
     )
 
     vals.forEach {
@@ -57,17 +56,17 @@ internal class PipeTest {
     pipe.accept(
       basicRequest(),
       HttpResponse(URI("http://a"), 200, mapOf(), "a".toByteArray()),
-      requestDataFromList(listOf())
+      listOf()
     )
     pipe.accept(
       basicRequest(),
       HttpResponse(URI("http://a"), 200, mapOf(), "b".toByteArray()),
-      requestDataFromList(listOf())
+      listOf()
     )
     pipe.accept(
       basicRequest(),
       HttpResponse(URI("http://a"), 200, mapOf(), "c".toByteArray()),
-      requestDataFromList(listOf())
+      listOf()
     )
 
     val values = listOf("a", "b", "c")

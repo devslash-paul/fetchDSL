@@ -3,6 +3,7 @@ package net.devslash.data
 import net.devslash.RequestData
 import net.devslash.RequestDataSupplier
 import net.devslash.RequestVisitor
+import java.lang.RuntimeException
 import java.util.concurrent.atomic.AtomicInteger
 
 class Repeat(private val repeat: Int) : RequestDataSupplier<Unit> {
@@ -15,6 +16,7 @@ class Repeat(private val repeat: Int) : RequestDataSupplier<Unit> {
 
   private val unitData: RequestData<Unit> = object : RequestData<Unit>() {
     override fun <T> visit(visitor: RequestVisitor<T, Any?>): T = visitor(Unit, Unit::class.java)
+    override fun get() = Unit
   }
   private val count = AtomicInteger(0)
 

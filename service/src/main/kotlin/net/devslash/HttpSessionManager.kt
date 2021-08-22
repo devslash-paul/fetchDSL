@@ -2,12 +2,14 @@ package net.devslash
 
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
+import java.lang.ClassCastException
+import java.lang.RuntimeException
 import java.time.Clock
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 
-typealias Contents = Pair<HttpRequest, RequestData<*>>
+typealias Contents<T> = Pair<HttpRequest, RequestData<T>>
 
 class HttpSessionManager(private val engine: Driver, private val session: Session) : SessionManager {
 
@@ -38,7 +40,7 @@ class HttpSessionManager(private val engine: Driver, private val session: Sessio
   override fun <T> call(call: Call<T>): Exception? = call(call, DefaultCookieJar())
 
   override fun <T> call(call: Call<T>, jar: CookieJar): Exception? = runBlocking(Dispatchers.Default) {
-    val channel: Channel<Envelope<Contents>> = Channel(session.concurrency * 2)
+    val channel: Channel<Envelope<Contents<T>>> = Channel(session.concurrency * 2)
     launch(Dispatchers.IO) { RequestProducer().produceHttp(this@HttpSessionManager, call, jar, channel) }
 
     val afterRequest: MutableList<AfterHook> = mutableListOf(jar)
@@ -81,7 +83,7 @@ class HttpSessionManager(private val engine: Driver, private val session: Sessio
       call: Call<T>,
       rateLimiter: AcquiringRateLimiter,
       afterRequest: List<AfterHook>,
-      channel: Channel<Envelope<Pair<HttpRequest, RequestData<*>>>>,
+      channel: Channel<Envelope<Pair<HttpRequest, RequestData<T>>>>,
       storedException: AtomicReference<Exception>
   ) {
     for (next in channel) {
@@ -106,10 +108,11 @@ class HttpSessionManager(private val engine: Driver, private val session: Sessio
     }
   }
 
-  private fun handleSuccess(
+  @Suppress("UNCHECKED_CAST")
+  private fun <T> handleSuccess(
       resp: Success<HttpResponse>,
       afterRequest: List<AfterHook>,
-      contents: Pair<HttpRequest, RequestData<*>>
+      contents: Pair<HttpRequest, RequestData<T>>,
   ) {
     val mappedResponse = resp.value
     afterRequest.forEach {
@@ -117,14 +120,17 @@ class HttpSessionManager(private val engine: Driver, private val session: Sessio
         is SimpleAfterHook -> it.accept(mappedResponse.copy())
         is BodyMutatingAfterHook -> it.accept(mappedResponse)
         is FullDataAfterHook -> it.accept(contents.first, mappedResponse, contents.second)
+        is ResolvedFullDataAfterHook<*> -> (it as ResolvedFullDataAfterHook<T>)
+            .accept(contents.first, mappedResponse, contents.second.get())
+        else -> throw RuntimeException("Unexpected after hook type $it")
       }
     }
   }
 
   private suspend fun <T> handleFailure(
       call: Call<T>,
-      channel: Channel<Envelope<Pair<HttpRequest, RequestData<*>>>>,
-      next: Envelope<Pair<HttpRequest, RequestData<*>>>,
+      channel: Channel<Envelope<Pair<HttpRequest, RequestData<T>>>>,
+      next: Envelope<Pair<HttpRequest, RequestData<T>>>,
       exception: Failure<java.lang.Exception>
   ) {
     when (val onError = call.onError) {

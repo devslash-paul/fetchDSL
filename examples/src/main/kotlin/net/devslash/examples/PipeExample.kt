@@ -8,6 +8,7 @@ import io.ktor.server.netty.*
 import net.devslash.*
 import net.devslash.data.FileDataSupplier
 import net.devslash.data.ListDataSupplier
+import net.devslash.outputs.StdOut
 import net.devslash.outputs.WriteFile
 import net.devslash.pipes.ResettablePipe
 import java.net.ServerSocket
@@ -21,7 +22,7 @@ fun main() {
   val server = embeddedServer(Netty, port) {
     routing {
       get("/") {
-        call.respondText("")
+        call.respondText("response here")
       }
     }
   }
@@ -36,22 +37,30 @@ fun main() {
           +WriteFile("${tmp.toUri().path}/!1!")
         }
       }
+      call<Int>("") {
+        before {
+
+        }
+        after {
+          action {
+            data
+          }
+        }
+      }
       call(address) {
         data = pipe
         before {
 
           action {
-            val x = data.value()
+            val x = data
             println("ActionBefore")
           }
         }
         after {
-          +object : FullDataAfterHook {
-            override fun accept(req: HttpRequest, resp: HttpResponse, data: RequestData<*>) {
+          // TODO: this should fail... Somehow
+          +object : ResolvedFullDataAfterHook<List<Int>> {
+            override fun accept(req: HttpRequest, resp: HttpResponse, data: List<Int>) {
             }
-          }
-          action {
-            println("ActionAfter")
           }
         }
       }
@@ -65,7 +74,7 @@ fun main() {
         data = ListDataSupplier(listOf(1, 2, 3))
         before {
           action {
-            println(data.mustGet<Int>())
+            println(data)
           }
         }
         body {

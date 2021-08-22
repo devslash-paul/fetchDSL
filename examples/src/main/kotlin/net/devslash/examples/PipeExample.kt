@@ -11,6 +11,7 @@ import net.devslash.data.ListDataSupplier
 import net.devslash.outputs.StdOut
 import net.devslash.outputs.WriteFile
 import net.devslash.pipes.ResettablePipe
+import java.lang.RuntimeException
 import java.net.ServerSocket
 import java.nio.file.Files
 import java.util.concurrent.TimeUnit
@@ -57,9 +58,8 @@ fun main() {
           }
         }
         after {
-          // TODO: this should fail... Somehow
-          +object : ResolvedFullDataAfterHook<List<Int>> {
-            override fun accept(req: HttpRequest, resp: HttpResponse, data: List<Int>) {
+          +object : ResolvedFullDataAfterHook<List<String>> {
+            override fun accept(req: HttpRequest, resp: HttpResponse, data: List<String>) {
             }
           }
         }

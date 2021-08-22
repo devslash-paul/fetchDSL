@@ -23,16 +23,56 @@ object Version {
 @DslMarker
 private annotation class FetchDSL
 
-class UnaryAddBuilder<V, T> {
-  private var hooks = mutableListOf<T>()
+class BeforeBuilder<T> {
+  private var hooks = mutableListOf<BeforeHook>()
 
-  operator fun T.unaryPlus() {
-    hooks = (hooks + this).toMutableList()
+  private fun add(before: BeforeHook) {
+    hooks += before
   }
 
-  fun build(): List<T> {
-    return hooks
+  operator fun ResolvedSessionPersistingBeforeHook<T>.unaryPlus() = add(this)
+  operator fun SimpleBeforeHook.unaryPlus() = add(this)
+  operator fun SkipBeforeHook.unaryPlus() = add(this)
+  operator fun SessionPersistingBeforeHook.unaryPlus() = add(this)
+
+  /**
+   * If we can't resolve to the <T> type for the resolved after hook, then it's the incorrect type. If we remove this
+   * method, then the error is simply that `+` is not found. Leaving it in with the added deprecation notice leads
+   * to a more usable experience as the developer is informed that they got wrong
+   */
+  @JvmName("unaryPlusAny?")
+  @Deprecated(level = DeprecationLevel.ERROR, replaceWith = ReplaceWith("Correct type T for the before hook"),
+      message = "Incorrect type T used")
+  operator fun ResolvedSessionPersistingBeforeHook<out Any?>.unaryPlus() {
   }
+
+  fun build(): List<BeforeHook> = hooks
+}
+
+class AfterBuilder<T> {
+  private var hooks = mutableListOf<AfterHook>()
+
+  private fun add(after: AfterHook) {
+    hooks += after
+  }
+
+  operator fun ResolvedFullDataAfterHook<T>.unaryPlus() = add(this)
+  operator fun SimpleAfterHook.unaryPlus() = add(this)
+  operator fun BodyMutatingAfterHook.unaryPlus() = add(this)
+  operator fun FullDataAfterHook.unaryPlus() = add(this)
+
+  /**
+   * If we can't resolve to the <T> type for the resolved after hook, then it's the incorrect type. If we remove this
+   * method, then the error is simply that `+` is not found. Leaving it in with the added deprecation notice leads
+   * to a more usable experience as the developer is informed that they got wrong
+   */
+  @JvmName("unaryPlusAny?")
+  @Deprecated(level = DeprecationLevel.ERROR, replaceWith = ReplaceWith("Correct type T for the after hook"),
+      message = "Incorrect type T used")
+  operator fun ResolvedFullDataAfterHook<out Any?>.unaryPlus() {
+  }
+
+  fun build(): List<AfterHook> = hooks
 }
 
 data class RateLimitOptions(val enabled: Boolean, val count: Int, val duration: Duration)
@@ -54,12 +94,12 @@ open class CallBuilder<T>(private val url: String) {
   private var preHooksList = mutableListOf<BeforeHook>()
   private var postHooksList = mutableListOf<AfterHook>()
 
-  fun before(block: UnaryAddBuilder<T, BeforeHook>.() -> Unit) {
-    preHooksList.addAll(UnaryAddBuilder<T, BeforeHook>().apply(block).build())
+  fun before(block: BeforeBuilder<T>.() -> Unit) {
+    preHooksList.addAll(BeforeBuilder<T>().apply(block).build())
   }
 
-  fun after(block: UnaryAddBuilder<T, AfterHook>.() -> Unit) {
-    postHooksList.addAll(UnaryAddBuilder<T, AfterHook>().apply(block).build())
+  fun after(block: AfterBuilder<T>.() -> Unit) {
+    postHooksList.addAll(AfterBuilder<T>().apply(block).build())
   }
 
   fun body(block: BodyBuilder.() -> Unit) {
@@ -80,12 +120,12 @@ open class CallBuilder<T>(private val url: String) {
   fun build(): Call<T> {
     val localHeaders = HashMap(headers)
     localHeaders.putIfAbsent(
-      "User-Agent",
-      listOf("FetchDSL (Apache-HttpAsyncClient + Kotlin, ${Version.version})")
+        "User-Agent",
+        listOf("FetchDSL (Apache-HttpAsyncClient + Kotlin, ${Version.version})")
     )
     return Call(
-      url, urlProvider, mapHeaders(localHeaders), type, data, body, onError,
-      preHooksList, postHooksList
+        url, urlProvider, mapHeaders(localHeaders), type, data, body, onError,
+        preHooksList, postHooksList
     )
   }
 }
@@ -133,8 +173,8 @@ class BodyBuilder {
   }
 
   fun formParams(
-    params: Map<String, List<String>>,
-    mapper: ValueMapper<Map<String, List<String>>> = formIdentity
+      params: Map<String, List<String>>,
+      mapper: ValueMapper<Map<String, List<String>>> = formIdentity
   ) {
     formParams = params
     formMapper = mapper
@@ -142,14 +182,14 @@ class BodyBuilder {
 
   @Suppress("unused")
   fun multipartForm(
-    parts: List<FormPart>
+      parts: List<FormPart>
   ) {
     this.formParts = parts
   }
 
   @Suppress("unused")
   fun multipartForm(
-    lazyForm: RequestData<*>.() -> List<FormPart>
+      lazyForm: RequestData<*>.() -> List<FormPart>
   ) {
     this.lazyMultipartForm = lazyForm
   }
@@ -168,14 +208,14 @@ class BodyBuilder {
 
   fun build(): HttpBody {
     return HttpBody(
-      value,
-      valueMapper,
-      formParams,
-      formMapper,
-      formParts,
-      lazyMultipartForm,
-      jsonObject,
-      lazyJsonObject
+        value,
+        valueMapper,
+        formParams,
+        formMapper,
+        formParts,
+        lazyMultipartForm,
+        jsonObject,
+        lazyJsonObject
     )
   }
 

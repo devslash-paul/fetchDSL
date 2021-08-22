@@ -148,7 +148,7 @@ data class AfterCtx<T>(
 )
 
 @JvmName("beforeAction")
-fun <T> UnaryAddBuilder<T, BeforeHook>.action(block: BeforeCtx<T>.() -> Unit) {
+fun <T> BeforeBuilder<T>.action(block: BeforeCtx<T>.() -> Unit) {
   +object : ResolvedSessionPersistingBeforeHook<T> {
     override suspend fun accept(
         sessionManager: SessionManager,
@@ -163,7 +163,7 @@ fun <T> UnaryAddBuilder<T, BeforeHook>.action(block: BeforeCtx<T>.() -> Unit) {
 }
 
 @JvmName("afterAction")
-fun <T> UnaryAddBuilder<T, AfterHook>.action(block: AfterCtx<T>.() -> Unit) {
+fun <T> AfterBuilder<T>.action(block: AfterCtx<T>.() -> Unit) {
   +object : ResolvedFullDataAfterHook<T> {
     override fun accept(req: HttpRequest, resp: HttpResponse, data: T) {
       AfterCtx(req, resp, data).apply(block)

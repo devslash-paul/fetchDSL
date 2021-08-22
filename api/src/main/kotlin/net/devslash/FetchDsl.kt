@@ -135,26 +135,6 @@ open class CallBuilder<T>(private val url: String = "") {
   }
 }
 
-fun replaceString(changes: Map<String, String>, str: String): String {
-  var x = str
-  changes.forEach {
-    x = x.replace(it.key, it.value)
-  }
-  return x
-}
-
-typealias ValueMapper<V> = (V, RequestData<*>) -> V
-
-val identityValueMapper: ValueMapper<String> = { v, _ -> v }
-val indexValueMapper: ValueMapper<String> = { inData, reqData ->
-  val indexes = reqData.mustGet<List<String>>().mapIndexed { index, string ->
-    "!" + (index + 1) + "!" to string
-  }.toMap()
-  inData.let { entry ->
-    return@let replaceString(indexes, entry)
-  }
-}
-
 @Suppress("MemberVisibilityCanBePrivate")
 @FetchDSL
 class BodyBuilder {
@@ -223,7 +203,6 @@ class BodyBuilder {
         lazyJsonObject
     )
   }
-
 }
 
 @Suppress("MemberVisibilityCanBePrivate")

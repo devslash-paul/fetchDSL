@@ -215,6 +215,26 @@ interface ResolvedFullDataAfterHook<T> : AfterHook {
   fun accept(req: HttpRequest, resp: HttpResponse, data: T)
 }
 
+fun replaceString(changes: Map<String, String>, str: String): String {
+  var x = str
+  changes.forEach {
+    x = x.replace(it.key, it.value)
+  }
+  return x
+}
+
+val identityValueMapper: ValueMapper<String> = { v, _ -> v }
+val indexValueMapper: ValueMapper<String> = { inData, reqData ->
+  val indexes = reqData.mustGet<List<String>>().mapIndexed { index, string ->
+    "!" + (index + 1) + "!" to string
+  }.toMap()
+  inData.let { entry ->
+    return@let replaceString(indexes, entry)
+  }
+}
+
+typealias ValueMapper<V> = (V, RequestData<*>) -> V
+
 @Suppress("unused")
 fun (() -> Any).toPostHook(): SimpleAfterHook = object : SimpleAfterHook {
   override fun accept(resp: HttpResponse) {
@@ -228,7 +248,6 @@ fun ((HttpResponse) -> Any).toPostHook(): SimpleAfterHook = object : SimpleAfter
     this@toPostHook(resp)
   }
 }
-
 
 sealed class HttpResult<out T, out E>
 data class Success<out T>(val value: T) : HttpResult<T, Nothing>()

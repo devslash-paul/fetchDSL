@@ -30,7 +30,7 @@ class BeforeBuilder<T> {
     hooks += before
   }
 
-  operator fun ResolvedSessionPersistingBeforeHook<T>.unaryPlus() = add(this)
+  operator fun ResolvedSessionPersistingBeforeHook<in T>.unaryPlus() = add(this)
   operator fun SimpleBeforeHook.unaryPlus() = add(this)
   operator fun SkipBeforeHook.unaryPlus() = add(this)
   operator fun SessionPersistingBeforeHook.unaryPlus() = add(this)
@@ -56,7 +56,7 @@ class AfterBuilder<T> {
     hooks += after
   }
 
-  operator fun ResolvedFullDataAfterHook<T>.unaryPlus() = add(this)
+  operator fun ResolvedFullDataAfterHook<in T>.unaryPlus() = add(this)
   operator fun SimpleAfterHook.unaryPlus() = add(this)
   operator fun BodyMutatingAfterHook.unaryPlus() = add(this)
   operator fun FullDataAfterHook.unaryPlus() = add(this)
@@ -83,7 +83,12 @@ enum class HttpMethod {
 
 @FetchDSL
 @Suppress("MemberVisibilityCanBePrivate")
-open class CallBuilder<T>(private val url: String) {
+open class CallBuilder<T>(private val url: String = "") {
+  constructor(urlProvider: URLProvider<T>) : this("", urlProvider)
+  constructor(url: String, urlProvider: URLProvider<T>) : this(url) {
+    this.urlProvider = urlProvider
+  }
+
   var urlProvider: URLProvider<T>? = null
   var data: RequestDataSupplier<T>? = null
   var body: HttpBody? = null
@@ -244,6 +249,24 @@ class SessionBuilder {
 
   fun call(url: String, block: CallBuilder<List<String>>.() -> Unit = {}) {
     calls.add(CallBuilder<List<String>>(url).apply(block).build())
+  }
+
+  @JvmName("genericCallWithUrlProvider")
+  fun <T> call(urlProvider: URLProvider<T>, block: CallBuilder<T>.() -> Unit = {}) {
+    calls.add(CallBuilder<T>(urlProvider).apply(block).build())
+  }
+
+  fun call(urlProvider: URLProvider<List<String>>, block: CallBuilder<List<String>>.() -> Unit = {}) {
+    calls.add(CallBuilder(urlProvider).apply(block).build())
+  }
+
+  @JvmName("genericCallWithUrlAndUrlProvider")
+  fun <T> call(url: String, urlProvider: URLProvider<T>, block: CallBuilder<T>.() -> Unit = {}) {
+    calls.add(CallBuilder<T>(url, urlProvider).apply(block).build())
+  }
+
+  fun call(url: String, urlProvider: URLProvider<List<String>>, block: CallBuilder<List<String>>.() -> Unit = {}) {
+    calls.add(CallBuilder(url, urlProvider).apply(block).build())
   }
 
   fun build(): Session = Session(calls, concurrency, delay, rateOptions)

@@ -8,10 +8,8 @@ import io.ktor.server.netty.*
 import net.devslash.*
 import net.devslash.data.FileDataSupplier
 import net.devslash.data.ListDataSupplier
-import net.devslash.outputs.StdOut
 import net.devslash.outputs.WriteFile
 import net.devslash.pipes.ResettablePipe
-import java.lang.RuntimeException
 import java.net.ServerSocket
 import java.nio.file.Files
 import java.util.concurrent.TimeUnit
@@ -38,23 +36,20 @@ fun main() {
           +WriteFile("${tmp.toUri().path}/!1!")
         }
       }
-      call<Int>("") {
-        before {
-
-        }
-        after {
-          action {
-            data
-          }
-        }
+      call({ _, data -> data.get()[0] }) {
+        data = ListDataSupplier(listOf(address))
       }
       call(address) {
         data = pipe
         before {
-
           action {
             val x = data
             println("ActionBefore")
+          }
+          +object : ResolvedSessionPersistingBeforeHook<List<Any>> {
+            override suspend fun accept(sessionManager: SessionManager, cookieJar: CookieJar, req: HttpRequest, data: List<Any>) {
+              println("More generic type available")
+            }
           }
         }
         after {

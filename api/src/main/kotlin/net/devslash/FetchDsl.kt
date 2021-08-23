@@ -1,6 +1,7 @@
 package net.devslash
 
 import net.devslash.err.RetryOnTransitiveError
+import java.io.InputStream
 import java.time.Duration
 import java.util.*
 
@@ -143,11 +144,14 @@ class BodyBuilder {
   private var value: String? = null
   private var valueMapper: ValueMapper<String>? = null
 
+  private var rawValue :((RequestData<*>) -> InputStream)? = null
+
   private var formParts: List<FormPart>? = null
   private var lazyMultipartForm: ((RequestData<*>) -> List<FormPart>)? = null
 
   private var formParams: Form? = null
   private var formMapper: ValueMapper<Map<String, List<String>>>? = null
+
   var jsonObject: Any? = null
   var lazyJsonObject: ((RequestData<*>) -> Any)? = null
 
@@ -197,6 +201,7 @@ class BodyBuilder {
     return HttpBody(
         value,
         valueMapper,
+        rawValue,
         formParams,
         formMapper,
         formParts,

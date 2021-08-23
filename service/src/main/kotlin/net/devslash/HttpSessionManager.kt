@@ -14,7 +14,6 @@ class HttpSessionManager(private val engine: Driver, private val session: Sessio
 
   private val jobThreadPool = System.getProperty("HTTP_THREAD_POOL_SIZE")?.toInt()
       ?: Runtime.getRuntime().availableProcessors() * 2
-
   private val httpThreadPool = Executors.newFixedThreadPool(jobThreadPool)
   private val dispatcher = httpThreadPool.asCoroutineDispatcher()
 

@@ -1,14 +1,18 @@
 package net.devslash
 
+import java.io.InputStream
+
 // TODO: This feels impl based. Create API abstraction for this?
 sealed class BodyProvider
 
 typealias Form = Map<String, List<String>>
 
+class RawBody(val raw: InputStream): BodyProvider()
+
 class BasicBodyProvider(
-  private val body: String,
-  private val data: RequestData<*>,
-  private val mapper: ValueMapper<String>
+    private val body: String,
+    private val data: RequestData<*>,
+    private val mapper: ValueMapper<String>
 ) : BodyProvider() {
   fun get(): String {
     return mapper(body, data)
@@ -42,9 +46,9 @@ val formIndexed: ValueMapper<Map<String, List<String>>> = { form, reqData ->
 class MultipartForm(val parts: List<FormPart>) : BodyProvider()
 
 class FormBody(
-  private val body: Map<String, List<String>>,
-  private val data: RequestData<*>,
-  private val mapper: ValueMapper<Map<String, List<String>>>
+    private val body: Map<String, List<String>>,
+    private val data: RequestData<*>,
+    private val mapper: ValueMapper<Map<String, List<String>>>
 ) : BodyProvider() {
   fun get(): Map<String, List<String>> = mapper(body, data)
 }
@@ -69,6 +73,10 @@ fun getBodyProvider(call: Call<*>, data: RequestData<*>): BodyProvider {
 
   if (call.body.bodyValue != null) {
     return BasicBodyProvider(call.body.bodyValue, data, call.body.bodyValueMapper!!)
+  }
+
+  if (call.body.rawValue != null) {
+    return RawBody(call.body.rawValue!!(data))
   }
 
   if (call.body.multipartForm != null) {

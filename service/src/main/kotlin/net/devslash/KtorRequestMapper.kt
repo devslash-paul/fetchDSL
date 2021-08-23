@@ -23,8 +23,8 @@ object KtorRequestMapper {
       when (httpRequest.body) {
         is JsonBody -> {
           body = TextContent(
-            mapper.writeValueAsString((httpRequest.body as JsonBody).get()),
-            ContentType.Application.Json
+              mapper.writeValueAsString((httpRequest.body as JsonBody).get()),
+              ContentType.Application.Json
           )
         }
         is BasicBodyProvider -> {
@@ -49,6 +49,10 @@ object KtorRequestMapper {
               }
             }
           })
+        }
+        is RawBody -> {
+          val rb = (httpRequest.body as RawBody)
+          body = ByteArrayContent(rb.raw.readAllBytes())
         }
         EmptyBodyProvider -> {/* Do nothing explicitly */
         }

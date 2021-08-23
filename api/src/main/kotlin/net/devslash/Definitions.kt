@@ -1,6 +1,7 @@
 package net.devslash
 
 import kotlinx.coroutines.channels.Channel
+import java.io.InputStream
 import java.util.*
 
 typealias URLProvider<T> = (String, RequestData<T>) -> String
@@ -82,6 +83,7 @@ interface BasicOutput : FullDataAfterHook
 data class HttpBody(
     val bodyValue: String?,
     val bodyValueMapper: ValueMapper<String>?,
+    val rawValue: ((RequestData<*>) -> InputStream)?,
     val formData: Map<String, List<String>>?,
     val formMapper: ValueMapper<Map<String, List<String>>>?,
     val multipartForm: List<FormPart>?,

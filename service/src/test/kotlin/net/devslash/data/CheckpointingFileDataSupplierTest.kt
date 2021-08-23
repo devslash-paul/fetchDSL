@@ -6,7 +6,7 @@ import net.devslash.Call
 import net.devslash.CallBuilder
 import net.devslash.HttpResponse
 import net.devslash.mustGet
-import net.devslash.outputs.LogResponse
+import net.devslash.post.LogResponse
 import net.devslash.util.basicRequest
 import net.devslash.util.basicResponse
 import net.devslash.util.basicUrl

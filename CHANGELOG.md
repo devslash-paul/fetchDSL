@@ -1,3 +1,14 @@
+0.20.0
+======
+Long time no see. This summarises since 0.19.3
+
+* Calls have their own concurrency level set
+* Body's can have an Inputstream rather than requiring a string
+* action hooks now have the resolved data type
+* A specific resolved hook exists 
+* Url provider can be defined instead of a URL
+* Editor config added
+
 0.14.0
 ====
 

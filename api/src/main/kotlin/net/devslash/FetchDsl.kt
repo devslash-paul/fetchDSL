@@ -37,7 +37,7 @@ class BeforeBuilder<T> {
   operator fun SkipBeforeHook.unaryPlus() = add(this)
   operator fun SessionPersistingBeforeHook.unaryPlus() = add(this)
 
-  operator fun AfterHook.unaryPlus() {
+  operator fun BeforeHook.unaryPlus() {
     when(this) {
       is SimpleBeforeHook -> add(this)
       is SkipBeforeHook -> add(this)

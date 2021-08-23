@@ -3,11 +3,11 @@ import java.util.*
 
 buildscript {
   project.extra.apply {
-    set("kotlinVersion", "1.5.0")
-    set("ktorVersion", "1.5.4")
+    set("kotlinVersion", "1.5.30-RC")
+    set("ktorVersion", "1.6.2")
     set("junitVersion", "4.12")
-    set("ktorNettyVersion", "1.5.4")
-    set("kotlinxCoroutinesVersion", "1.5.0")
+    set("ktorNettyVersion", "1.6.2")
+    set("kotlinxCoroutinesVersion", "1.5.1")
   }
 
   dependencies {
@@ -17,7 +17,7 @@ buildscript {
 
 plugins {
   base
-  kotlin("jvm") version "1.5.0" apply false
+  kotlin("jvm") version "1.5.30-RC" apply false
   jacoco
   java
   `maven-publish`
@@ -26,7 +26,7 @@ plugins {
 
 allprojects {
   group = "net.devslash.fetchdsl"
-  version = "0.20.4-SNAPSHOT"
+  version = "0.20.4"
 
   repositories {
     mavenCentral()

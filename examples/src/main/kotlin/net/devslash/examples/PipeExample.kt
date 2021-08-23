@@ -10,6 +10,7 @@ import net.devslash.data.FileDataSupplier
 import net.devslash.data.ListDataSupplier
 import net.devslash.outputs.WriteFile
 import net.devslash.pipes.ResettablePipe
+import net.devslash.post.LogResponse
 import java.net.ServerSocket
 import java.nio.file.Files
 import java.util.concurrent.TimeUnit
@@ -27,6 +28,11 @@ fun main() {
   }
   server.start()
   val address = "http://localhost:$port"
+  val f = object: ResolvedFullDataAfterHook<List<Int>> {
+    override fun accept(req: HttpRequest, resp: HttpResponse, data: List<Int>) {
+      println("HO")
+    }
+  }
   try {
     runHttp {
       call(address) {

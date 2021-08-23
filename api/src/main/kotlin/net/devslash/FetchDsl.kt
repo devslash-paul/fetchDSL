@@ -2,6 +2,7 @@ package net.devslash
 
 import net.devslash.err.RetryOnTransitiveError
 import java.io.InputStream
+import java.lang.IllegalStateException
 import java.time.Duration
 import java.util.*
 
@@ -36,6 +37,15 @@ class BeforeBuilder<T> {
   operator fun SkipBeforeHook.unaryPlus() = add(this)
   operator fun SessionPersistingBeforeHook.unaryPlus() = add(this)
 
+  operator fun AfterHook.unaryPlus() {
+    when(this) {
+      is SimpleBeforeHook -> add(this)
+      is SkipBeforeHook -> add(this)
+      is SessionPersistingBeforeHook -> add(this)
+      else -> throw IllegalStateException("Resolved types must know their type at compile time")
+    }
+  }
+
   /**
    * If we can't resolve to the <T> type for the resolved after hook, then it's the incorrect type. If we remove this
    * method, then the error is simply that `+` is not found. Leaving it in with the added deprecation notice leads
@@ -61,6 +71,15 @@ class AfterBuilder<T> {
   operator fun SimpleAfterHook.unaryPlus() = add(this)
   operator fun BodyMutatingAfterHook.unaryPlus() = add(this)
   operator fun FullDataAfterHook.unaryPlus() = add(this)
+
+  operator fun AfterHook.unaryPlus() {
+    when(this) {
+      is SimpleAfterHook -> add(this)
+      is BodyMutatingAfterHook -> add(this)
+      is FullDataAfterHook -> add(this)
+      else -> throw IllegalStateException("Resolved types must know their type at compile time")
+    }
+  }
 
   /**
    * If we can't resolve to the <T> type for the resolved after hook, then it's the incorrect type. If we remove this

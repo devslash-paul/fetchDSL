@@ -68,12 +68,14 @@ inline fun <reified T> RequestData<*>.mustGet(): T {
   return this.mustVisit<T, T> { a -> a }
 }
 
+class DSLVisitorException(reason: String) : RuntimeException(reason)
+
 inline fun <T, reified V> RequestData<*>.mustVisit(crossinline visitor: MustVisitor<T, V>): T {
   return visit { any, clazz ->
     if (V::class.java.isAssignableFrom(clazz)) {
       return@visit visitor(any as V)
     } else {
-      throw RuntimeException("Was unable to find correct visitor class. Was $clazz not ${V::class.java}")
+      throw DSLVisitorException("Was unable to find correct visitor class. Was $clazz not ${V::class.java}")
     }
   }
 }

@@ -163,7 +163,7 @@ class BodyBuilder {
   private var value: String? = null
   private var valueMapper: ValueMapper<String>? = null
 
-  private var rawValue :((RequestData<*>) -> InputStream)? = null
+  var rawValue :((RequestData<*>) -> InputStream)? = null
 
   private var formParts: List<FormPart>? = null
   private var lazyMultipartForm: ((RequestData<*>) -> List<FormPart>)? = null
@@ -258,7 +258,7 @@ class SessionBuilder {
 
   @JvmName("genericCallWithUrlProvider")
   fun <T> call(urlProvider: URLProvider<T>, block: CallBuilder<T>.() -> Unit = {}) {
-    calls.add(CallBuilder<T>(urlProvider).apply(block).build())
+    calls.add(CallBuilder(urlProvider).apply(block).build())
   }
 
   fun call(urlProvider: URLProvider<List<String>>, block: CallBuilder<List<String>>.() -> Unit = {}) {
@@ -267,7 +267,7 @@ class SessionBuilder {
 
   @JvmName("genericCallWithUrlAndUrlProvider")
   fun <T> call(url: String, urlProvider: URLProvider<T>, block: CallBuilder<T>.() -> Unit = {}) {
-    calls.add(CallBuilder<T>(url, urlProvider).apply(block).build())
+    calls.add(CallBuilder(url, urlProvider).apply(block).build())
   }
 
   fun call(url: String, urlProvider: URLProvider<List<String>>, block: CallBuilder<List<String>>.() -> Unit = {}) {

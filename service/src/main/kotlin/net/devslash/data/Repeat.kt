@@ -3,7 +3,6 @@ package net.devslash.data
 import net.devslash.RequestData
 import net.devslash.RequestDataSupplier
 import net.devslash.RequestVisitor
-import java.lang.RuntimeException
 import java.util.concurrent.atomic.AtomicInteger
 
 class Repeat(private val repeat: Int) : RequestDataSupplier<Unit> {

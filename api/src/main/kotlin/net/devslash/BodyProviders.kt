@@ -76,7 +76,7 @@ fun getBodyProvider(call: Call<*>, data: RequestData<*>): BodyProvider {
   }
 
   if (call.body.rawValue != null) {
-    return RawBody(call.body.rawValue!!(data))
+    return RawBody(call.body.rawValue.invoke(data))
   }
 
   if (call.body.multipartForm != null) {

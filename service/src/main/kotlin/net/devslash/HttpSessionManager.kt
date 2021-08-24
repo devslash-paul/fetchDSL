@@ -13,7 +13,7 @@ typealias Contents<T> = Pair<HttpRequest, RequestData<T>>
 class HttpSessionManager(private val engine: Driver, private val session: Session) : SessionManager {
 
   private val jobThreadPool = System.getProperty("HTTP_THREAD_POOL_SIZE")?.toInt()
-      ?: Runtime.getRuntime().availableProcessors() * 2
+      ?: (Runtime.getRuntime().availableProcessors() * 2)
   private val httpThreadPool = Executors.newFixedThreadPool(jobThreadPool)
   private val dispatcher = httpThreadPool.asCoroutineDispatcher()
 

@@ -12,3 +12,4 @@ pluginManagement {
 }
 
 include("api", "service", "examples", "test-utils")
+include("lib-test")

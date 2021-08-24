@@ -35,7 +35,7 @@ class AppendFile(
     if (output != null) {
       synchronized(lock) {
         f.write(output)
-        f.write(NEWLINE)
+        f.write(newline)
         f.flush()
         if (memoizedFile == null) {
           // if we're doing it on a per call basis, close the stream
@@ -45,7 +45,5 @@ class AppendFile(
     }
   }
 
-  companion object {
-    private val NEWLINE = "\n".toByteArray()
-  }
+  private val newline = "\n".toByteArray()
 }

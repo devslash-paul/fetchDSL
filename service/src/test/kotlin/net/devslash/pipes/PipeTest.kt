@@ -14,19 +14,19 @@ internal class PipeTest {
 
   @Test
   fun testPipeStartsEmpty() = runBlocking {
-    val pipe = Pipe<List<String>> { _, _ -> listOf(ListRequestData(listOf("A", "B"))) }
+    val pipe = Pipe { _, _ -> listOf(ListRequestData(listOf("A", "B"))) }
 
     assertThat(pipe.getDataForRequest(), nullValue())
   }
 
   @Test
   fun testPipeSingleCase() = runBlocking {
-    val pipe = Pipe<List<String>> { r, _ -> listOf(ListRequestData(listOf(String(r.body)))) }
+    val pipe = Pipe { r, _ -> listOf(ListRequestData(listOf(String(r.body)))) }
 
     pipe.accept(
-      basicRequest(),
-      HttpResponse(URI("http://a"), 200, mapOf(), "result".toByteArray()),
-      listOf()
+        basicRequest(),
+        HttpResponse(URI("http://a"), 200, mapOf(), "result".toByteArray()),
+        listOf()
     )
 
     val data = pipe.getDataForRequest()!!
@@ -38,11 +38,11 @@ internal class PipeTest {
   @Test
   fun testPipeCanReturnMultipleResults() = runBlocking {
     val vals = listOf("a", "b", "c")
-    val pipe = Pipe<List<String>> { _, _ -> vals.map { ListRequestData(listOf(it)) } }
+    val pipe = Pipe { _, _ -> vals.map { ListRequestData(listOf(it)) } }
     pipe.accept(
-      basicRequest(),
-      HttpResponse(URI("http://a"), 200, mapOf(), byteArrayOf()),
-      listOf()
+        basicRequest(),
+        HttpResponse(URI("http://a"), 200, mapOf(), byteArrayOf()),
+        listOf()
     )
 
     vals.forEach {
@@ -52,21 +52,21 @@ internal class PipeTest {
 
   @Test
   fun testPipeAcceptsMultipleAndReturnsInOrder() = runBlocking {
-    val pipe = Pipe<List<String>> { r, _ -> listOf(ListRequestData(listOf(String(r.body)))) }
+    val pipe = Pipe { r, _ -> listOf(ListRequestData(listOf(String(r.body)))) }
     pipe.accept(
-      basicRequest(),
-      HttpResponse(URI("http://a"), 200, mapOf(), "a".toByteArray()),
-      listOf()
+        basicRequest(),
+        HttpResponse(URI("http://a"), 200, mapOf(), "a".toByteArray()),
+        listOf()
     )
     pipe.accept(
-      basicRequest(),
-      HttpResponse(URI("http://a"), 200, mapOf(), "b".toByteArray()),
-      listOf()
+        basicRequest(),
+        HttpResponse(URI("http://a"), 200, mapOf(), "b".toByteArray()),
+        listOf()
     )
     pipe.accept(
-      basicRequest(),
-      HttpResponse(URI("http://a"), 200, mapOf(), "c".toByteArray()),
-      listOf()
+        basicRequest(),
+        HttpResponse(URI("http://a"), 200, mapOf(), "c".toByteArray()),
+        listOf()
     )
 
     val values = listOf("a", "b", "c")

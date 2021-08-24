@@ -44,7 +44,7 @@ internal class ResettablePipeTest {
   @Test
   fun testPipeCanReturnMultipleResults() = runBlocking {
     val vals = listOf("a", "b", "c")
-    val pipe = Pipe<List<String>> { _, _ -> vals.map { ListRequestData(listOf(it)) } }
+    val pipe = Pipe { _, _ -> vals.map { ListRequestData(listOf(it)) } }
     pipe.accept(
       basicRequest(),
       HttpResponse(URI("http://a"), 200, mapOf(), byteArrayOf()),
@@ -58,7 +58,7 @@ internal class ResettablePipeTest {
 
   @Test
   fun testPipeAcceptsMultipleAndReturnsInOrder() = runBlocking {
-    val pipe = Pipe<List<String>> { r, _ -> listOf(ListRequestData(listOf(String(r.body)))) }
+    val pipe = Pipe { r, _ -> listOf(ListRequestData(listOf(String(r.body)))) }
     pipe.accept(
       basicRequest(),
       HttpResponse(URI("http://a"), 200, mapOf(), "a".toByteArray()),

@@ -6,6 +6,8 @@ import io.ktor.response.*
 import io.ktor.routing.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
+import net.devslash.post.Filter
+import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Assert.assertTrue
@@ -34,6 +36,25 @@ class TestIntegration {
       }
       server.start()
     }
+  }
+
+  @Test
+  fun testBasicFilter() {
+    var arrived = false
+    runHttp {
+      call("${address()}/bounce") {
+        after {
+          +Filter({it.statusCode == 200}) {
+            +object: ResolvedFullDataAfterHook<List<String>> {
+              override fun accept(req: HttpRequest, resp: HttpResponse, data: List<String>) {
+                arrived = true
+              }
+            }
+          }
+        }
+      }
+    }
+    assertThat(arrived, `is`(true))
   }
 
   @Test

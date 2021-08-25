@@ -1,6 +1,3 @@
-group = "net.devslash.fetchdsl"
-version = "0.20.5-SNAPSHOT"
-
 val ktorNettyVersion: String by project
 val kotlinxCoroutinesVersion: String by project
 val kotlinVersion: String by project

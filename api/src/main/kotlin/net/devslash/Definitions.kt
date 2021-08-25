@@ -214,7 +214,7 @@ interface FullDataAfterHook : AfterHook {
  * Used to reify request data into its real type without requiring visitor use.
  * Can be used incorrectly without compilation warnings - use with care.
  */
-interface ResolvedFullDataAfterHook<T> : AfterHook {
+interface ResolvedFullDataAfterHook<T: Any?> : AfterHook {
   fun accept(req: HttpRequest, resp: HttpResponse, data: T)
 }
 

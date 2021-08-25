@@ -61,7 +61,7 @@ class RequestProducer {
         //TODO: Allow configuration of what happens here.
         println("An exception occurred when preparing requests. Shutting down further requests")
         e.printStackTrace()
-        channel.close()
+        channel.close(e)
         return
       }
       nextData = dataSupplier.getDataForRequest()

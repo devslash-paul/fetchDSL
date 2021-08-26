@@ -8,10 +8,11 @@ import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import net.devslash.data.ListDataSupplier
 import net.devslash.data.Repeat
+import net.devslash.post.Filter
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.MatcherAssert.assertThat
+import org.hamcrest.collection.IsMapContaining
 import org.junit.Assert.assertThrows
-import org.junit.Assert.assertTrue
 import org.junit.BeforeClass
 import org.junit.Test
 import java.io.ByteArrayInputStream
@@ -32,12 +33,38 @@ class TestIntegration {
       server = embeddedServer(Netty, port) {
         routing {
           get("/bounce") {
+            call.request.headers.forEach { key, list ->
+              list.forEach { call.response.headers.append(key, it) }
+            }
             call.respond(call.receiveText())
           }
         }
       }
       server.start()
     }
+  }
+
+  @Test
+  fun testBasicFilter() {
+    val arrived = AtomicInteger()
+    runHttp {
+      call("${address()}/bounce") {
+        data = ListDataSupplier(listOf("A", "B"))
+        body {
+          value("!1!", indexValueMapper)
+        }
+        after {
+          +Filter({String(it.body) == "B"}) {
+            +object: ResolvedFullDataAfterHook<List<String>> {
+              override fun accept(req: HttpRequest, resp: HttpResponse, data: List<String>) {
+                arrived.getAndIncrement()
+              }
+            }
+          }
+        }
+      }
+    }
+    assertThat(arrived.get(), equalTo(1))
   }
 
   @Test
@@ -127,4 +154,22 @@ class TestIntegration {
       }
     }
   }
+  @Test
+  fun testHeaderSet() {
+    var responseHeaders = mapOf<String, List<String>>()
+    val testHeaders = mapOf("test" to listOf("value"))
+    runHttp {
+      call("${address()}/bounce") {
+        headers = testHeaders
+        after {
+          action {
+            responseHeaders = resp.headers
+          }
+        }
+      }
+    }
+
+    assertThat(responseHeaders, IsMapContaining.hasEntry(equalTo("test"), equalTo(listOf("value"))))
+  }
+
 }

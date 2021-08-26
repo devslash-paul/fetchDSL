@@ -14,10 +14,22 @@ class FilterBuilder {
  * An after hook that can be provided additional hooks to call in the event that the predicate is true.
  */
 @Suppress("unused")
-class Filter(
+class Filter<T> private constructor(
   private val predicate: (HttpResponse) -> Boolean,
+  boolean: Boolean,
   builder: FilterBuilder.() -> Unit
-) : FullDataAfterHook {
+) :FullDataAfterHook {
+
+  companion object {
+    operator fun invoke(predicate: (HttpResponse) -> Boolean, b: FilterBuilder.() -> Unit): Filter<List<String>> {
+      return Filter(predicate, true, b)
+    }
+
+    @JvmName("invokeTyped")
+    operator fun <T> invoke(predicate: (HttpResponse) -> Boolean, b: FilterBuilder.() -> Unit): Filter<T> {
+      return Filter(predicate, true, b)
+    }
+  }
 
   private val builtBlock = FilterBuilder().apply(builder)
 
@@ -28,7 +40,7 @@ class Filter(
           is SimpleAfterHook -> it.accept(resp)
           is BodyMutatingAfterHook -> it.accept(resp)
           is FullDataAfterHook -> it.accept(req, resp, data)
-          is ResolvedFullDataAfterHook<*> -> TODO("Resolved data hook not implemented for Filter scope")
+          is ResolvedFullDataAfterHook<*> -> (it as ResolvedFullDataAfterHook<T>).accept(req, resp, data.get() as T)
           is BasicOutput -> it.accept(req, resp, data)
           else -> throw RuntimeException("Unsupported filter hook. Filter hooks must be SimpleAfterHook, ChainReceivingResponseHook")
         }

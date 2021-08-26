@@ -6,15 +6,20 @@ import io.ktor.response.*
 import io.ktor.routing.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
+import net.devslash.data.ListDataSupplier
+import net.devslash.outputs.DebugOutput
 import net.devslash.post.Filter
+import net.devslash.post.LogResponse
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.MatcherAssert.assertThat
+import org.hamcrest.collection.IsMapContaining
 import org.junit.Assert.assertTrue
 import org.junit.BeforeClass
 import org.junit.Test
 import java.io.ByteArrayInputStream
 import java.net.ServerSocket
+import java.util.concurrent.atomic.AtomicInteger
 
 class TestIntegration {
 
@@ -30,6 +35,9 @@ class TestIntegration {
       server = embeddedServer(Netty, port) {
         routing {
           get("/bounce") {
+            call.request.headers.forEach { key, list ->
+              list.forEach { call.response.headers.append(key, it) }
+            }
             call.respond(call.receiveText())
           }
         }
@@ -40,21 +48,25 @@ class TestIntegration {
 
   @Test
   fun testBasicFilter() {
-    var arrived = false
+    val arrived = AtomicInteger()
     runHttp {
       call("${address()}/bounce") {
+        data = ListDataSupplier(listOf("A", "B"))
+        body {
+          value("!1!", indexValueMapper)
+        }
         after {
-          +Filter({it.statusCode == 200}) {
+          +Filter({String(it.body) == "B"}) {
             +object: ResolvedFullDataAfterHook<List<String>> {
               override fun accept(req: HttpRequest, resp: HttpResponse, data: List<String>) {
-                arrived = true
+                arrived.getAndIncrement()
               }
             }
           }
         }
       }
     }
-    assertThat(arrived, `is`(true))
+    assertThat(arrived.get(), equalTo(1))
   }
 
   @Test
@@ -88,6 +100,24 @@ class TestIntegration {
     assertThat(beforeHit, equalTo(true))
     assertThat(afterHit, equalTo(true))
     assertThat(body, equalTo("Body"))
+  }
+
+  @Test
+  fun testHeaderSet() {
+    var responseHeaders = mapOf<String, List<String>>()
+    val testHeaders = mapOf("test" to listOf("value"))
+    runHttp {
+      call("${address()}/bounce") {
+        headers = testHeaders
+        after {
+          action {
+            responseHeaders = resp.headers
+          }
+        }
+      }
+    }
+
+    assertThat(responseHeaders, IsMapContaining.hasEntry(equalTo("test"), equalTo(listOf("value"))))
   }
 
 }

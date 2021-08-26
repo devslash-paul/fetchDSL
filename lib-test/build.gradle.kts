@@ -9,7 +9,7 @@ dependencies {
   implementation(kotlin("stdlib", kotlinVersion))
   implementation(project(":api"))
   implementation(project(":service"))
-  implementation("org.hamcrest:hamcrest-core:2.2")
+  implementation("org.hamcrest:hamcrest:2.2")
 
   // Used for testing mocking
   testImplementation("io.ktor:ktor-server-netty:$ktorNettyVersion")

@@ -19,24 +19,32 @@ class ListDataSupplier<T>(private val list: Lazy<List<T>>, private val clazz: Cl
       return ListDataSupplier(list.map { listOf(it) }.toList())
     }
 
+    /**
+     * Due to supporting `ListDataSupplier(listOf("String"))` returning a supplier that works for
+     * List<T> call types that doesn't attempt to resolve to a set of lists
+     */
+    inline fun <reified T> typed(stringList: List<T>): ListDataSupplier<T> {
+      return ListDataSupplier(lazy { stringList }, T::class.java)
+    }
+
     @JvmName("lazyStringToList")
     operator fun <T> invoke(
-      lazyList: Lazy<List<T>>,
-      trans: (T) -> List<String>
+        lazyList: Lazy<List<T>>,
+        trans: (T) -> List<String>
     ): ListDataSupplier<List<String>> {
       return ListDataSupplier(transformedLazyList(lazyList, trans))
     }
 
     @JvmName("lazyListStringToList")
     operator fun invoke(
-      ll: Lazy<List<String>>
+        ll: Lazy<List<String>>
     ): ListDataSupplier<List<String>> {
       return invoke(ll) { listOf(it) }
     }
 
     private fun <T> transformedLazyList(
-      lazyList: Lazy<List<T>>,
-      transform: (T) -> List<String>
+        lazyList: Lazy<List<T>>,
+        transform: (T) -> List<String>
     ): Lazy<List<List<String>>> {
       // TODO: Do i really need to do this?? Feels weird
       return lazy {
@@ -60,8 +68,8 @@ class ListDataSupplier<T>(private val list: Lazy<List<T>>, private val clazz: Cl
     }
 
     @Deprecated(
-      "Instead of transforming, send type directly",
-      ReplaceWith("ListDataSupplier(list)", "net.devslash.data.ListDataSupplier")
+        "Instead of transforming, send type directly",
+        ReplaceWith("ListDataSupplier(list)", "net.devslash.data.ListDataSupplier")
     )
     inline operator fun <reified T, Q> invoke(list: List<Q>, transform: (Q) -> T): ListDataSupplier<T> {
       return ListDataSupplier(list.map { transform(it) }.toList())

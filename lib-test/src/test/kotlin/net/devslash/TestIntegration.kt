@@ -109,4 +109,22 @@ class TestIntegration {
       }
     }
   }
+
+  @Test
+  fun testRuntimeFailsReportedInAfter() {
+    assertThrows(DSLVisitorException::class.java) {
+      runHttp {
+        call("${address()}/bounce") {
+          data = ListDataSupplier(listOf("Hi"))
+          after {
+            +object : FullDataAfterHook {
+              override fun accept(req: HttpRequest, resp: HttpResponse, data: RequestData<*>) {
+                data.mustGet<Int>()
+              }
+            }
+          }
+        }
+      }
+    }
+  }
 }

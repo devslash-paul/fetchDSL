@@ -50,14 +50,14 @@ class BasicIntegrationTest {
   fun testRateLimitIsReasonable() {
     val result = measureTimeMillis {
       runHttp {
-        rateLimit(10, Duration.ofSeconds(1))
+        rateLimit(1, Duration.ofSeconds(1))
         call<Unit>("${testServer.address()}/bounce") {
-          data = Repeat(50)
+          data = Repeat(3)
         }
       }
     }
-    assertThat(result, greaterThan(5000))
-    assertThat(result, lessThan(7000))
+    assertThat(result, greaterThan(3000))
+    assertThat(result, lessThan(6000))
   }
 
   @Test

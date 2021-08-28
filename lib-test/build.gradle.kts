@@ -9,6 +9,7 @@ dependencies {
   implementation(kotlin("stdlib", kotlinVersion))
   implementation(project(":api"))
   implementation(project(":service"))
+
   implementation("org.hamcrest:hamcrest:2.2")
 
   // Used for testing mocking

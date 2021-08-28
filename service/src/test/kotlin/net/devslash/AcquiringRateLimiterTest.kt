@@ -4,7 +4,9 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runBlockingTest
 import kotlinx.coroutines.withTimeout
-import org.junit.Assert.assertFalse
+import org.hamcrest.CoreMatchers.equalTo
+import org.hamcrest.MatcherAssert.assertThat
+import org.hamcrest.number.OrderingComparison
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -16,31 +18,42 @@ import kotlin.system.measureTimeMillis
 @ExperimentalCoroutinesApi
 class AcquiringRateLimiterTest {
   private lateinit var tenPerSecond: AcquiringRateLimiter
+  private lateinit var timedTicket: TimedTicket
   private lateinit var clock: FakeClock
 
   @Before
   fun setup() {
     clock = FakeClock(Instant.ofEpochMilli(100000))
     tenPerSecond = AcquiringRateLimiter(RateLimitOptions(true, 10, Duration.of(1, ChronoUnit.SECONDS)), clock)
+    // 100ms per ticket
+    timedTicket = TimedTicket(100L, clock)
   }
 
   @Test
-  fun `Second request within rate does not fire`() = runBlockingTest {
-    assertTrue(tenPerSecond.tryAcquire())
-    assertFalse(tenPerSecond.tryAcquire())
+  fun `Test two tickets require delay`() = runBlocking {
+    val taken = measureTimeMillis {
+      tenPerSecond.acquire()
+      tenPerSecond.acquire()
+    }
+    assertThat(taken, OrderingComparison.greaterThan(99L))
   }
 
   @Test
-  fun `Second request fires after allowed`() = runBlockingTest {
-    assertTrue(tenPerSecond.tryAcquire())
-    clock.advance(Duration.ofMillis(1001))
-    assertTrue(tenPerSecond.tryAcquire())
+  fun `After request time step suggested for waiting is correct`() {
+    timedTicket.setLastRelease()
+    assertThat(timedTicket.timeTillNextRelease(), equalTo(100))
+    clock.advance(Duration.ofMillis(45))
+    assertThat(timedTicket.timeTillNextRelease(), equalTo(55))
+    clock.advance(Duration.ofMillis(55))
+    assertThat(timedTicket.timeTillNextRelease(), equalTo(0))
+    clock.advance(Duration.ofMillis(50))
+    assertThat(timedTicket.timeTillNextRelease(), equalTo(0))
   }
 
   @Test
   fun `Attempt request with timeout`() = runBlocking {
     // Give a little leeway
-    withTimeout(1200) {
+    withTimeout(1100) {
       val time = measureTimeMillis {
         repeat(10) {
           tenPerSecond.acquire()
@@ -49,5 +62,15 @@ class AcquiringRateLimiterTest {
 
       assertTrue("Must take more than 900ms due to smoothing", time > 900)
     }
+  }
+
+  @Test
+  fun `Test consistent gating time when returning partially through wait`() {
+    timedTicket.setLastRelease()
+    clock.advance(Duration.ofMillis(30))
+    assertThat(timedTicket.timeTillNextRelease(), equalTo(70))
+    clock.advance(Duration.ofMillis(10))
+    timedTicket.setLastRelease()
+    assertThat(timedTicket.timeTillNextRelease(), equalTo(100))
   }
 }

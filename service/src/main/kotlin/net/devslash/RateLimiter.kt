@@ -17,12 +17,12 @@ import kotlin.math.max
  */
 class AcquiringRateLimiter(
   private val rateLimitOptions: RateLimitOptions,
-  private val clock: Clock = Clock.systemUTC()
+  clock: Clock = Clock.systemUTC()
 ) {
-  private var lastRelease = Instant.ofEpochMilli(0)
 
   // This equals how many milliseconds it takes to release a ticket
-  private val qps = rateLimitOptions.duration.toMillis() / max(1, rateLimitOptions.count)
+  private val stepMillis = rateLimitOptions.duration.toMillis() / max(1, rateLimitOptions.count)
+  private val ticket = TimedTicket(stepMillis, clock)
   private val lock = Mutex()
 
   suspend fun acquire() {
@@ -31,34 +31,26 @@ class AcquiringRateLimiter(
     }
 
     lock.lock()
-    val delayMs = getTimeOfNextAcquire()
+    val delayMs = ticket.timeTillNextRelease()
     delay(delayMs)
+    ticket.setLastRelease()
     lock.unlock()
   }
+}
 
-  // Fixme: This is all that's being tested... Rather than the original method
-  fun tryAcquire(): Boolean {
-    if (!rateLimitOptions.enabled) {
-      return true
-    }
+/**
+ * This class is split out from the Rate limiter to allow for better testing
+ * It effectively should manage the timesteps in which a request ticket can be
+ * allowed
+ */
+class TimedTicket(private val millSteps: Long, private val clock: Clock) {
+  private var lastRelease = Instant.ofEpochMilli(0)
 
-    return if (lock.tryLock()) {
-      val result = getTimeOfNextAcquire()
-      lock.unlock()
-      result <= 0
-    } else {
-      false
-    }
-  }
-
-  /**
-   * This function attempts to figure out when the next update can occur. This
-   */
-  private fun getTimeOfNextAcquire(): Long {
+  fun timeTillNextRelease(): Long {
     val now = clock.instant()
-    val diff = Duration.between(lastRelease, now).toMillis()
-    // We assume this ticket gets consumed, this lets update out last release
-    lastRelease = lastRelease.plusMillis(diff)
-    return (qps - diff).coerceAtLeast(0L)
+    val timeSinceLastRelease = Duration.between(lastRelease, now).toMillis()
+    return (millSteps - timeSinceLastRelease).coerceAtLeast(0)
   }
+
+  fun setLastRelease() { lastRelease = clock.instant() }
 }

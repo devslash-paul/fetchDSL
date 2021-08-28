@@ -56,7 +56,8 @@ class BasicIntegrationTest {
         }
       }
     }
-    assertThat(result, greaterThan(3000))
+    // First one is zero time. 3 can be done in 2 seconds
+    assertThat(result, greaterThan(2000))
     assertThat(result, lessThan(6000))
   }
 

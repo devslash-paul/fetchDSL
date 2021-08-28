@@ -3,7 +3,7 @@ import java.util.*
 
 buildscript {
   project.extra.apply {
-    set("kotlinVersion", "1.5.30-RC")
+    set("kotlinVersion", "1.5.30")
     set("ktorVersion", "1.6.2")
     set("junitVersion", "4.12")
     set("ktorNettyVersion", "1.6.2")
@@ -17,7 +17,7 @@ buildscript {
 
 plugins {
   base
-  kotlin("jvm") version "1.5.30-RC" apply false
+  kotlin("jvm") version "1.5.30" apply false
   jacoco
   java
   `maven-publish`
@@ -31,7 +31,6 @@ allprojects {
   repositories {
     mavenCentral()
   }
-
 }
 
 subprojects {

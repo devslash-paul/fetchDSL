@@ -2,21 +2,28 @@
 description: Cayman is a clean, responsive theme for GitHub Pages.
 ---
 
-FetchDSL is a compact DSL that allows for fast, easy to maintain, HTTP request scripts.
+FetchDSL is a compact DSL that allows for fast, maintainable, HTTP scripts.
 
-The DSL runs using kotlin, ktor, and kotlinx-coroutines to provide highly parallel requests, without requiring many
+The DSL runs using kotlin DSLs, ktor, and kotlinx-coroutines to provide highly parallel requests, without requiring many
 resources to run quickly.
+
+# Uses
+fetchDSL's main use case is for providing repeatable declarative HTTP 
+requests. In particular, it's built for safely handling thousands of requests
+in an efficient manner while allowing control over request rate, request level changes (url, body, headers, etc)
+as well as once off session level setup such as login.
 
 # Getting started
 
-The `runHttp` context is the main entrypoint for the DSL. Each instance
-of `runHttp` could be considered similar to an incognito browser window. 
-That is, within the `runHttp` block, cookies and state may be shared, 
+`runHttp` context is the main entrypoint for the DSL. Each instance
+of `runHttp` could be considered similar to a new browser window. 
+
+That is, within the `runHttp` block, cookies and state are shared, 
 and as soon as the block is over, any future blocks start from a fresh
-state.
+session.
 
 Multiple `runHttp` blocks can be run at the same time in different threads.
-There is no global state.
+There is no shared global state.
 
 #### Making a simple call
 
@@ -29,7 +36,7 @@ runHttp {
 ```
 
 At it most simple, this will not output anything, or provide anything in the
-request body. This is analogous to the following silent, suppressed curl call.
+request body. This is analogous to the following silent, `curl` call.
 
 ```bash
 curl -s --output /dev/null example.com
@@ -47,16 +54,9 @@ runHttp {
 }
 ```
 
-This is quite slow, encumbering, and not very useful.
-
 One of the major advantages of _fetchDSL_ is its ability to perform many 
 thousands of requests efficiently. Even when there's changes in each
 request. To take advantage of this, we have to define a `DataSupplier`.
-
-### Changing request method
-TODO
-
-### Adding a body
 
 ### Making multiple requests with Data Suppliers
 
@@ -64,14 +64,12 @@ The concept of data suppliers comes from the fact that most of the time
 when you require many requests to occur, there's usually something a 
 little different each time.
 
-For instance, it may be that you want to download all the HTML pages given
-a sitemap. Each time you're simply doing a GET call and saving the response,
-but the URL will change each time.
-
-Data suppliers are the basis for providing the changed data to a request. 
+For instance, the URL may change slightly, or the body of a form request may
+be referring to something slightly different. A Data supplier is used to supply
+the small change between each of these requests.
 
 In the following example, we'll be utilising the `FileDataSupplier`. This is a basic
-line-by-line supplier. Where each line indicates a new request, with the arguments
+line based supplier. Where each line indicates one new request, with the arguments
 for that request on the line.
 
 For example, if we were trying to add many items to our shopping cart, we may 
@@ -99,22 +97,29 @@ runHttp {
 
 There's a few new things here, so lets go through them.
 
-First of all, a call takes a second parameter which is a block. In kotlin this can be specified outside of the
-parameters, so the convention is to place it after the closed parenthses. Within this, you may specify details about
-this specific call.
+### Call Context Block
 
-First of all, we'll change the call from its default (a GET) to a POST by specfying the type.
+A call takes a second parameter which is a receiving block. In kotlin this can be specified 
+outside of the parenthesis, so the convention is to place it in braces outside. Within this, you 
+may specify details about this specific call such as body, before/after actions and more.
+
+In this case, we'll change the call from its default (a GET) to a POST by specifying 
+the type.
 
 Then, we set our data. The FileDataSupplier reads line by line from the input file.
 
-Finally, we set the body. Note that the body, like the `call` receives a block as a parameter. There are many ways to
-set a body, depending on your requirements. We choose the simplest, which just sets the body to specific text content.
+Finally, we set the body. Note that the body, like the `call` receives a block as a 
+parameter. There are many ways to set a body, depending on your requirements. We choose 
+the simplest, which just sets the body to specific text content.
 
-We also see `"!1!"`. This is a replacement section and at the heart of `fetchDSL`. This allows you to specify something
-that should be replaced on a per call basis. The way this works, is that the data supplier is called at the start of
-each request, and returns a map of replacements. In the default case, the replacements are specified as `!1!`, `!2!`
-, `!3!` and so on. A one based index wrapped in `!`. The replacements themselves come from the line in the supplied
-file.
+### Using string replacements
+
+We also see `"!1!"`. This is a replacement section and at the heart of `fetchDSL`. This 
+allows you to specify something that should be replaced on a per call basis. The way 
+this works, is that the data supplier is called at the start of each request, and 
+returns a map of replacements. In the default case, the replacements are specified as 
+`!1!`, `!2!`, `!3!` and so on. A one based index wrapped in `!`. The replacements 
+themselves come from the line in the supplied file.
 
 In a file such as
 
@@ -129,6 +134,9 @@ Any `Bye` on the second.
 
 `FileDataSupplier` allows you to split by more than just spaces. The optional second argument to `FileDataSupplier` is
 the splitting char.
+
+### Adding a body
+
 
 # Before Hooks
 

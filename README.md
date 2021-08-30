@@ -38,4 +38,4 @@ whatever is the first part of the line (by default split by spaces).
 
 #### More Examples
 
-For more examples, see the "examples" directory.
+For more examples, see the "examples" directory, or the docs at fetchDSL.dev.

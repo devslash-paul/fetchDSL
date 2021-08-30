@@ -5,6 +5,7 @@ import java.io.InputStream
 import java.util.*
 
 typealias URLProvider<T> = (String, RequestData<T>) -> String
+typealias Form = Map<String, List<String>>
 
 sealed class FormTypes
 class NumberType(val i: Number) : FormTypes()

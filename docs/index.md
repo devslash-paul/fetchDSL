@@ -12,18 +12,41 @@ efficient manner while allowing control over request rate, request level changes
 (url, body, headers, etc), as well as once off session level setup such as
 login.
 
+A simple example of a DSL scrip that may log in, and post potentially thousands
+of unique POST requests is as follows. This script would log in once, then for
+each line in `requests.txt` send a POST request. It would then print the
+response body. All of this can be customised to your needs
+
+```kotlin
+runHttp {
+  call("https://www.example.com") {
+    type = POST
+    data = FileDataSupplier("requests.txt")
+    before {
+      +Once(Login())
+      +LogRequest()
+    }
+    body {
+      value("Example Body")
+    }
+    after {
+      action {
+        println("The body response was ${resp.body}")
+      }
+    }
+  }
+}
+```
+
 # Getting started
 
 `runHttp` context is the main entrypoint for the DSL. Each instance of `runHttp`
 could be considered similar to a new browser window.
 
-That is, within the `runHttp` block, cookies and state are shared, and as soon
-as the block is over, any future blocks start from a fresh session.
-
 Multiple `runHttp` blocks can be run at the same time in different threads.
 There is no shared global state.
 
-#### Making a simple call
+## Making a call
 
 To get started with a simple call, open the `runHttp` context, and create
 a `call`
@@ -34,17 +57,21 @@ runHttp {
 }
 ```
 
-At it most simple, this will not output anything, or provide anything in the
-request body. This is analogous to the following silent, `curl` call.
+At it most simple, this will not output anything, and will only do a GET call to
+the provided url. This is analogous to the following silent, `curl` call.
 
 ```bash
 curl -s --output /dev/null example.com
 ```
 
-#### Making multiple calls
+## Making multiple calls
 
-Multiple calls can be added to a single `runHttp` block. Cookies are shared with
-all calls in a `runHttp` block.
+There are a few possible ways to make multiple calls. Either explicitly, or
+providing data parameters to a `call`.
+
+The simplest form of multiple HTTP calls is to add new `call` statements. Each
+`call` will be run one after each other. The second `call` is only started once
+the previous one has returned
 
 ```kotlin
 runHttp {
@@ -54,23 +81,58 @@ runHttp {
 }
 ```
 
-One of the major advantages of _fetchDSL_ is its ability to perform many
-thousands of requests efficiently. Even when there's changes in each request. To
-take advantage of this, we have to define a `DataSupplier`.
+## Customising the call
+
+Just doing a GET call to a URL isn't particularly interesting. Every call can
+change its `method`, `body`, `headers`, as well as set of hooks for before and
+after the request takes places.
+
+To take advantage of this customisation, one must supply a receiving block as
+the second parameter of the `call`. In Kotlin this can take place via a block
+defined after the parenthesis.
+
+```kotlin
+runHttp {
+  call("http://fetchdsl.dev") {
+    type = HttpMethod.POST
+    headers = mapOf("X-Custom-Header" to listOf("value-1", "value-2"))
+    body {
+      value("Custom Body")
+    }
+    before {
+      action {
+        println("Preparing a request")
+      }
+    }
+    after {
+      action {
+        println("Response was ${resp.statusCode}")
+      }
+    }
+  }
+}
+```
+
+Rather than just a simple GET request, we now have a POST that contains custom
+headers, a body, and will print out a message prior to the request - as well as
+the status code after the response has been returned.
 
 ### Making multiple requests with Data Suppliers
 
-The concept of data suppliers comes from the fact that most of the time when you
-require many requests to occur, there's usually something a little different
-each time.
+When repeating requests, it's common that something is a little different about
+each request. For instance, the URL may change slightly, or the body of a form
+request may be referring to something slightly different. A Data supplier is
+used to supply the small change between each of these requests.
 
-For instance, the URL may change slightly, or the body of a form request may be
-referring to something slightly different. A Data supplier is used to supply the
-small change between each of these requests.
+Supplying `data` to a call block allows for specific control over both the
+number of requests that will take place, and the particular details about that
+call.
 
-In the following example, we'll be utilising the `FileDataSupplier`. This is a
-basic line based supplier. Where each line indicates one new request, with the
-arguments for that request on the line.
+There are a number of inbuilt data suppliers (and extra ones can be created via
+implementing the `DataSupplier` interface). In the following example, we'll be
+utilising the `FileDataSupplier`. This is a basic line based supplier. Where
+each line from the file indicates one request, with the arguments for that
+request on the line.
 
 For example, if we were trying to add many items to our shopping cart, we may
 have a file that contains each item.
@@ -82,7 +144,7 @@ tissues
 ...many more lines
 ```
 
-Then, to create a POST request for each of those lines, you'd simply create the
+Then, to create a POST request for each of those lines, you'd create the
 following
 
 ```kotlin
@@ -97,33 +159,15 @@ runHttp {
 }
 ```
 
-There's a few new things here, so lets go through them.
 
-### Call Context Block
 
-A call takes a second parameter which is a receiving block. In kotlin this can
-be specified outside of the parenthesis, so the convention is to place it in
-braces outside. Within this, you may specify details about this specific call
-such as body, before/after actions and more.
+### Inbuilt use for Data
 
-In this case, we'll change the call from its default (a GET) to a POST by
-specifying the type.
-
-Then, we set our data. The FileDataSupplier reads line by line from the input
-file.
-
-Finally, we set the body. Note that the body, like the `call` receives a block
-as a parameter. There are many ways to set a body, depending on your
-requirements. We choose the simplest, which just sets the body to specific text
-content.
-
-### Using string replacements
-
-We also see `"!1!"`. This is a replacement section and at the heart
-of `fetchDSL`. This allows you to specify something that should be replaced on a
-per call basis. The way this works, is that the data supplier is called at the
-start of each request, and returns a map of replacements. In the default case,
-the replacements are specified as
+We also see `"!1!"`. This is a replacement section and a way to customise each
+request in `fetchDSL`. This allows you to specify something that should be
+replaced on a per call basis. The way this works, is that the data supplier is
+called at the start of each request, and returns a map of replacements. In the
+default case, the replacements are specified as
 `!1!`, `!2!`, `!3!` and so on. A one based index wrapped in `!`. The
 replacements themselves come from the line in the supplied file.
 

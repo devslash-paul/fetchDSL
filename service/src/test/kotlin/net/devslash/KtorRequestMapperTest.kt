@@ -34,7 +34,7 @@ internal class KtorRequestMapperTest {
       builders.appendAll(it.key, it.value)
     }
     val obj = mapOf("string" to "value")
-    val httpRequest = HttpRequest(net.devslash.HttpMethod.POST, basicUrl, JsonBody(obj))
+    val httpRequest = HttpRequest(net.devslash.HttpMethod.POST, basicUrl, JsonRequestBody(obj))
     headers.forEach { (key, value) ->
       value.forEach { httpRequest.addHeader(key, it) }
     }

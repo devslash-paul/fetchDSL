@@ -11,7 +11,7 @@ import java.net.URI
 internal class DefaultCookieJarTest {
 
   private val jar: CookieJar = DefaultCookieJar()
-  private val standardRequest = HttpRequest(HttpMethod.GET, "https://example.com", EmptyBodyProvider)
+  private val standardRequest = HttpRequest(HttpMethod.GET, "https://example.com", EmptyBody)
 
   @Test
   fun testSingleCookieSet() {
@@ -24,7 +24,7 @@ internal class DefaultCookieJarTest {
   @Test
   fun testMultipleCaseCookieSet() {
     jar.accept(
-      responseWithHeaders(mapOf("set-Cookie" to listOf("A=B"), "SET-COOKIE" to listOf("C=D")))
+        responseWithHeaders(mapOf("set-Cookie" to listOf("A=B"), "SET-COOKIE" to listOf("C=D")))
     )
     jar.accept(standardRequest, requestDataFromList(listOf()))
 
@@ -35,7 +35,7 @@ internal class DefaultCookieJarTest {
   @Test
   fun testSetMultipleOfTheSameKey() {
     jar.accept(
-      responseWithHeaders(mapOf("set-Cookie" to listOf("A=B"), "SET-COOKIE" to listOf("A=D")))
+        responseWithHeaders(mapOf("set-Cookie" to listOf("A=B"), "SET-COOKIE" to listOf("A=D")))
     )
     jar.accept(standardRequest, requestDataFromList(listOf()))
 
@@ -47,7 +47,7 @@ internal class DefaultCookieJarTest {
   fun testDomainsDoNotShareCookies() {
     jar.accept(responseWithHeaders(mapOf("Set-Cookie" to listOf("A=B"))))
 
-    val otherSizeRequest = HttpRequest(HttpMethod.GET, "https://differentDomain.com", EmptyBodyProvider)
+    val otherSizeRequest = HttpRequest(HttpMethod.GET, "https://differentDomain.com", EmptyBody)
     jar.accept(otherSizeRequest, requestDataFromList(listOf()))
     jar.accept(standardRequest, requestDataFromList(listOf()))
 
@@ -58,19 +58,19 @@ internal class DefaultCookieJarTest {
   @Test
   fun testProtocolsDoNotShareCookies() {
     jar.accept(responseWithHeaders(mapOf("Set-Cookie" to listOf("A=B"))))
-    val httpRequest = HttpRequest(HttpMethod.GET, "http://example.com", EmptyBodyProvider)
+    val httpRequest = HttpRequest(HttpMethod.GET, "http://example.com", EmptyBody)
 
     jar.accept(httpRequest, requestDataFromList(listOf()))
     jar.accept(standardRequest, requestDataFromList(listOf("A=B")))
   }
 
   private fun responseWithHeaders(
-    headers: Map<String, List<String>>,
-    url: String = "https://example.com/test"
+      headers: Map<String, List<String>>,
+      url: String = "https://example.com/test"
   ) = HttpResponse(
-    URI(url),
-    200,
-    headers,
-    "".toByteArray()
+      URI(url),
+      200,
+      headers,
+      "".toByteArray()
   )
 }

@@ -3,7 +3,7 @@ package net.devslash
 import java.net.URI
 import java.util.*
 
-class HttpRequest(val type: HttpMethod, val url: String, val body: BodyProvider) {
+class HttpRequest(val type: HttpMethod, val url: String, val body: Body) {
   val headers: TreeMap<String, MutableList<String>> =
     TreeMap(String.CASE_INSENSITIVE_ORDER)
 

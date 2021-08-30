@@ -20,28 +20,29 @@ object KtorRequestMapper {
           }
         }
       }
-      when (httpRequest.body) {
-        is JsonBody -> {
+      when (val reqBody = httpRequest.body) {
+        EmptyBody -> {
+        }
+        is BytesRequestBody -> {
+          body = ByteArrayContent(reqBody.body.readAllBytes())
+        }
+        is StringRequestBody -> {
+          body = ByteArrayContent(reqBody.body.toByteArray())
+        }
+        is FormRequestBody -> {
+          body = FormDataContent(
+              parametersOf(*reqBody.form.map { (key, value) -> key to value }.toTypedArray())
+          )
+        }
+        is JsonRequestBody -> {
           body = TextContent(
-              mapper.writeValueAsString((httpRequest.body as JsonBody).get()),
+              mapper.writeValueAsString(reqBody.data),
               ContentType.Application.Json
           )
         }
-        is BasicBodyProvider -> {
-          body = ByteArrayContent((httpRequest.body as BasicBodyProvider).get().toByteArray())
-        }
-        is FormBody -> body = FormDataContent(Parameters.build {
-          val prov = httpRequest.body as FormBody
-          prov.get().forEach { (key, value) ->
-            value.forEach {
-              append(key, it)
-            }
-          }
-        })
-        is MultipartForm -> {
-          val bd = httpRequest.body as MultipartForm
+        is MultipartFormRequestBody -> {
           body = MultiPartFormDataContent(formData {
-            bd.parts.forEach {
+            reqBody.form.forEach {
               when (val value = it.value) {
                 is NumberType -> append(it.key, value.i)
                 is StringType -> append(it.key, value.i)
@@ -49,12 +50,6 @@ object KtorRequestMapper {
               }
             }
           })
-        }
-        is RawBody -> {
-          val rb = (httpRequest.body as RawBody)
-          body = ByteArrayContent(rb.raw.readAllBytes())
-        }
-        EmptyBodyProvider -> {/* Do nothing explicitly */
         }
       }
     }

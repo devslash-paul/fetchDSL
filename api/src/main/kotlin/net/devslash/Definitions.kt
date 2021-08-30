@@ -12,6 +12,14 @@ class NumberType(val i: Number) : FormTypes()
 class StringType(val i: String) : FormTypes()
 class ByteArrayType(val i: ByteArray) : FormTypes()
 
+sealed class Body
+object EmptyBody: Body()
+class JsonRequestBody(val data: Any): Body()
+class FormRequestBody(val form: Map<String, List<String>>): Body()
+class MultipartFormRequestBody(val form: List<FormPart>): Body()
+class StringRequestBody(val body: String): Body()
+class BytesRequestBody(val body: InputStream): Body()
+
 data class FormPart(val key: String, val value: FormTypes)
 sealed class HeaderValue
 data class StrHeaderValue(val value: String) : HeaderValue()
@@ -32,7 +40,7 @@ data class Call<T>(
     val headers: Map<String, List<HeaderValue>>,
     val type: HttpMethod,
     val dataSupplier: RequestDataSupplier<T>?,
-    val body: HttpBody?,
+    val body: HttpBody<T>?,
     val onError: OnError?,
     val beforeHooks: List<BeforeHook>,
     val afterHooks: List<AfterHook>
@@ -45,7 +53,7 @@ interface RequestDataSupplier<T> {
   suspend fun getDataForRequest(): RequestData<T>?
 
   fun init() {
-    // By default this is empty, but implementors can be assured that on a per-call basis, this
+    // By default, this is empty, but implementors can be assured that on a per-call basis, this
     // will be called
   }
 }
@@ -83,16 +91,16 @@ inline fun <T, reified V> RequestData<*>.mustVisit(crossinline visitor: MustVisi
 
 interface BasicOutput : FullDataAfterHook
 
-data class HttpBody(
+data class HttpBody<T>(
     val bodyValue: String?,
-    val bodyValueMapper: ValueMapper<String>?,
-    val rawValue: ((RequestData<*>) -> InputStream)?,
+    val bodyValueMapper: ValueMapper<String, T>?,
+    val rawValue: ((RequestData<T>) -> InputStream)?,
     val formData: Map<String, List<String>>?,
-    val formMapper: ValueMapper<Map<String, List<String>>>?,
+    val formMapper: ValueMapper<Map<String, List<String>>, T>?,
     val multipartForm: List<FormPart>?,
-    val lazyMultipartForm: (RequestData<*>.() -> List<FormPart>)?,
+    val lazyMultipartForm: (RequestData<T>.() -> List<FormPart>)?,
     val jsonObject: Any?,
-    val lazyJsonObject: ((RequestData<*>) -> Any)?
+    val lazyJsonObject: ((RequestData<T>) -> Any)?
 )
 
 @Deprecated("Type deprecated")
@@ -229,8 +237,7 @@ fun replaceString(changes: Map<String, String>, str: String): String {
   return x
 }
 
-val identityValueMapper: ValueMapper<String> = { v, _ -> v }
-val indexValueMapper: ValueMapper<String> = { inData, reqData ->
+val indexValueMapper: ValueMapper<String, *> = { inData, reqData ->
   val indexes = reqData.mustGet<List<String>>().mapIndexed { index, string ->
     "!" + (index + 1) + "!" to string
   }.toMap()
@@ -239,7 +246,25 @@ val indexValueMapper: ValueMapper<String> = { inData, reqData ->
   }
 }
 
-typealias ValueMapper<V> = (V, RequestData<*>) -> V
+val formIdentity: ValueMapper<Map<String, List<String>>, *> = { form, _ -> form }
+val formIndexed: ValueMapper<Map<String, List<String>>, *> = { form, reqData ->
+  // Early return, as an empty form can otherwise automatically
+  // Fail out due to the mustGet default
+  if (form.isEmpty()) {
+    form
+  } else {
+    val indexes = reqData.mustGet<List<String>>().mapIndexed { index, string ->
+      "!" + (index + 1) + "!" to string
+    }.toMap()
+    form.map { (formKey, formValue) ->
+      val key = replaceString(indexes, formKey)
+      val value = formValue.map { replaceString(indexes, it) }
+      return@map key to value
+    }.toMap()
+  }
+}
+
+typealias ValueMapper<V, T> = (V, RequestData<T>) -> V
 
 @Suppress("unused")
 fun (() -> Any).toPostHook(): SimpleAfterHook = object : SimpleAfterHook {

@@ -19,7 +19,7 @@ fun basicData(): RequestData<*> {
 
 const val basicUrl: String = "https://example.com"
 fun basicRequest(): HttpRequest {
-  return HttpRequest(HttpMethod.GET, basicUrl, EmptyBodyProvider)
+  return HttpRequest(HttpMethod.GET, basicUrl, EmptyBody)
 }
 
 fun getCookieJar(): CookieJar {
@@ -44,13 +44,13 @@ fun basicResponse(): HttpResponse {
   return getResponseWithBody("Body".toByteArray())
 }
 
-fun getCall(sup: HttpBody? = null, url: String = "https://example.com"): Call<Any?> = CallBuilder<Any?>(
-  url
+fun getCall(sup: HttpBody<List<String>>? = null, url: String = "https://example.com"): Call<List<String>> = CallBuilder<List<String>>(
+    url
 ).apply {
   body = sup
 }.build()
 
-fun <T> getTypedCall(sup: HttpBody? = null, url: String = "https://example.com"): Call<T> = CallBuilder<T>(
+fun <T> getTypedCall(sup: HttpBody<T>? = null, url: String = "https://example.com"): Call<T> = CallBuilder<T>(
     url
 ).apply {
   body = sup

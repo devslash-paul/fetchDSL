@@ -38,7 +38,7 @@ class BeforeBuilder<T> {
   operator fun SessionPersistingBeforeHook.unaryPlus() = add(this)
 
   operator fun BeforeHook.unaryPlus() {
-    when(this) {
+    when (this) {
       is SimpleBeforeHook -> add(this)
       is SkipBeforeHook -> add(this)
       is SessionPersistingBeforeHook -> add(this)
@@ -73,7 +73,7 @@ class AfterBuilder<T> {
   operator fun FullDataAfterHook.unaryPlus() = add(this)
 
   operator fun AfterHook.unaryPlus() {
-    when(this) {
+    when (this) {
       is SimpleAfterHook -> add(this)
       is BodyMutatingAfterHook -> add(this)
       is FullDataAfterHook -> add(this)
@@ -113,7 +113,7 @@ open class CallBuilder<T>(private val url: String = "") {
   val concurrency: Int? = null
   var urlProvider: URLProvider<T>? = null
   var data: RequestDataSupplier<T>? = null
-  var body: HttpBody? = null
+  var body: HttpBody<T>? = null
   var type: HttpMethod = HttpMethod.GET
   var headers: Map<String, List<Any>> = mapOf()
   var onError: OnError? = RetryOnTransitiveError()
@@ -129,8 +129,8 @@ open class CallBuilder<T>(private val url: String = "") {
     postHooksList.addAll(AfterBuilder<T>().apply(block).build())
   }
 
-  fun body(block: BodyBuilder.() -> Unit) {
-    body = BodyBuilder().apply(block).build()
+  fun body(block: BodyBuilder<T>.() -> Unit) {
+    body = BodyBuilder<T>().apply(block).build()
   }
 
   private fun mapHeaders(map: Map<String, List<Any>>): Map<String, List<HeaderValue>> {
@@ -159,20 +159,20 @@ open class CallBuilder<T>(private val url: String = "") {
 
 @Suppress("MemberVisibilityCanBePrivate")
 @FetchDSL
-class BodyBuilder {
+class BodyBuilder<T> {
   private var value: String? = null
-  private var valueMapper: ValueMapper<String>? = null
+  private var valueMapper: ValueMapper<String, T>? = null
 
-  var rawValue :((RequestData<*>) -> InputStream)? = null
+  var rawValue: ((RequestData<T>) -> InputStream)? = null
 
   private var formParts: List<FormPart>? = null
-  private var lazyMultipartForm: ((RequestData<*>) -> List<FormPart>)? = null
+  private var lazyMultipartForm: ((RequestData<T>) -> List<FormPart>)? = null
 
   private var formParams: Form? = null
-  private var formMapper: ValueMapper<Map<String, List<String>>>? = null
+  private var formMapper: ValueMapper<Map<String, List<String>>, T>? = null
 
   var jsonObject: Any? = null
-  var lazyJsonObject: ((RequestData<*>) -> Any)? = null
+  var lazyJsonObject: ((RequestData<T>) -> Any)? = null
 
   // This is actually used. The receiver ensures that only the basic case can utilise a non mapped
   // function
@@ -184,7 +184,7 @@ class BodyBuilder {
 
   fun formParams(
       params: Map<String, List<String>>,
-      mapper: ValueMapper<Map<String, List<String>>> = formIdentity
+      mapper: ValueMapper<Map<String, List<String>>, T> = formIdentity
   ) {
     formParams = params
     formMapper = mapper
@@ -199,7 +199,7 @@ class BodyBuilder {
 
   @Suppress("unused")
   fun multipartForm(
-      lazyForm: RequestData<*>.() -> List<FormPart>
+      lazyForm: RequestData<T>.() -> List<FormPart>
   ) {
     this.lazyMultipartForm = lazyForm
   }
@@ -207,16 +207,23 @@ class BodyBuilder {
   @Suppress("unused")
   fun value(value: String) {
     this.value = value
-    this.valueMapper = identityValueMapper
+    this.valueMapper = indexValueMapper
+  }
+
+  fun value(valueMapper: (T) -> String) {
+    this.value = ""
+    this.valueMapper = { _, data ->
+      valueMapper.invoke(data.get())
+    }
   }
 
   @Suppress("unused")
-  fun value(value: String, mapper: (String, RequestData<*>) -> String) {
+  fun value(value: String, mapper: (String, RequestData<T>) -> String) {
     this.value = value
     this.valueMapper = mapper
   }
 
-  fun build(): HttpBody {
+  fun build(): HttpBody<T> {
     return HttpBody(
         value,
         valueMapper,

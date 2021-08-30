@@ -15,19 +15,18 @@ class FilterBuilder {
  */
 @Suppress("unused")
 class Filter<T> private constructor(
-  private val predicate: (HttpResponse) -> Boolean,
-  boolean: Boolean,
-  builder: FilterBuilder.() -> Unit
+    private val predicate: (HttpResponse) -> Boolean,
+    builder: FilterBuilder.() -> Unit
 ) :FullDataAfterHook {
 
   companion object {
     operator fun invoke(predicate: (HttpResponse) -> Boolean, b: FilterBuilder.() -> Unit): Filter<List<String>> {
-      return Filter(predicate, true, b)
+      return Filter(predicate, b)
     }
 
     @JvmName("invokeTyped")
     operator fun <T> invoke(predicate: (HttpResponse) -> Boolean, b: FilterBuilder.() -> Unit): Filter<T> {
-      return Filter(predicate, true, b)
+      return Filter(predicate, b)
     }
   }
 

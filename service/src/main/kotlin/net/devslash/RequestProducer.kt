@@ -6,7 +6,7 @@ class RequestCreator {
   companion object {
     fun <T> getRequestFor(call: Call<T>, data: RequestData<T>): HttpRequest {
       val getUrl = getUrlProvider(call)
-      val body = getBodyProvider(call, data)
+      val body = getBodyProvider(call, data.get())
       val currentUrl = getUrl(call.url, data)
       val type = call.type
       val req = HttpRequest(type, currentUrl, body)

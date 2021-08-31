@@ -2,7 +2,6 @@ package net.devslash
 
 import net.devslash.err.RetryOnTransitiveError
 import java.io.InputStream
-import java.lang.IllegalStateException
 import java.time.Duration
 import java.util.*
 
@@ -163,31 +162,39 @@ class BodyBuilder<T> {
   private var value: String? = null
   private var valueMapper: ValueMapper<String, T>? = null
 
-  var rawValue: ((RequestData<T>) -> InputStream)? = null
+  var rawValue: ((T) -> InputStream)? = null
 
   private var formParts: List<FormPart>? = null
-  private var lazyMultipartForm: ((RequestData<T>) -> List<FormPart>)? = null
+  private var lazyMultipartForm: ((T) -> List<FormPart>)? = null
 
   private var formParams: Form? = null
   private var formMapper: ValueMapper<Map<String, List<String>>, T>? = null
 
   var jsonObject: Any? = null
-  var lazyJsonObject: ((RequestData<T>) -> Any)? = null
-
-  // This is actually used. The receiver ensures that only the basic case can utilise a non mapped
-  // function
-  @Suppress("unused")
-  fun formParams(params: Map<String, List<String>>) {
-    formParams = params
-    formMapper = formIndexed
-  }
+  var lazyJsonObject: ((T) -> Any)? = null
 
   fun formParams(
       params: Map<String, List<String>>,
-      mapper: ValueMapper<Map<String, List<String>>, T> = formIdentity
+      mapper: ValueMapper<Map<String, List<String>>, T>? = null
   ) {
+    if (mapper == null) {
+      // We have no easy way to know if they're expecting the legacy
+      // index mapper - so we'll use that in the case that formParams
+      // contains a key or value that may use it
+      val replacement = Regex("!\\d+!")
+      val expectingMapped = params.any {
+        it.key.contains(replacement) ||
+            it.value.any { v -> v.contains(replacement) }
+      }
+      formMapper = if (expectingMapped) {
+        formIndexed as ValueMapper<Map<String, List<String>>, T>
+      } else {
+        formIdentity()
+      }
+    } else {
+      formMapper = mapper
+    }
     formParams = params
-    formMapper = mapper
   }
 
   @Suppress("unused")
@@ -199,13 +206,13 @@ class BodyBuilder<T> {
 
   @Suppress("unused")
   fun multipartForm(
-      lazyForm: RequestData<T>.() -> List<FormPart>
+      lazyForm: T.() -> List<FormPart>
   ) {
     this.lazyMultipartForm = lazyForm
   }
 
   @Suppress("unused")
-  fun value(value: String) {
+  fun BodyBuilder<List<String>>.value(value: String) {
     this.value = value
     this.valueMapper = indexValueMapper
   }
@@ -213,12 +220,12 @@ class BodyBuilder<T> {
   fun value(valueMapper: (T) -> String) {
     this.value = ""
     this.valueMapper = { _, data ->
-      valueMapper.invoke(data.get())
+      valueMapper.invoke(data)
     }
   }
 
   @Suppress("unused")
-  fun value(value: String, mapper: (String, RequestData<T>) -> String) {
+  fun value(value: String, mapper: (String, T) -> String) {
     this.value = value
     this.valueMapper = mapper
   }

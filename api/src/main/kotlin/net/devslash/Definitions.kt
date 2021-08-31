@@ -13,12 +13,12 @@ class StringType(val i: String) : FormTypes()
 class ByteArrayType(val i: ByteArray) : FormTypes()
 
 sealed class Body
-object EmptyBody: Body()
-class JsonRequestBody(val data: Any): Body()
-class FormRequestBody(val form: Map<String, List<String>>): Body()
-class MultipartFormRequestBody(val form: List<FormPart>): Body()
-class StringRequestBody(val body: String): Body()
-class BytesRequestBody(val body: InputStream): Body()
+object EmptyBody : Body()
+class JsonRequestBody(val data: Any) : Body()
+class FormRequestBody(val form: Map<String, List<String>>) : Body()
+class MultipartFormRequestBody(val form: List<FormPart>) : Body()
+class StringRequestBody(val body: String) : Body()
+class BytesRequestBody(val body: InputStream) : Body()
 
 data class FormPart(val key: String, val value: FormTypes)
 sealed class HeaderValue
@@ -94,13 +94,13 @@ interface BasicOutput : FullDataAfterHook
 data class HttpBody<T>(
     val bodyValue: String?,
     val bodyValueMapper: ValueMapper<String, T>?,
-    val rawValue: ((RequestData<T>) -> InputStream)?,
+    val rawValue: ((T) -> InputStream)?,
     val formData: Map<String, List<String>>?,
     val formMapper: ValueMapper<Map<String, List<String>>, T>?,
     val multipartForm: List<FormPart>?,
-    val lazyMultipartForm: (RequestData<T>.() -> List<FormPart>)?,
+    val lazyMultipartForm: (T.() -> List<FormPart>)?,
     val jsonObject: Any?,
-    val lazyJsonObject: ((RequestData<T>) -> Any)?
+    val lazyJsonObject: ((T) -> Any)?
 )
 
 @Deprecated("Type deprecated")
@@ -225,20 +225,20 @@ interface FullDataAfterHook : AfterHook {
  * Used to reify request data into its real type without requiring visitor use.
  * Can be used incorrectly without compilation warnings - use with care.
  */
-interface ResolvedFullDataAfterHook<T: Any?> : AfterHook {
+interface ResolvedFullDataAfterHook<T : Any?> : AfterHook {
   fun accept(req: HttpRequest, resp: HttpResponse, data: T)
 }
 
-fun replaceString(changes: Map<String, String>, str: String): String {
+fun replaceString(changes: Map<String, Any?>, str: String): String {
   var x = str
   changes.forEach {
-    x = x.replace(it.key, it.value)
+    x = x.replace(it.key, it.value.toString())
   }
   return x
 }
 
-val indexValueMapper: ValueMapper<String, *> = { inData, reqData ->
-  val indexes = reqData.mustGet<List<String>>().mapIndexed { index, string ->
+val indexValueMapper: ValueMapper<String, List<String>> = { inData, reqData ->
+  val indexes = reqData.mapIndexed { index, string ->
     "!" + (index + 1) + "!" to string
   }.toMap()
   inData.let { entry ->
@@ -246,14 +246,13 @@ val indexValueMapper: ValueMapper<String, *> = { inData, reqData ->
   }
 }
 
-val formIdentity: ValueMapper<Map<String, List<String>>, *> = { form, _ -> form }
-val formIndexed: ValueMapper<Map<String, List<String>>, *> = { form, reqData ->
+fun <T> formIdentity(): ValueMapper<Map<String, List<String>>, T> = { form, _ -> form }
+val formIndexed: ValueMapper<Map<String, List<String>>, List<*>> = { form, reqData ->
   // Early return, as an empty form can otherwise automatically
-  // Fail out due to the mustGet default
   if (form.isEmpty()) {
     form
   } else {
-    val indexes = reqData.mustGet<List<String>>().mapIndexed { index, string ->
+    val indexes = reqData.mapIndexed { index, string ->
       "!" + (index + 1) + "!" to string
     }.toMap()
     form.map { (formKey, formValue) ->
@@ -264,7 +263,7 @@ val formIndexed: ValueMapper<Map<String, List<String>>, *> = { form, reqData ->
   }
 }
 
-typealias ValueMapper<V, T> = (V, RequestData<T>) -> V
+typealias ValueMapper<V, T> = (V, T) -> V
 
 @Suppress("unused")
 fun (() -> Any).toPostHook(): SimpleAfterHook = object : SimpleAfterHook {

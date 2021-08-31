@@ -20,6 +20,9 @@ class TestServer : ExternalResource() {
     println("USING PORT $port")
     server = embeddedServer(Netty, port) {
       routing {
+        post("/form") {
+          bounceForm()
+        }
         post("/bounce") {
           bounceResponse()
         }
@@ -31,8 +34,23 @@ class TestServer : ExternalResource() {
     server!!.start()
   }
 
+  private suspend fun PipelineContext<Unit, ApplicationCall>.bounceForm() {
+    try {
+      call.request.headers.filter { name, _ -> !listOf("content-length", "content-type").contains(name.lowercase()) }.forEach { key, list ->
+        // Filter some
+        list.forEach { call.response.headers.append(key, it) }
+      }
+      val message = call.receiveParameters()
+      var resp = ""
+      message.forEach { key, list -> resp += key + ":[" + list.joinToString(",") + "]" }
+      call.respond(resp)
+    } catch (e: Exception) {
+      e.printStackTrace()
+    }
+  }
+
   private suspend fun PipelineContext<Unit, ApplicationCall>.bounceResponse() {
-    call.request.headers.filter { name, _ -> !listOf("content-length", "content-type").contains(name) }.forEach { key, list ->
+    call.request.headers.filter { name, _ -> !listOf("content-length", "content-type").contains(name.lowercase()) }.forEach { key, list ->
       // Filter some
       list.forEach { call.response.headers.append(key, it) }
     }

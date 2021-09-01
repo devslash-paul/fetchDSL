@@ -1,7 +1,6 @@
 package net.devslash
 
 import net.devslash.util.getCall
-import net.devslash.util.requestDataFromList
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -24,8 +23,7 @@ internal class BodyProviderTest {
                 null,
                 null,
                 null,
-                mapOf("a" to listOf("b"), "c" to listOf("d")),
-                formIdentity(),
+                { mapOf("a" to listOf("b"), "c" to listOf("d")) },
                 null,
                 null,
                 null,
@@ -41,7 +39,7 @@ internal class BodyProviderTest {
   @Test
   fun testBodyWithReplaceableValues() {
     val provider = getBodyProvider(
-        getCall(HttpBody("a=!1!&c=!2!", indexValueMapper, null, null, null, null, null, null, null)),
+        getCall(HttpBody("a=!1!&c=!2!", indexValueMapper, null, null, null, null, null, null)),
         listOf("b", "d")
     )
     assertEquals("a=b&c=d", (provider as StringRequestBody).body)
@@ -55,8 +53,7 @@ internal class BodyProviderTest {
                 null,
                 null,
                 null,
-                mapOf("a" to listOf("!1!"), "c" to listOf("!2!")),
-                formIndexed,
+                { formIndexed(mapOf("a" to listOf("!1!"), "c" to listOf("!2!")), data) },
                 null,
                 null,
                 null,

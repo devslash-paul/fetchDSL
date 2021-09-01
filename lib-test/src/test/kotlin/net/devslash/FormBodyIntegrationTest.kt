@@ -3,11 +3,8 @@ package net.devslash
 import net.devslash.data.ListDataSupplier
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.MatcherAssert.assertThat
-import org.junit.Assert.assertThrows
 import org.junit.ClassRule
 import org.junit.Test
-import java.lang.ClassCastException
-import java.lang.NumberFormatException
 
 class FormBodyIntegrationTest {
 
@@ -18,7 +15,7 @@ class FormBodyIntegrationTest {
   }
 
   @Test
-  fun testFormIndexedReplacements() {
+  fun testFormIndexedInKeysAndValue() {
     var result = ""
     runHttp {
       call("${testServer.address()}/form") {
@@ -38,7 +35,7 @@ class FormBodyIntegrationTest {
   }
 
   @Test
-  fun testFormNonIndexed() {
+  fun testBasicFormNonMapped() {
     var result = ""
     runHttp {
       call("${testServer.address()}/form") {
@@ -58,7 +55,7 @@ class FormBodyIntegrationTest {
   }
 
   @Test
-  fun testFormNonIndexedWhileTyped() {
+  fun testTypedFormMappedWithData() {
     var result = ""
     runHttp {
       call<Int>("${testServer.address()}/form") {
@@ -66,7 +63,7 @@ class FormBodyIntegrationTest {
         data = ListDataSupplier(listOf(1))
         body {
           // TODO: Form Params invalid on a get - or at least needs to be repurposed into URL params
-          formParams(mapOf("A" to listOf("B"))) { _, data ->
+          formParams {
             mapOf("B" to listOf("C$data"))
           }
         }
@@ -81,7 +78,7 @@ class FormBodyIntegrationTest {
   }
 
   @Test
-  fun testFormNonIndexedWhileTypedWithNoMapper() {
+  fun testBasicFormNotMappedWhenTyped() {
     var result = ""
     runHttp {
       call<Int>("${testServer.address()}/form") {
@@ -102,7 +99,7 @@ class FormBodyIntegrationTest {
   }
 
   @Test
-  fun testFormIndexedWhileTypedWithNoMapper() {
+  fun testBasicFormMapped() {
     var result = ""
     runHttp {
       call<List<Int>>("${testServer.address()}/form") {
@@ -122,17 +119,23 @@ class FormBodyIntegrationTest {
   }
 
   @Test
-  fun testFormIndexedWhileTypedWithNoMapperAndNoListTypeFails() {
-    assertThrows(ClassCastException::class.java) {
-      runHttp {
-        call<Int>("${testServer.address()}/form") {
-          type = HttpMethod.POST
-          data = ListDataSupplier(listOf(1))
-          body {
-            formParams(mapOf("A" to listOf("!1!")))
+  fun testBasicFormNotIndexMappedWhenNonListType() {
+    var form = ""
+    runHttp {
+      call<Int>("${testServer.address()}/form") {
+        type = HttpMethod.POST
+        data = ListDataSupplier(listOf(1))
+        body {
+          formParams(mapOf("A" to listOf("!1!")))
+        }
+        after {
+          action {
+            form = String(resp.body)
           }
         }
       }
     }
+
+    assertThat(form, equalTo("A:[!1!]"))
   }
 }

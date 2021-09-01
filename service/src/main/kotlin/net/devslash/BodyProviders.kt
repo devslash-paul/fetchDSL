@@ -1,6 +1,6 @@
 package net.devslash
 
-fun <T> getBodyProvider(call: Call<T>, data: T): Body {
+fun <T> getBodyProvider(call: Call<T>, data:T): Body {
   val body = call.body ?: return EmptyBody
 
   if (body.jsonObject !== null) {
@@ -14,7 +14,7 @@ fun <T> getBodyProvider(call: Call<T>, data: T): Body {
   }
 
   if (body.formData != null) {
-    val form = body.formMapper!!(checkNotNull(body.formData), data)
+    val form = body.formData!!.invoke(MapperCtx(data))
     return FormRequestBody(form)
   }
 

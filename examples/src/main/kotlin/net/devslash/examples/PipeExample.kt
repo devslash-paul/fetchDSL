@@ -27,7 +27,7 @@ fun main() {
   }
   server.start()
   val address = "http://localhost:$port"
-  val f = object: ResolvedFullDataAfterHook<List<Int>> {
+  val f = object : ResolvedFullDataAfterHook<List<Int>> {
     override fun accept(req: HttpRequest, resp: HttpResponse, data: List<Int>) {
       println("HO")
     }
@@ -36,6 +36,11 @@ fun main() {
     runHttp {
       call(address) {
         data = FileDataSupplier(this.javaClass.getResource("/in.log")!!.path)
+        body {
+          formParams {
+            mapOf()
+          }
+        }
         after {
           +pipe
           +WriteFile("${tmp.toUri().path}/!1!")
@@ -67,7 +72,7 @@ fun main() {
       call(address) {
         data = pipe
         body {
-          formParams(mapOf("Yo" to listOf())) { form, _ -> form }
+          formParams { mapOf("Yo" to listOf()) }
         }
       }
       call<Int>(address) {
@@ -78,7 +83,7 @@ fun main() {
           }
         }
         body {
-          formParams(mapOf())
+          formParams { mapOf() }
         }
       }
     }

@@ -5,7 +5,6 @@ import java.io.InputStream
 import java.util.*
 
 typealias URLProvider<T> = (String, RequestData<T>) -> String
-typealias Form = Map<String, List<String>>
 
 sealed class FormTypes
 class NumberType(val i: Number) : FormTypes()
@@ -95,8 +94,7 @@ data class HttpBody<T>(
     val bodyValue: String?,
     val bodyValueMapper: ValueMapper<String, T>?,
     val rawValue: ((T) -> InputStream)?,
-    val formData: Map<String, List<String>>?,
-    val formMapper: ValueMapper<Map<String, List<String>>, T>?,
+    val formData: (MapperCtx<T>.() -> Map<String, List<String>>)?,
     val multipartForm: List<FormPart>?,
     val lazyMultipartForm: (T.() -> List<FormPart>)?,
     val jsonObject: Any?,
@@ -229,7 +227,7 @@ interface ResolvedFullDataAfterHook<T : Any?> : AfterHook {
   fun accept(req: HttpRequest, resp: HttpResponse, data: T)
 }
 
-fun replaceString(changes: Map<String, Any?>, str: String): String {
+fun replaceString(str: String, changes: Map<String, Any?>): String {
   var x = str
   changes.forEach {
     x = x.replace(it.key, it.value.toString())
@@ -242,11 +240,10 @@ val indexValueMapper: ValueMapper<String, List<String>> = { inData, reqData ->
     "!" + (index + 1) + "!" to string
   }.toMap()
   inData.let { entry ->
-    return@let replaceString(indexes, entry)
+    return@let replaceString(entry, indexes)
   }
 }
 
-fun <T> formIdentity(): ValueMapper<Map<String, List<String>>, T> = { form, _ -> form }
 val formIndexed: ValueMapper<Map<String, List<String>>, List<*>> = { form, reqData ->
   // Early return, as an empty form can otherwise automatically
   if (form.isEmpty()) {
@@ -256,8 +253,8 @@ val formIndexed: ValueMapper<Map<String, List<String>>, List<*>> = { form, reqDa
       "!" + (index + 1) + "!" to string
     }.toMap()
     form.map { (formKey, formValue) ->
-      val key = replaceString(indexes, formKey)
-      val value = formValue.map { replaceString(indexes, it) }
+      val key = replaceString(formKey, indexes)
+      val value = formValue.map { replaceString(it, indexes) }
       return@map key to value
     }.toMap()
   }

@@ -156,6 +156,8 @@ open class CallBuilder<T>(private val url: String = "") {
   }
 }
 
+data class MapperCtx<T>(val data: T)
+
 @Suppress("MemberVisibilityCanBePrivate")
 @FetchDSL
 class BodyBuilder<T> {
@@ -167,34 +169,27 @@ class BodyBuilder<T> {
   private var formParts: List<FormPart>? = null
   private var lazyMultipartForm: ((T) -> List<FormPart>)? = null
 
-  private var formParams: Form? = null
-  private var formMapper: ValueMapper<Map<String, List<String>>, T>? = null
+  // By default, everything should be this with a backup raw one
+  private var formParams: (MapperCtx<T>.() -> Map<String, List<String>>)? = null
 
   var jsonObject: Any? = null
   var lazyJsonObject: ((T) -> Any)? = null
 
   fun formParams(
-      params: Map<String, List<String>>,
-      mapper: ValueMapper<Map<String, List<String>>, T>? = null
+      params: MapperCtx<T>.() -> Map<String, List<String>>
   ) {
-    if (mapper == null) {
-      // We have no easy way to know if they're expecting the legacy
-      // index mapper - so we'll use that in the case that formParams
-      // contains a key or value that may use it
-      val replacement = Regex("!\\d+!")
-      val expectingMapped = params.any {
-        it.key.contains(replacement) ||
-            it.value.any { v -> v.contains(replacement) }
+    this.formParams = params
+  }
+
+  fun formParams(
+      basic: Map<String, List<String>>
+  ) {
+    formParams {
+      when (data) {
+        is List<*> -> formIndexed(basic, data)
+        else -> basic
       }
-      formMapper = if (expectingMapped) {
-        formIndexed as ValueMapper<Map<String, List<String>>, T>
-      } else {
-        formIdentity()
-      }
-    } else {
-      formMapper = mapper
     }
-    formParams = params
   }
 
   @Suppress("unused")
@@ -236,7 +231,6 @@ class BodyBuilder<T> {
         valueMapper,
         rawValue,
         formParams,
-        formMapper,
         formParts,
         lazyMultipartForm,
         jsonObject,

@@ -118,7 +118,7 @@ open class CallBuilder<T>(private val url: String = "") {
   var headers: Map<String, List<Any>> = mapOf()
   var onError: OnError? = RetryOnTransitiveError()
 
-  var decorators = listOf<CallDecorator>()
+  var decorators = listOf<CallDecorator<T>>()
 
   private var preHooksList = mutableListOf<BeforeHook>()
   private var postHooksList = mutableListOf<AfterHook>()
@@ -162,7 +162,7 @@ open class CallBuilder<T>(private val url: String = "") {
     return call
   }
 
-  fun install(vararg decorators: CallDecorator) {
+  fun install(vararg decorators: CallDecorator<T>) {
     this.decorators = decorators.toList()
   }
 }

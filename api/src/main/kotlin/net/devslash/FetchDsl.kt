@@ -110,7 +110,7 @@ open class CallBuilder<T>(private val url: String = "") {
   }
 
   // A call local concurrency limit
-  val concurrency: Int? = null
+  var concurrency: Int? = null
   var urlProvider: URLProvider<T>? = null
   var data: RequestDataSupplier<T>? = null
   var body: HttpBody<T>? = null

@@ -1,33 +1,19 @@
 package net.devslash.examples
 
-import io.ktor.application.*
-import io.ktor.response.*
-import io.ktor.routing.*
 import io.ktor.server.engine.*
-import io.ktor.server.netty.*
 import net.devslash.*
 import net.devslash.data.FileDataSupplier
 import net.devslash.data.ListDataSupplier
 import net.devslash.outputs.WriteFile
 import net.devslash.pipes.ResettablePipe
-import java.net.ServerSocket
 import java.nio.file.Files
 import java.util.concurrent.TimeUnit
 
 fun main() {
   val tmp = Files.createTempDirectory("pref")
+  val (server, address) = createTestServer()
   val pipe = ResettablePipe({ r, _ -> listOf(String(r.body)) })
-  val port = ServerSocket(0).use { it.localPort }
-  val server = embeddedServer(Netty, port) {
-    routing {
-      get("/") {
-        call.respondText("response here")
-      }
-    }
-  }
-  server.start()
-  val address = "http://localhost:$port"
-  val f = object: ResolvedFullDataAfterHook<List<Int>> {
+  val f = object : ResolvedFullDataAfterHook<List<Int>> {
     override fun accept(req: HttpRequest, resp: HttpResponse, data: List<Int>) {
       println("HO")
     }

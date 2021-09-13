@@ -118,6 +118,8 @@ open class CallBuilder<T>(private val url: String = "") {
   var headers: Map<String, List<Any>> = mapOf()
   var onError: OnError? = RetryOnTransitiveError()
 
+  var decorators = listOf<CallDecorator>()
+
   private var preHooksList = mutableListOf<BeforeHook>()
   private var postHooksList = mutableListOf<AfterHook>()
 
@@ -150,10 +152,18 @@ open class CallBuilder<T>(private val url: String = "") {
         "User-Agent",
         listOf("FetchDSL (Apache-HttpAsyncClient + Kotlin, ${Version.version})")
     )
-    return Call(
+    var call = Call(
         url, urlProvider, concurrency, mapHeaders(localHeaders), type, data, body, onError,
         preHooksList, postHooksList
     )
+    for (decorator in decorators) {
+      call = decorator.accept(call)
+    }
+    return call
+  }
+
+  fun install(vararg decorators: CallDecorator) {
+    this.decorators = decorators.toList()
   }
 }
 

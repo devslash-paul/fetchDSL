@@ -7,6 +7,10 @@ import java.util.*
 typealias URLProvider<T> = (String, RequestData<T>) -> String
 typealias Form = Map<String, List<String>>
 
+interface CallDecorator {
+  fun <T> accept(call: Call<T>): Call<T>
+}
+
 sealed class FormTypes
 class NumberType(val i: Number) : FormTypes()
 class StringType(val i: String) : FormTypes()

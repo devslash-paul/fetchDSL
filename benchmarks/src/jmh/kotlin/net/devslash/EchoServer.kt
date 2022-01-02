@@ -16,8 +16,7 @@ class EchoServer : Closeable {
   private val server = embeddedServer(Netty, port) {
     routing {
       get("/") {
-        headersOf("Content-type", "text/plain")
-        call.respond(HttpStatusCode.OK, call.receiveText())
+        call.respond(HttpStatusCode.OK, "")
       }
     }
   }
@@ -28,6 +27,6 @@ class EchoServer : Closeable {
   }
 
   override fun close() {
-    server.stop(100, 100, TimeUnit.MILLISECONDS)
+    server.stop(10, 100, TimeUnit.MILLISECONDS)
   }
 }

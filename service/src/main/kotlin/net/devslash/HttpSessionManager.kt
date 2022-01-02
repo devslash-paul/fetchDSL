@@ -2,7 +2,6 @@ package net.devslash
 
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
-import java.lang.RuntimeException
 import java.time.Clock
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
@@ -10,8 +9,9 @@ import java.util.concurrent.atomic.AtomicReference
 
 typealias Contents<T> = Pair<HttpRequest, RequestData<T>>
 
-class HttpSessionManager(private val engine: Driver, private val session: Session) : SessionManager {
+class HttpSessionManager(private val engine: Driver) : SessionManager, AutoCloseable {
 
+  var count: Int = 0
   private val jobThreadPool = System.getProperty("HTTP_THREAD_POOL_SIZE")?.toInt()
       ?: (Runtime.getRuntime().availableProcessors() * 2)
   private val httpThreadPool = Executors.newFixedThreadPool(jobThreadPool)
@@ -20,24 +20,24 @@ class HttpSessionManager(private val engine: Driver, private val session: Sessio
   private var lastCall = 0L
   private val clock = Clock.systemUTC()
 
-  fun run() {
+  fun run(session: Session) {
     val jar = DefaultCookieJar()
-    try {
-      for (call in session.calls) {
-        call(call, jar)?.let {
-          throw it
-        }
+    for (call in session.calls) {
+      call(call, session, jar)?.let {
+        throw it
       }
-    } finally {
-      engine.close()
-      httpThreadPool.shutdownNow()
-      httpThreadPool.awaitTermination(100L, TimeUnit.MILLISECONDS)
     }
   }
 
-  override fun <T> call(call: Call<T>): Exception? = call(call, DefaultCookieJar())
+  override fun close() {
+    engine.close()
+    httpThreadPool.shutdownNow()
+    httpThreadPool.awaitTermination(100L, TimeUnit.MILLISECONDS)
+  }
 
-  override fun <T> call(call: Call<T>, jar: CookieJar): Exception? = runBlocking(Dispatchers.Default) {
+  override fun <T> call(call: Call<T>, session: Session): Exception? = call(call, session, DefaultCookieJar())
+
+  override fun <T> call(call: Call<T>, session: Session, jar: CookieJar): Exception? = runBlocking(Dispatchers.Default) {
     val channel: Channel<Envelope<Contents<T>>> = Channel(session.concurrency * 2)
     launch(Dispatchers.IO) { RequestProducer().produceHttp(this@HttpSessionManager, call, jar, channel) }
 
@@ -60,13 +60,15 @@ class HttpSessionManager(private val engine: Driver, private val session: Sessio
     val jobs = mutableListOf<Job>()
 
     // Take the call concurrency before defaulting to the session concurrency
-    val concurrency = if (hasDelay) 1 else call.concurrency ?: session.concurrency
+    val concurrency = if (hasDelay) 1 else call.concurrency
+        ?: session.concurrency
     val storedException = AtomicReference<Exception>(null)
 
     repeat(concurrency) {
       jobs += launch(dispatcher) {
         launchHttpProcessor(
             call,
+            session,
             limiter,
             afterRequest,
             channel,
@@ -81,6 +83,7 @@ class HttpSessionManager(private val engine: Driver, private val session: Sessio
 
   private suspend fun <T> launchHttpProcessor(
       call: Call<T>,
+      session: Session,
       rateLimiter: AcquiringRateLimiter,
       afterRequest: List<AfterHook>,
       channel: Channel<Envelope<Pair<HttpRequest, RequestData<T>>>>,
@@ -96,7 +99,7 @@ class HttpSessionManager(private val engine: Driver, private val session: Sessio
           val contents = next.get()
           rateLimiter.acquire()
 
-          when (val resp = makeRequest(contents.first)) {
+          when (val resp = makeRequest(contents.first, session)) {
             is Failure -> handleFailure(call, channel, next, resp)
             is Success -> handleSuccess(resp, afterRequest, contents)
           }
@@ -114,6 +117,7 @@ class HttpSessionManager(private val engine: Driver, private val session: Sessio
       afterRequest: List<AfterHook>,
       contents: Pair<HttpRequest, RequestData<T>>,
   ) {
+    count++
     val mappedResponse = resp.value
     afterRequest.forEach {
       when (it) {
@@ -142,14 +146,14 @@ class HttpSessionManager(private val engine: Driver, private val session: Sessio
   }
 
 
-  private suspend fun makeRequest(modelRequest: HttpRequest): HttpResult<HttpResponse, java.lang.Exception> {
-    maybeDelay()
+  private suspend fun makeRequest(modelRequest: HttpRequest, session: Session): HttpResult<HttpResponse, java.lang.Exception> {
+    maybeDelay(session)
     val result = engine.call(modelRequest)
     lastCall = clock.millis()
     return result
   }
 
-  private suspend fun maybeDelay() {
+  private suspend fun maybeDelay(session: Session) {
     session.delay?.let {
       require(it > 0)
       // Then between every call, we have to have waited at least that many ms

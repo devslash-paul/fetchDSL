@@ -33,10 +33,10 @@ class ConfigBuilder {
 }
 
 data class Config(
-  val followRedirects: Boolean,
-  val socketTimeout: Int,
-  val connectTimeout: Int,
-  val connectionRequestTimeout: Int
+    val followRedirects: Boolean,
+    val socketTimeout: Int,
+    val connectTimeout: Int,
+    val connectionRequestTimeout: Int
 )
 
 fun runHttp(block: SessionBuilder.() -> Unit) {
@@ -48,7 +48,8 @@ fun runHttp(config: ConfigBuilder.() -> Unit, block: SessionBuilder.() -> Unit) 
   return runHttp(HttpDriver(KtorClientAdapter(builtConfig)), block)
 }
 
-internal fun runHttp(engine: Driver, block: SessionBuilder.() -> Unit) {
+fun runHttp(engine: Driver, block: SessionBuilder.() -> Unit) {
   val session = SessionBuilder().apply(block).build()
-  HttpSessionManager(engine, session).run()
+  val sessionMgr = HttpSessionManager(engine)
+  sessionMgr.use { it.run(session) }
 }

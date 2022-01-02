@@ -72,7 +72,7 @@ typealias RequestVisitor<T, V> = (V, Class<*>) -> T
 typealias MustVisitor<T, V> = (V) -> T
 
 abstract class RequestData<T> {
-  val id: UUID = UUID.randomUUID()
+  val id: UUID by lazy { UUID.randomUUID() }
   abstract fun <T> visit(visitor: RequestVisitor<T, Any?>): T
   abstract fun get(): T
 }

@@ -47,7 +47,7 @@ open class Bencho {
 
   @Setup
   fun setup() {
-    sManagerSupplier = HttpSessionManager(HttpDriver(MockHttpAdapter()))
+    sManagerSupplier = HttpSessionManager(HttpDriver(StaticHttpAdapter()))
   }
 
   @TearDown

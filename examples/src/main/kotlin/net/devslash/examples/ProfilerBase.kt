@@ -1,14 +1,11 @@
 package net.devslash.examples
 
-import net.devslash.HttpDriver
-import net.devslash.HttpSessionManager
-import net.devslash.SessionBuilder
-import net.devslash.action
+import net.devslash.*
 import net.devslash.data.ListDataSupplier
 
 fun main() {
   System.setProperty("HTTP_THREAD_POOL_SIZE", "50")
-  val sManagerSupplier = HttpSessionManager(HttpDriver(MockHttpAdapter()))
+  val sManagerSupplier = HttpSessionManager(HttpDriver(StaticHttpAdapter()))
   val session = { num: Int ->
     SessionBuilder().apply {
       concurrency = num

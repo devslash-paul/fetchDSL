@@ -174,7 +174,6 @@ fun <T> BeforeBuilder<T>.action(block: BeforeCtx<T>.() -> Unit) {
         req: HttpRequest,
         data: T
     ) {
-      // Safe cast due to usage
       BeforeCtx(sessionManager, cookieJar, req, data).apply(block)
     }
   }

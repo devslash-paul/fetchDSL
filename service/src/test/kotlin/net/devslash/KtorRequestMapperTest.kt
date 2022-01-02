@@ -26,12 +26,12 @@ internal class KtorRequestMapperTest {
   @Test
   fun testHttpMapComplexAttributes() {
     val headers = mapOf(
-      "header1" to listOf("value1", "value2"),
-      "header2" to listOf("second1", "second2")
+        "header1" to listOf("value1", "value2"),
+        "header2" to listOf("second1", "second2")
     )
     val builders = HeadersBuilder()
     headers.forEach {
-      builders.appendAll(it.key, it.value)
+      it.value.forEach { v -> builders.append(it.key, v) }
     }
     val obj = mapOf("string" to "value")
     val httpRequest = HttpRequest(net.devslash.HttpMethod.POST, basicUrl, JsonRequestBody(obj))

@@ -25,10 +25,10 @@ class RequestCreator {
 
 class RequestProducer {
   suspend fun <T> produceHttp(
-    sessionManager: SessionManager,
-    call: Call<T>,
-    jar: CookieJar,
-    channel: Channel<Envelope<Contents<T>>>
+      sessionManager: SessionManager,
+      call: Call<T>,
+      jar: CookieJar,
+      channel: Channel<Envelope<Contents<T>>>
   ) {
     val dataSupplier = handleNoSupplier(call.dataSupplier)
 
@@ -40,16 +40,16 @@ class RequestProducer {
       val preRequest = call.beforeHooks + jar
       try {
         val shouldSkip =
-          preRequest.filterIsInstance<SkipBeforeHook>().any { it.skip(data) }
+            preRequest.filterIsInstance<SkipBeforeHook>().any { it.skip(data) }
         if (!shouldSkip) {
-          preRequest.forEach {
+          preRequest.filter { it !is SkipBeforeHook }.forEach {
             when (it) {
               is SimpleBeforeHook -> it.accept(req, data)
               is SessionPersistingBeforeHook -> it.accept(
-                sessionManager,
-                jar,
-                req,
-                data
+                  sessionManager,
+                  jar,
+                  req,
+                  data
               )
               is ResolvedSessionPersistingBeforeHook<*> -> (it as ResolvedSessionPersistingBeforeHook<T>)
                   .accept(sessionManager, jar, req, data.get())

@@ -2,7 +2,6 @@ package net.devslash
 
 import net.devslash.err.RetryOnTransitiveError
 import java.io.InputStream
-import java.lang.IllegalStateException
 import java.time.Duration
 import java.util.*
 

@@ -26,7 +26,7 @@ plugins {
 
 allprojects {
   group = "net.devslash.fetchdsl"
-  version = "0.21.2-SNAPSHOT"
+  version = "0.22.0"
 
   repositories {
     mavenCentral()
@@ -46,6 +46,11 @@ subprojects {
 
   jacoco {
     toolVersion = "0.8.7"
+  }
+
+  java {
+    sourceCompatibility = JavaVersion.VERSION_16
+    targetCompatibility = JavaVersion.VERSION_1_8
   }
 
   publishing {

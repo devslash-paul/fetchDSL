@@ -13,11 +13,6 @@ fun main() {
   val tmp = Files.createTempDirectory("pref")
   val (server, address) = createTestServer()
   val pipe = ResettablePipe({ r, _ -> listOf(String(r.body)) })
-  val f = object : ResolvedFullDataAfterHook<List<Int>> {
-    override fun accept(req: HttpRequest, resp: HttpResponse, data: List<Int>) {
-      println("HO")
-    }
-  }
   try {
     runHttp {
       call(address) {
@@ -34,7 +29,6 @@ fun main() {
         data = pipe
         before {
           action {
-            val x = data
             println("ActionBefore")
           }
           +object : ResolvedSessionPersistingBeforeHook<List<Any>> {

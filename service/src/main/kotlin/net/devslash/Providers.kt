@@ -14,6 +14,8 @@ fun <T> handleNoSupplier(data: RequestDataSupplier<T>?): RequestDataSupplier<T> 
 }
 
 class SingleUseDataSupplier<T>(supply: List<String> = listOf()) : RequestDataSupplier<T> {
+
+  @Suppress("UNCHECKED_CAST")
   private val unsafeSupply: T = supply as T
   private val first = AtomicBoolean(true)
 

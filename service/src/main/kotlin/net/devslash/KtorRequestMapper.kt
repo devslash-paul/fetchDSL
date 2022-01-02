@@ -14,6 +14,7 @@ object KtorRequestMapper {
       url.takeFrom(httpRequest.url)
       method = mapType(httpRequest.type)
       headers {
+
         httpRequest.headers.forEach {
           it.value.forEach { kVal ->
             append(it.key, kVal)

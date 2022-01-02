@@ -5,29 +5,37 @@ import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
 import io.ktor.server.engine.*
-import io.ktor.server.netty.*
 import io.ktor.util.*
 import io.ktor.util.pipeline.*
 import org.junit.rules.ExternalResource
+import java.util.concurrent.atomic.AtomicInteger
 
 class TestServer : ExternalResource() {
-  private var server: NettyApplicationEngine? = null
+  private var server: io.ktor.server.netty.NettyApplicationEngine? = null
   private var port: Int = 0
+  val count = AtomicInteger(0)
   val address = { "http://localhost:${port}" }
 
   private fun start() {
     port = 50000
     println("USING PORT $port")
-    server = embeddedServer(Netty, port) {
-      routing {
-        post("/bounce") {
-          bounceResponse()
+    server =
+        embeddedServer(io.ktor.server.netty.Netty, port) {
+          routing {
+            post("/bounce") {
+              bounceResponse()
+            }
+            get("/bounce") {
+              bounceResponse()
+            }
+            get("/count") {
+              call.respond(
+                  io.ktor.http.HttpStatusCode.Companion.OK,
+                  "" + count.incrementAndGet()
+              )
+            }
+          }
         }
-        get("/bounce") {
-          bounceResponse()
-        }
-      }
-    }
     server!!.start()
   }
 

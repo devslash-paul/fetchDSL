@@ -15,7 +15,6 @@ dependencies {
   implementation("com.fasterxml.jackson.core:jackson-core:2.12.3")
   implementation("com.fasterxml.jackson.core:jackson-databind:2.12.3")
 
-  testImplementation(project(":test-utils"))
   testImplementation("org.hamcrest:hamcrest:2.2")
   testImplementation("junit:junit:$junitVersion")
   testImplementation("org.mockito.kotlin:mockito-kotlin:3.2.0")

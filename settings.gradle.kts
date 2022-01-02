@@ -8,4 +8,4 @@ pluginManagement {
   }
 }
 
-include("api", "service", "examples", "test-utils", "lib-test")
+include("api", "service", "examples", "lib-test")

@@ -29,7 +29,7 @@ fun getCookieJar(): CookieJar {
 fun getSessionManager(): SessionManager {
   val config = ConfigBuilder().build()
   val ktor = KtorClientAdapter(config)
-  return HttpSessionManager(HttpDriver(ktor), getSession())
+  return HttpSessionManager(HttpDriver(ktor))
 }
 
 fun getSession(): Session {

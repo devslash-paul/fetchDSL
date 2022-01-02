@@ -20,12 +20,13 @@ class DelayTest {
   fun testDelayCausesWaitBetweenCalls() {
     val times = mutableListOf<Long>()
     val engine = TimingDriver(times)
-    HttpSessionManager(engine, SessionBuilder().apply {
+    val mgr = HttpSessionManager(engine)
+    mgr.run(SessionBuilder().apply {
       delay = 30
       call("http://example.org") {
         data = ListDataSupplier(listOf(listOf("1"), listOf("2")))
       }
-    }.build()).run()
+    }.build())
 
     val diff = times[1] - times[0]
     assertTrue(diff >= 30)

@@ -8,15 +8,42 @@ import net.devslash.outputs.WriteFile
 import net.devslash.pipes.ResettablePipe
 import java.nio.file.Files
 import java.util.concurrent.TimeUnit
+import kotlin.experimental.ExperimentalTypeInference
+
+
+@DslMarker
+private annotation class PA
+
+class Test<T> {
+  fun add(a: T) {}
+  fun secondFun(a: T) {}
+  fun <T> Test<T>.lambda(a: (T) -> Unit) {}
+}
+
+
+@OptIn(ExperimentalTypeInference::class)
+@PA
+fun <T> builder(@BuilderInference x: Test<T>.() -> Unit): Test<T> {
+  return Test<T>().apply(x)
+}
 
 fun main() {
+  val x: Test<Int> = builder {
+    add(1)
+    lambda { it + 1 }
+  }
+
   val tmp = Files.createTempDirectory("pref")
   val (server, address) = createTestServer()
   val pipe = ResettablePipe({ r, _ -> listOf(String(r.body)) })
+  val sp = FileDataSupplier(object {}.javaClass.getResource("/in.log")!!.path)
   try {
     runHttp {
       call(address) {
-        data = FileDataSupplier(this.javaClass.getResource("/in.log")!!.path)
+        data {
+          println("Hello!")
+          sp
+        }
         after {
           +pipe
           +WriteFile("${tmp.toUri().path}/!1!")
@@ -45,13 +72,13 @@ fun main() {
         }
       }
       call(address) {
-        data = pipe
+        data { pipe }
         body {
           formParams(mapOf("Yo" to listOf())) { form, _ -> form }
         }
       }
-      call<Int>(address) {
-        data = ListDataSupplier(listOf(1, 2, 3))
+      call(address) {
+        data { ListDataSupplier(listOf(1, 2, 3)) }
         before {
           action {
             println(data)

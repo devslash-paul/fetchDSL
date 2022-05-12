@@ -2,6 +2,7 @@ package net.devslash.examples
 
 import net.devslash.*
 import net.devslash.data.ListDataSupplier
+import net.devslash.decorators.Progress
 
 fun main() {
   System.setProperty("HTTP_THREAD_POOL_SIZE", "50")
@@ -10,16 +11,22 @@ fun main() {
     SessionBuilder().apply {
       concurrency = num
       call<Int>("http://any") {
-        data = ListDataSupplier((1..100000).toList())
+        install(Progress(1))
+        data = ListDataSupplier(lazy {
+          println("Evaluated")
+          (1..100000).toList()
+        })
         before {
         }
         after {
-          action {  }
+          action { }
         }
       }
     }.build()
   }
 
-  sManagerSupplier.run(session(300))
+  val sesToRun = session(300)
+  println("Session created")
+  sManagerSupplier.run(sesToRun)
   sManagerSupplier.close()
 }

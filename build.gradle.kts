@@ -3,11 +3,11 @@ import java.util.*
 
 buildscript {
   project.extra.apply {
-    set("kotlinVersion", "1.5.30")
-    set("ktorVersion", "1.6.2")
-    set("junitVersion", "4.12")
-    set("ktorNettyVersion", "1.6.2")
-    set("kotlinxCoroutinesVersion", "1.5.1")
+    set("kotlinVersion", "1.6.0")
+    set("ktorVersion", "1.6.7")
+    set("ktorNettyVersion", "1.6.7")
+    set("junitVersion", "4.13.2")
+    set("kotlinxCoroutinesVersion", "1.6.0")
   }
 
   dependencies {
@@ -52,6 +52,8 @@ subprojects {
     sourceCompatibility = JavaVersion.VERSION_11
     targetCompatibility = JavaVersion.VERSION_11
   }
+
+
 
   publishing {
     val userName: String? by project
@@ -129,9 +131,12 @@ subprojects {
   tasks.withType<KotlinCompile>().configureEach {
     dependsOn("writeVersionProps")
     println("Configuring $name in project ${project.name}...")
+
     kotlinOptions {
       suppressWarnings = false
       jvmTarget = "11"
+      freeCompilerArgs =
+        freeCompilerArgs + "-Xunrestricted-builder-inference" + "-Xopt-in=kotlin.RequiresOptIn"
     }
   }
 }

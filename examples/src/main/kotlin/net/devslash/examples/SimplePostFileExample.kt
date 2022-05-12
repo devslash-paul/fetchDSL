@@ -25,7 +25,8 @@ fun main() {
         data = FileDataSupplier(this.javaClass.getResource("/in.log")!!.path)
         body {
           value {
-            it[0]
+            val z: List<String> = it
+            z[0]
           }
         }
       }

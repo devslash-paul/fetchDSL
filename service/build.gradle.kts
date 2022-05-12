@@ -5,7 +5,7 @@ val kotlinxCoroutinesVersion: String by project
 val ktorNettyVersion: String by project
 
 dependencies {
-  implementation(kotlin("stdlib", kotlinVersion))
+  implementation("org.jetbrains.kotlin:kotlin-stdlib:1.6.0")
 
   implementation(project(":api"))
 

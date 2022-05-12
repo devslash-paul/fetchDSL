@@ -3,6 +3,7 @@ package net.devslash.examples
 import net.devslash.Call
 import net.devslash.CallDecorator
 import net.devslash.action
+import net.devslash.post.Filter
 import net.devslash.runHttp
 
 class HttpDowngrader<T> : CallDecorator<T> {

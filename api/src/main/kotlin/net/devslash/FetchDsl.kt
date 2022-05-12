@@ -4,6 +4,8 @@ import net.devslash.err.RetryOnTransitiveError
 import java.io.InputStream
 import java.time.Duration
 import java.util.*
+import java.util.concurrent.atomic.AtomicReference
+import kotlin.experimental.ExperimentalTypeInference
 
 /**
  * Version contains the current version defined in the build.gradle root file.
@@ -126,6 +128,10 @@ open class CallBuilder<T>(private val url: String = "") {
     preHooksList.addAll(BeforeBuilder<T>().apply(block).build())
   }
 
+  fun data(t: () -> RequestDataSupplier<T>) {
+    data = t()
+  }
+
   fun after(block: AfterBuilder<T>.() -> Unit) {
     postHooksList.addAll(AfterBuilder<T>().apply(block).build())
   }
@@ -155,8 +161,19 @@ open class CallBuilder<T>(private val url: String = "") {
         url, urlProvider, concurrency, mapHeaders(localHeaders), type, data, body, onError,
         preHooksList, postHooksList
     )
-    for (decorator in decorators) {
+    val anyOrdering = decorators.filter { it.ordering() == DecoratorOrder.ANY }
+    val afterDataLock = decorators.filter { it.ordering() == DecoratorOrder.AFTER_DATA_LOCKED }
+    for (decorator in anyOrdering) {
       call = decorator.accept(call)
+    }
+    // Now we lock the data supplier
+    val ds = call.dataSupplier
+    for (decorator in afterDataLock) {
+      call = decorator.accept(call)
+      if (call.dataSupplier != ds) {
+        throw IllegalStateException("Data supplier was modified after data was " +
+            "locked. This was done by " + decorator + ":" + decorator.javaClass.simpleName)
+      }
     }
     return call
   }
@@ -263,13 +280,10 @@ class SessionBuilder {
     rateOptions = RateLimitOptions(true, count, duration)
   }
 
+  @OptIn(ExperimentalTypeInference::class)
   @JvmName("genericCall")
-  fun <T> call(url: String, block: CallBuilder<T>.() -> Unit = {}) {
+  fun <T> call(url: String, @BuilderInference block: CallBuilder<T>.() -> Unit = {}) {
     calls.add(CallBuilder<T>(url).apply(block).build())
-  }
-
-  fun call(url: String, block: CallBuilder<List<String>>.() -> Unit = {}) {
-    calls.add(CallBuilder<List<String>>(url).apply(block).build())
   }
 
   @JvmName("genericCallWithUrlProvider")

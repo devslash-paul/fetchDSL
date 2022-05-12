@@ -3,9 +3,10 @@ package net.devslash.data
 import net.devslash.ListRequestData
 import net.devslash.RequestData
 import net.devslash.RequestDataSupplier
+import net.devslash.Sized
 import java.util.concurrent.atomic.AtomicInteger
 
-class ListDataSupplier<T>(private val list: Lazy<List<T>>, private val clazz: Class<T>) : RequestDataSupplier<T> {
+class ListDataSupplier<T>(private val list: Lazy<List<T>>, private val clazz: Class<T>) : RequestDataSupplier<T>, Sized {
   private val line = AtomicInteger(0)
 
   companion object {
@@ -89,5 +90,9 @@ class ListDataSupplier<T>(private val list: Lazy<List<T>>, private val clazz: Cl
     val index = line.getAndIncrement()
     val obj = list.value.getOrNull(index) ?: return null
     return ListRequestData(obj, clazz)
+  }
+
+  override fun size(): Int {
+    return list.value.size
   }
 }

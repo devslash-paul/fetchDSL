@@ -1,6 +1,7 @@
-package net.devslash
+package net.devslash.decorators
 
 import kotlinx.coroutines.delay
+import net.devslash.*
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.logging.Logger
 

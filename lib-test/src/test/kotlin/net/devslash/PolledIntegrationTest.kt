@@ -1,7 +1,6 @@
 package net.devslash
 
-import net.devslash.outputs.DebugOutput
-import net.devslash.post.LogResponse
+import net.devslash.decorators.PollUntil
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.ClassRule

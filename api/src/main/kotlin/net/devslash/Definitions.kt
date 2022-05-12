@@ -3,11 +3,21 @@ package net.devslash
 import kotlinx.coroutines.channels.Channel
 import java.io.InputStream
 import java.util.*
+import kotlin.experimental.ExperimentalTypeInference
 
 typealias URLProvider<T> = (String, RequestData<T>) -> String
 typealias Form = Map<String, List<String>>
 
+enum class DecoratorOrder {
+  ANY,
+
+  // This ordering means that the data supplier may no longer be changed
+  // and one can be assured that the data supplier remains the same
+  AFTER_DATA_LOCKED,
+}
+
 interface CallDecorator<T> {
+  fun ordering(): DecoratorOrder = DecoratorOrder.ANY
   fun accept(call: Call<T>): Call<T>
 }
 
@@ -17,12 +27,12 @@ class StringType(val i: String) : FormTypes()
 class ByteArrayType(val i: ByteArray) : FormTypes()
 
 sealed class Body
-object EmptyBody: Body()
-class JsonRequestBody(val data: Any): Body()
-class FormRequestBody(val form: Map<String, List<String>>): Body()
-class MultipartFormRequestBody(val form: List<FormPart>): Body()
-class StringRequestBody(val body: String): Body()
-class BytesRequestBody(val body: InputStream): Body()
+object EmptyBody : Body()
+class JsonRequestBody(val data: Any) : Body()
+class FormRequestBody(val form: Map<String, List<String>>) : Body()
+class MultipartFormRequestBody(val form: List<FormPart>) : Body()
+class StringRequestBody(val body: String) : Body()
+class BytesRequestBody(val body: InputStream) : Body()
 
 data class FormPart(val key: String, val value: FormTypes)
 sealed class HeaderValue
@@ -48,7 +58,34 @@ data class Call<T>(
     val onError: OnError?,
     val beforeHooks: List<BeforeHook>,
     val afterHooks: List<AfterHook>
-)
+) {
+
+  companion object {
+    inline fun <T> build(call: Call<T>, block: Builder<T>.() -> Unit): Call<T> = Builder(call).apply(block).build()
+  }
+
+  @Suppress("MemberVisibilityCanBePrivate")
+  class Builder<T>(private val call: Call<T>) {
+    var dataSupplier: RequestDataSupplier<T>? = null
+    var beforeHooks: List<BeforeHook>? = null
+    var afterHooks: List<AfterHook>? = null
+
+    fun build(): Call<T> {
+      return Call(
+          call.url,
+          call.urlProvider,
+          call.concurrency,
+          call.headers,
+          call.type,
+          dataSupplier ?: call.dataSupplier,
+          call.body,
+          call.onError,
+          beforeHooks ?: call.beforeHooks,
+          afterHooks ?: call.afterHooks
+      )
+    }
+  }
+}
 
 interface RequestDataSupplier<T> {
   /**
@@ -228,7 +265,7 @@ interface FullDataAfterHook : AfterHook {
  * Used to reify request data into its real type without requiring visitor use.
  * Can be used incorrectly without compilation warnings - use with care.
  */
-interface ResolvedFullDataAfterHook<T: Any?> : AfterHook {
+interface ResolvedFullDataAfterHook<T : Any?> : AfterHook {
   fun accept(req: HttpRequest, resp: HttpResponse, data: T)
 }
 

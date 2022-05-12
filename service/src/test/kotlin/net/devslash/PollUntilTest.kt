@@ -3,6 +3,7 @@ package net.devslash
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
+import net.devslash.decorators.PollUntil
 import net.devslash.util.basicRequest
 import net.devslash.util.basicResponse
 import org.hamcrest.CoreMatchers.*

@@ -25,7 +25,7 @@ class RequestCreator {
 
 class RequestProducer {
   suspend fun <T> produceHttp(
-      sessionManager: SessionManager,
+      callRunner: CallRunner<T>,
       call: Call<T>,
       jar: CookieJar,
       channel: Channel<Envelope<Contents<T>>>
@@ -46,13 +46,13 @@ class RequestProducer {
             when (it) {
               is SimpleBeforeHook -> it.accept(req, data)
               is SessionPersistingBeforeHook -> it.accept(
-                  sessionManager,
+                  callRunner as CallRunner<*>,
                   jar,
                   req,
                   data
               )
               is ResolvedSessionPersistingBeforeHook<*> -> (it as ResolvedSessionPersistingBeforeHook<T>)
-                  .accept(sessionManager, jar, req, data.get())
+                  .accept(callRunner, jar, req, data.get())
               is SkipBeforeHook -> {}
             }
           }

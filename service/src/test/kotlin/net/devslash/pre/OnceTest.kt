@@ -2,10 +2,7 @@ package net.devslash.pre
 
 import kotlinx.coroutines.runBlocking
 import net.devslash.*
-import net.devslash.util.basicRequest
-import net.devslash.util.getCookieJar
-import net.devslash.util.getSessionManager
-import net.devslash.util.requestDataFromList
+import net.devslash.util.*
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -16,7 +13,7 @@ internal class OnceTest {
     var count = 0
     val o = Once({ count++; Unit }.toPreHook())
 
-    o.accept(getSessionManager(), getCookieJar(), basicRequest(), requestDataFromList(listOf()))
+    o.accept(getUntypedCallRunner(), getCookieJar(), basicRequest(), requestDataFromList(listOf()))
 
     assertEquals(1, count)
   }
@@ -30,8 +27,8 @@ internal class OnceTest {
       }
     })
 
-    o.accept(getSessionManager(), getCookieJar(), basicRequest(), requestDataFromList(listOf()))
-    o.accept(getSessionManager(), getCookieJar(), basicRequest(), requestDataFromList(listOf()))
+    o.accept(getUntypedCallRunner(), getCookieJar(), basicRequest(), requestDataFromList(listOf()))
+    o.accept(getUntypedCallRunner(), getCookieJar(), basicRequest(), requestDataFromList(listOf()))
 
     assertEquals(1, count)
   }
@@ -41,16 +38,16 @@ internal class OnceTest {
     var count = 0
     val o = Once(object : SessionPersistingBeforeHook {
       override suspend fun accept(
-        sessionManager: SessionManager,
-        cookieJar: CookieJar,
-        req: HttpRequest,
-        data: RequestData<*>
+          subCallRunner: CallRunner<*>,
+          cookieJar: CookieJar,
+          req: HttpRequest,
+          data: RequestData<*>
       ) {
         count++
       }
     })
 
-    o.accept(getSessionManager(), getCookieJar(), basicRequest(), requestDataFromList(listOf()))
+    o.accept(getUntypedCallRunner(), getCookieJar(), basicRequest(), requestDataFromList(listOf()))
 
     assertEquals(1, count)
   }

@@ -8,18 +8,19 @@ class Once(private val before: BeforeHook) : SessionPersistingBeforeHook {
   private val flag = AtomicBoolean(false)
 
   override suspend fun accept(
-    sessionManager: SessionManager,
-    cookieJar: CookieJar,
-    req: HttpRequest,
-    data: RequestData<*>
+      subCallRunner: CallRunner<*>,
+      cookieJar: CookieJar,
+      req: HttpRequest,
+      data: RequestData<*>
   ) {
     if (flag.compareAndSet(false, true)) {
       when (before) {
-        is SessionPersistingBeforeHook -> before.accept(sessionManager, cookieJar, req, data)
+        is SessionPersistingBeforeHook -> before.accept(subCallRunner, cookieJar, req, data)
         is SimpleBeforeHook -> before.accept(req, data)
         is SkipBeforeHook -> before.skip(data)
         is ResolvedSessionPersistingBeforeHook<*> -> {
-          throw Error("Once is incompatible with session persisting hooks")}
+          throw Error("Once is incompatible with session persisting hooks")
+        }
 
       }
     }

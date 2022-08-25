@@ -26,6 +26,15 @@ fun getCookieJar(): CookieJar {
   return DefaultCookieJar()
 }
 
+fun <T> getCallRunner(): CallRunner<T> {
+  return { _: Call<T> -> null }
+}
+
+fun getUntypedCallRunner(): CallRunner<*> {
+  return { _: Call<*> -> null }
+}
+
+
 fun getSessionManager(): SessionManager {
   val config = ConfigBuilder().build()
   val ktor = KtorClientAdapter(config)

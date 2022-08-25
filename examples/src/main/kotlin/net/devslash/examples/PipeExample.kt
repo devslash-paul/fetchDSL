@@ -32,7 +32,7 @@ fun main() {
             println("ActionBefore")
           }
           +object : ResolvedSessionPersistingBeforeHook<List<Any>> {
-            override suspend fun accept(sessionManager: SessionManager, cookieJar: CookieJar, req: HttpRequest, data: List<Any>) {
+            override suspend fun accept(subCallRunner: CallRunner<List<Any>>, cookieJar: CookieJar, req: HttpRequest, data: List<Any>) {
               println("More generic type available")
             }
           }

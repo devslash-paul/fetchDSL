@@ -17,12 +17,12 @@ class StringType(val i: String) : FormTypes()
 class ByteArrayType(val i: ByteArray) : FormTypes()
 
 sealed class Body
-object EmptyBody: Body()
-class JsonRequestBody(val data: Any): Body()
-class FormRequestBody(val form: Map<String, List<String>>): Body()
-class MultipartFormRequestBody(val form: List<FormPart>): Body()
-class StringRequestBody(val body: String): Body()
-class BytesRequestBody(val body: InputStream): Body()
+object EmptyBody : Body()
+class JsonRequestBody(val data: Any) : Body()
+class FormRequestBody(val form: Map<String, List<String>>) : Body()
+class MultipartFormRequestBody(val form: List<FormPart>) : Body()
+class StringRequestBody(val body: String) : Body()
+class BytesRequestBody(val body: InputStream) : Body()
 
 data class FormPart(val key: String, val value: FormTypes)
 sealed class HeaderValue
@@ -135,9 +135,12 @@ interface SkipBeforeHook : BeforeHook {
   fun skip(requestData: RequestData<*>): Boolean
 }
 
+// An Abstraction over the session manager that simply does a call.
+typealias CallRunner<T> = (Call<T>) -> Exception?
+
 interface SessionPersistingBeforeHook : BeforeHook {
   suspend fun accept(
-      sessionManager: SessionManager,
+      subCallRunner: CallRunner<*>,
       cookieJar: CookieJar,
       req: HttpRequest,
       data: RequestData<*>
@@ -146,7 +149,7 @@ interface SessionPersistingBeforeHook : BeforeHook {
 
 interface ResolvedSessionPersistingBeforeHook<T> : BeforeHook {
   suspend fun accept(
-      sessionManager: SessionManager,
+      subCallRunner: CallRunner<T>,
       cookieJar: CookieJar,
       req: HttpRequest,
       data: T
@@ -154,7 +157,7 @@ interface ResolvedSessionPersistingBeforeHook<T> : BeforeHook {
 }
 
 data class BeforeCtx<T>(
-    val sessionManager: SessionManager,
+    val subCallRunner: CallRunner<T>,
     val cookieJar: CookieJar,
     val req: HttpRequest,
     val data: T
@@ -170,12 +173,12 @@ data class AfterCtx<T>(
 fun <T> BeforeBuilder<T>.action(block: BeforeCtx<T>.() -> Unit) {
   +object : ResolvedSessionPersistingBeforeHook<T> {
     override suspend fun accept(
-        sessionManager: SessionManager,
+        subCallRunner: CallRunner<T>,
         cookieJar: CookieJar,
         req: HttpRequest,
         data: T
     ) {
-      BeforeCtx(sessionManager, cookieJar, req, data).apply(block)
+      BeforeCtx(subCallRunner, cookieJar, req, data).apply(block)
     }
   }
 }
@@ -229,7 +232,7 @@ interface FullDataAfterHook : AfterHook {
  * Used to reify request data into its real type without requiring visitor use.
  * Can be used incorrectly without compilation warnings - use with care.
  */
-interface ResolvedFullDataAfterHook<T: Any?> : AfterHook {
+interface ResolvedFullDataAfterHook<T : Any?> : AfterHook {
   fun accept(req: HttpRequest, resp: HttpResponse, data: T)
 }
 

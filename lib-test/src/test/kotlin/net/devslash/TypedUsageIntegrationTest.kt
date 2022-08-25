@@ -32,7 +32,7 @@ class TypedUsageIntegrationTest {
         before {
           action { beforeAction = data }
           +object : ResolvedSessionPersistingBeforeHook<Int> {
-            override suspend fun accept(sessionManager: SessionManager, cookieJar: CookieJar, req: HttpRequest, data: Int) {
+            override suspend fun accept(subCallRunner: CallRunner<Int>, cookieJar: CookieJar, req: HttpRequest, data: Int) {
               beforeObject = data
             }
           }
@@ -63,7 +63,7 @@ class TypedUsageIntegrationTest {
           data = ListDataSupplier(listOf("Hi"))
           before {
             +object : SessionPersistingBeforeHook {
-              override suspend fun accept(sessionManager: SessionManager, cookieJar: CookieJar, req: HttpRequest, data: RequestData<*>) {
+              override suspend fun accept(subCallRunner: CallRunner<*>, cookieJar: CookieJar, req: HttpRequest, data: RequestData<*>) {
                 // should fail
                 data.mustGet<Int>()
               }

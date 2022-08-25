@@ -39,7 +39,8 @@ class HttpSessionManager(private val engine: Driver) : SessionManager, AutoClose
 
   override fun <T> call(call: Call<T>, session: Session, jar: CookieJar): Exception? = runBlocking(Dispatchers.Default) {
     val channel: Channel<Envelope<Contents<T>>> = Channel(session.concurrency * 2)
-    launch(Dispatchers.IO) { RequestProducer().produceHttp(this@HttpSessionManager, call, jar, channel) }
+    val callRunner = { c: Call<T> -> call(c, session, jar) }
+    launch(Dispatchers.IO) { RequestProducer().produceHttp(callRunner, call, jar, channel) }
 
     val afterRequest: MutableList<AfterHook> = mutableListOf(jar)
     afterRequest.addAll(call.afterHooks)

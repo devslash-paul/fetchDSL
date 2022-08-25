@@ -43,7 +43,7 @@ class PollUntil<T>(private val predicate: PollPredicate<T>,
     }
 
     return Call(call.url, call.urlProvider,
-        1, call.headers, call.type, this, call.body, call.onError,
+        1, null, call.headers, call.type, this, call.body, call.onError,
         call.beforeHooks, call.afterHooks + this)
   }
 

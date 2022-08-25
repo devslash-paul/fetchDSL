@@ -18,6 +18,9 @@ class Once(private val before: BeforeHook) : SessionPersistingBeforeHook {
         is SessionPersistingBeforeHook -> before.accept(sessionManager, cookieJar, req, data)
         is SimpleBeforeHook -> before.accept(req, data)
         is SkipBeforeHook -> before.skip(data)
+        is ResolvedSessionPersistingBeforeHook<*> -> {
+          throw Error("Once is incompatible with session persisting hooks")}
+
       }
     }
   }

@@ -53,6 +53,7 @@ class RequestProducer {
               )
               is ResolvedSessionPersistingBeforeHook<*> -> (it as ResolvedSessionPersistingBeforeHook<T>)
                   .accept(sessionManager, jar, req, data.get())
+              is SkipBeforeHook -> {}
             }
           }
           channel.send(Envelope(Pair(req, data)))

@@ -8,7 +8,7 @@ import net.devslash.runHttp
 class HttpDowngrader<T> : CallDecorator<T> {
   override fun accept(call: Call<T>): Call<T> {
     return Call(call.url.replace(Regex("^https"), "http"), call.urlProvider,
-        call.concurrency, call.headers, call.type, call.dataSupplier, call.body, call.onError,
+        call.concurrency, call.rateOptions, call.headers, call.type, call.dataSupplier, call.body, call.onError,
         call.beforeHooks, call.afterHooks)
   }
 }

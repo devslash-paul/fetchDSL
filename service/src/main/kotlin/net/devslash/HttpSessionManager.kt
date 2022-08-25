@@ -56,7 +56,7 @@ class HttpSessionManager(private val engine: Driver) : SessionManager, AutoClose
       )
     }
 
-    val limiter = AcquiringRateLimiter(session.rateOptions)
+    val limiter = AcquiringRateLimiter(call.rateOptions ?: session.rateOptions)
     val jobs = mutableListOf<Job>()
 
     // Take the call concurrency before defaulting to the session concurrency

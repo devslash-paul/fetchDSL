@@ -110,6 +110,9 @@ open class CallBuilder<T>(private val url: String = "") {
 
   // A call local concurrency limit
   var concurrency: Int? = null
+  // A call local rate limit
+  var rateOptions: RateLimitOptions? = null
+
   var urlProvider: URLProvider<T>? = null
   var data: RequestDataSupplier<T>? = null
   var body: HttpBody<T>? = null
@@ -145,16 +148,20 @@ open class CallBuilder<T>(private val url: String = "") {
     }
   }
 
+  @Suppress("unused")
+  fun rateLimit(count: Int, duration: Duration) {
+    require(!(duration.isNegative || duration.isZero)) { "Invalid duration, must be more than zero" }
+    require(count > 0) { "Count must be positive" }
+    rateOptions = RateLimitOptions(true, count, duration)
+  }
+
   fun build(): Call<T> {
     val localHeaders = HashMap(headers)
     localHeaders.putIfAbsent(
         "User-Agent",
         listOf("FetchDSL (Apache-HttpAsyncClient + Kotlin, ${Version.version})")
     )
-    var call = Call(
-        url, urlProvider, concurrency, mapHeaders(localHeaders), type, data, body, onError,
-        preHooksList, postHooksList
-    )
+    var call = Call(url, urlProvider, concurrency, rateOptions, mapHeaders(localHeaders), type, data, body, onError, preHooksList, postHooksList)
     for (decorator in decorators) {
       call = decorator.accept(call)
     }

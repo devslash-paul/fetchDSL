@@ -1,6 +1,7 @@
 package net.devslash
 
 import io.ktor.http.*
+import io.ktor.util.date.*
 import io.ktor.utils.io.*
 import kotlinx.coroutines.runBlocking
 import net.devslash.util.basicUrl
@@ -19,6 +20,8 @@ internal class KtorResponseMapperTest {
     whenever(response.headers).thenReturn(Headers.Empty)
     whenever(response.status).thenReturn(HttpStatusCode.fromValue(200))
     whenever(response.content).thenReturn(ByteReadChannel.Empty)
+    whenever(response.responseTime).thenReturn(GMTDate.START)
+    whenever(response.requestTime).thenReturn(GMTDate.START)
     val mapped = KtorResponseMapper { URI(basicUrl) }.mapResponse(response)
 
     assertThat(mapped.uri.toASCIIString(), equalTo(basicUrl))
@@ -35,6 +38,8 @@ internal class KtorResponseMapperTest {
     whenever(response.headers).thenReturn(getHeaders())
     whenever(response.status).thenReturn(HttpStatusCode.fromValue(404))
     whenever(response.content).thenReturn(ByteReadChannel(content))
+    whenever(response.responseTime).thenReturn(GMTDate.START)
+    whenever(response.requestTime).thenReturn(GMTDate.START)
     val mapped = KtorResponseMapper { URI(basicUrl) }.mapResponse(response)
 
     assertThat(mapped.uri.toASCIIString(), equalTo(basicUrl))

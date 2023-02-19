@@ -21,6 +21,7 @@ internal class DebugOutputTest {
            status: 200
            headers: [{}]
            data: [a, b, c]
+           duration: 0ms
            body ->
            abc
            ----------------

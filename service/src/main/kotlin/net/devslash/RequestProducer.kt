@@ -56,7 +56,7 @@ class RequestProducer {
               is SkipBeforeHook -> {}
             }
           }
-          channel.send(Envelope(Pair(req, data)))
+          channel.send(Envelope(Pair(req, data), expires = call.lifecycleController?.getRequestExpiry()))
         }
       } catch (e: Exception) {
         //TODO: Allow configuration of what happens here.

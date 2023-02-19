@@ -13,6 +13,7 @@ class DebugOutput : OutputFormat {
               status: ${resp.statusCode}
               headers: [${resp.headers}]
               data: ${data.mustGet<Any?>()}
+              duration: ${resp.requestDuration.toMillis()}ms
               body ->
               ${String(resp.body)}
               ----------------

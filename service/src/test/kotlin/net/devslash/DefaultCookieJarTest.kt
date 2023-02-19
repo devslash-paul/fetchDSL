@@ -7,6 +7,8 @@ import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.core.IsEqual.equalTo
 import org.junit.Test
 import java.net.URI
+import java.time.Duration
+import java.time.Instant
 
 internal class DefaultCookieJarTest {
 

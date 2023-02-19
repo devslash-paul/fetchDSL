@@ -38,7 +38,8 @@ class HttpSessionManager(private val engine: Driver) : SessionManager, AutoClose
   override fun <T> call(call: Call<T>, session: Session): Exception? = call(call, session, DefaultCookieJar())
 
   override fun <T> call(call: Call<T>, session: Session, jar: CookieJar): Exception? = runBlocking(Dispatchers.Default) {
-    val channel: Channel<Envelope<Contents<T>>> = Channel(session.concurrency * 2)
+    val channel: Channel<Envelope<Contents<T>>> = Channel(call.lifecycleController?.getRequestQueueDepth()
+        ?: (session.concurrency * 2))
     val callRunner = { c: Call<T> -> call(c, session, jar) }
     launch(Dispatchers.IO) { RequestProducer().produceHttp(callRunner, call, jar, channel) }
 
@@ -96,9 +97,9 @@ class HttpSessionManager(private val engine: Driver) : SessionManager, AutoClose
         return
       }
       try {
+        rateLimiter.acquire()
         if (next.shouldProceed()) {
           val contents = next.get()
-          rateLimiter.acquire()
 
           when (val resp = makeRequest(contents.first, session)) {
             is Failure -> handleFailure(call, channel, next, resp)
@@ -127,6 +128,7 @@ class HttpSessionManager(private val engine: Driver) : SessionManager, AutoClose
         is FullDataAfterHook -> it.accept(contents.first, mappedResponse, contents.second)
         is ResolvedFullDataAfterHook<*> -> (it as ResolvedFullDataAfterHook<T>)
             .accept(contents.first, mappedResponse, contents.second.get())
+
         else -> throw RuntimeException("Unexpected after hook type $it")
       }
     }

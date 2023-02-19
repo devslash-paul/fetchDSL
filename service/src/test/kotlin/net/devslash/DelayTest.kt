@@ -9,7 +9,7 @@ class DelayTest {
   class TimingDriver(private val times: MutableList<Long>) : Driver {
     override suspend fun call(req: HttpRequest): HttpResult<HttpResponse, Exception> {
       times.add(System.currentTimeMillis())
-      return Success(HttpResponse(URI("https://a"), 200, mapOf(), ByteArray(0)))
+      return Success(HttpResponse(URI("https://a"), 200, mapOf(), body = ByteArray(0)))
     }
 
     override fun close() {

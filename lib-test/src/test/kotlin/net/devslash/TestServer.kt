@@ -20,7 +20,7 @@ class TestServer : ExternalResource() {
     port = 50000
     println("USING PORT $port")
     server =
-        embeddedServer(io.ktor.server.netty.Netty, port) {
+        embeddedServer(io.ktor.server.netty.Netty, port, configure = { runningLimit = 20 }) {
           routing {
             post("/bounce") {
               bounceResponse()

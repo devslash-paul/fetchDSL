@@ -21,7 +21,7 @@ internal class HttpSessionManagerTest {
         URI(basicUrl),
         200,
         mapOf("set-cookie" to listOf("session=abcd")),
-        "Hi there".toByteArray()
+        body = "Hi there".toByteArray()
     )
     val engine = BounceHttpDriver(resp)
     runHttp(engine) {

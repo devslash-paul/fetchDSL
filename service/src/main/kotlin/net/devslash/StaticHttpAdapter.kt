@@ -1,9 +1,6 @@
 package net.devslash
 
 import kotlinx.coroutines.delay
-import net.devslash.HttpClientAdapter
-import net.devslash.HttpRequest
-import net.devslash.HttpResponse
 import java.net.URI
 
 class StaticHttpAdapter : HttpClientAdapter {

@@ -2,6 +2,7 @@ package net.devslash
 
 import kotlinx.coroutines.channels.Channel
 import java.io.InputStream
+import java.time.Instant
 import java.util.*
 
 typealias URLProvider<T> = (String, RequestData<T>) -> String
@@ -48,8 +49,14 @@ data class Call<T>(
     val body: HttpBody<T>?,
     val onError: OnError?,
     val beforeHooks: List<BeforeHook>,
-    val afterHooks: List<AfterHook>
+    val afterHooks: List<AfterHook>,
+    val lifecycleController: LifecycleController? = null
 )
+
+interface LifecycleController {
+  fun getRequestExpiry(): Instant?
+  fun getRequestQueueDepth(): Int?
+}
 
 interface RequestDataSupplier<T> {
   /**
@@ -160,7 +167,8 @@ data class BeforeCtx<T>(
     val subCallRunner: CallRunner<T>,
     val cookieJar: CookieJar,
     val req: HttpRequest,
-    val data: T
+    val data: T,
+    val id: UUID,
 )
 
 data class AfterCtx<T>(
@@ -171,14 +179,14 @@ data class AfterCtx<T>(
 
 @JvmName("beforeAction")
 fun <T> BeforeBuilder<T>.action(block: BeforeCtx<T>.() -> Unit) {
-  +object : ResolvedSessionPersistingBeforeHook<T> {
+  +object : SessionPersistingBeforeHook {
     override suspend fun accept(
-        subCallRunner: CallRunner<T>,
+        subCallRunner: CallRunner<*>,
         cookieJar: CookieJar,
         req: HttpRequest,
-        data: T
+        data: RequestData<*>
     ) {
-      BeforeCtx(subCallRunner, cookieJar, req, data).apply(block)
+      BeforeCtx(subCallRunner, cookieJar, req, data.get() as T, data.id).apply(block)
     }
   }
 }
@@ -199,11 +207,13 @@ fun (() -> Unit).toPreHook(): SimpleBeforeHook = object : SimpleBeforeHook {
 }
 
 
-class Envelope<T>(private val message: T, private val maxRetries: Int = 3) {
+class Envelope<T>(private val message: T, private val maxRetries: Int = 3, private val expires: Instant?) {
   private var current = 0
   fun get(): T = message
   fun fail(): Int = current++
-  fun shouldProceed(): Boolean = current < maxRetries
+  fun shouldProceed(): Boolean {
+    return current < maxRetries && (expires == null || Instant.now().isBefore(expires))
+  }
 }
 
 interface OnError

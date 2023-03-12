@@ -3,7 +3,7 @@ import java.util.*
 
 buildscript {
   project.extra.apply {
-    set("kotlinVersion", "1.5.30")
+    set("kotlinVersion", "1.7.21")
     set("ktorVersion", "1.6.2")
     set("junitVersion", "4.12")
     set("ktorNettyVersion", "1.6.2")
@@ -11,13 +11,13 @@ buildscript {
   }
 
   dependencies {
-    classpath(kotlin("gradle-plugin", version = "1.5.0"))
+    classpath(kotlin("gradle-plugin", version = "1.7.21"))
   }
 }
 
 plugins {
   base
-  kotlin("jvm") version "1.5.30" apply false
+  kotlin("jvm") version "1.7.21" apply false
   jacoco
   java
   `maven-publish`
@@ -26,7 +26,7 @@ plugins {
 
 allprojects {
   group = "net.devslash.fetchdsl"
-  version = "0.24.1-SNAPSHOT"
+  version = "0.24.1"
 
   repositories {
     mavenCentral()
@@ -106,7 +106,7 @@ subprojects {
     dependsOn("processResources")
     doLast {
       File("$buildDir/resources/main/").mkdirs()
-      File("$buildDir/resources/main/version.properties").let {
+      File("$buildDir/resources/main/fetchdsl_version.properties").let {
         val p = Properties()
         p["version"] = project.version.toString()
         p.store(it.writer(), "Project version")

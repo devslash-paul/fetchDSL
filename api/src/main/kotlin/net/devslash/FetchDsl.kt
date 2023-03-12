@@ -16,7 +16,7 @@ object Version {
 
   init {
     val prop = Properties()
-    prop.load(FetchDSL::class.java.getResourceAsStream("/version.properties"))
+    prop.load(FetchDSL::class.java.getResourceAsStream("/fetchdsl_version.properties"))
     version = requireNotNull(prop.getProperty("version"))
   }
 }

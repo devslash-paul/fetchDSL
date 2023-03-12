@@ -31,7 +31,7 @@ tasks {
 
 dependencies {
   implementation("org.openjdk.jmh:jmh-core:1.27")
-  implementation("org.jetbrains.kotlin:kotlin-stdlib:1.5.0")
+  implementation("org.jetbrains.kotlin:kotlin-stdlib:1.7.21")
   implementation("io.ktor:ktor-server-netty:1.5.4")
 
   implementation(project(":api"))

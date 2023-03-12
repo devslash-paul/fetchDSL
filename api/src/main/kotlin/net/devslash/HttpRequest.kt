@@ -1,5 +1,6 @@
 package net.devslash
 
+import java.io.File
 import java.net.URI
 import java.time.Duration
 import java.time.Instant

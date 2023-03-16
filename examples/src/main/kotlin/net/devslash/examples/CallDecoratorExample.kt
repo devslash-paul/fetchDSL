@@ -1,9 +1,8 @@
 package net.devslash.examples
 
-import net.devslash.Call
-import net.devslash.CallDecorator
-import net.devslash.action
-import net.devslash.runHttp
+import net.devslash.*
+import net.devslash.data.ListDataSupplier
+import java.time.Duration
 
 class HttpDowngrader<T> : CallDecorator<T> {
   override fun accept(call: Call<T>): Call<T> {
@@ -11,6 +10,23 @@ class HttpDowngrader<T> : CallDecorator<T> {
         call.concurrency, call.rateOptions, call.headers, call.type, call.dataSupplier, call.body, call.onError,
         call.beforeHooks, call.afterHooks)
   }
+}
+
+fun main2() {
+runHttp {
+  call("https://example.com/!1!/!2!") {
+    rateLimit(10, Duration.ofSeconds(1))
+    type = HttpMethod.POST
+    headers = mapOf("X-Example" to listOf("exampleValue"))
+    body {
+      jsonObject = mapOf("key" to "value")
+    }
+    data = ListDataSupplier(listOf(
+        listOf("path1", "a"),
+        listOf("path2", "b"),
+        listOf("path3", "c")))
+  }
+}
 }
 
 fun main() {

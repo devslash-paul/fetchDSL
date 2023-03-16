@@ -18,6 +18,7 @@ buildscript {
 plugins {
   base
   kotlin("jvm") version "1.7.21" apply false
+  id("org.jetbrains.dokka") version "1.8.10"
   jacoco
   java
   `maven-publish`
@@ -26,7 +27,7 @@ plugins {
 
 allprojects {
   group = "net.devslash.fetchdsl"
-  version = "0.24.2-SNAPSHOT"
+  version = "0.24.2"
 
   repositories {
     mavenCentral()
@@ -40,6 +41,7 @@ subprojects {
     plugin("jacoco")
     plugin("org.jetbrains.kotlin.jvm")
     plugin("org.gradle.maven-publish")
+    plugin("org.jetbrains.dokka")
     plugin("org.gradle.signing")
     from("../publishing.gradle")
   }
@@ -51,6 +53,11 @@ subprojects {
   java {
     sourceCompatibility = JavaVersion.VERSION_11
     targetCompatibility = JavaVersion.VERSION_11
+    withJavadocJar()
+  }
+
+  val javadocJar = tasks.named<Jar>("javadocJar") {
+    from(tasks.named("dokkaJavadoc"))
   }
 
   publishing {
@@ -60,7 +67,7 @@ subprojects {
       create<MavenPublication>("library") {
         from(components["kotlin"])
         artifact(tasks["sourceJar"])
-        artifact(tasks["packageJavadoc"])
+        artifact(tasks["javadocJar"])
         pom {
           name.set("fetchDSL")
           description.set("A DSL for HTTP requests")

@@ -27,7 +27,7 @@ plugins {
 
 allprojects {
   group = "net.devslash.fetchdsl"
-  version = "0.24.3-SNAPSHOT"
+  version = "0.24.3"
 
   repositories {
     mavenCentral()
@@ -57,7 +57,7 @@ subprojects {
   }
 
   val javadocJar = tasks.named<Jar>("javadocJar") {
-    from(tasks.named("dokkaJavadoc"))
+    from(tasks.named("dokkaHtml"))
   }
 
   publishing {

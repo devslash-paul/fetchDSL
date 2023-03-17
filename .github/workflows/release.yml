@@ -13,6 +13,10 @@ jobs:
       name: Install gpg secret key
       run: |
         cat <(echo -e "${{ secrets.GPG_CODE_SIGNING_KEY }}") | gpg --batch --import
+
+    - id: move-secret-key
+      name: Move to secring
+      run: |
         gpg --pinentry-mode loopback --batch --export-secret-keys > ~/.gnupg/secring.kbx
     - uses: actions/checkout@v2
     - name: Set up JDK 11

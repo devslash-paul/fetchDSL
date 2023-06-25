@@ -23,7 +23,8 @@ class HttpSessionManager(private val engine: Driver) : SessionManager, AutoClose
   fun run(session: Session) {
     val jar = DefaultCookieJar()
     for (call in session.calls) {
-      call(call, session, jar)?.let {
+      val localJar = call.cookieJar ?: jar
+      call(call, session, localJar)?.let {
         throw it
       }
     }

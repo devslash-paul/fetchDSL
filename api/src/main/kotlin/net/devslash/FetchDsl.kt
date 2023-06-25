@@ -161,7 +161,10 @@ open class CallBuilder<T>(private val url: String = "") {
         "User-Agent",
         listOf("FetchDSL (Apache-HttpAsyncClient + Kotlin, ${Version.version})")
     )
-    var call = Call(url, urlProvider, concurrency, rateOptions, mapHeaders(localHeaders), type, data, body, onError, preHooksList, postHooksList)
+    var call = Call(
+      url, urlProvider, concurrency, rateOptions, null, mapHeaders
+        (localHeaders), type, data, body, onError, preHooksList, postHooksList
+    )
     for (decorator in decorators) {
       call = decorator.accept(call)
     }

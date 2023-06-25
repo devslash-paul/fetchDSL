@@ -15,7 +15,21 @@ class ForDuration<T>(private val duration: Duration, private val supplier: () ->
   private var expireTime: Instant? = null
 
   override fun accept(call: Call<T>): Call<T> {
-    return Call(call.url, call.urlProvider, 1, call.rateOptions, call.headers, call.type, this, call.body, call.onError, call.beforeHooks, call.afterHooks, this)
+    return Call(
+      call.url,
+      call.urlProvider,
+      1,
+      call.rateOptions,
+      null,
+      call.headers,
+      call.type,
+      this,
+      call.body,
+      call.onError,
+      call.beforeHooks,
+      call.afterHooks,
+      this
+    )
   }
 
   override fun getRequestExpiry(): Instant {

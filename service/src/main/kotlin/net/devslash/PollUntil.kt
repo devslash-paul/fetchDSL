@@ -42,9 +42,11 @@ class PollUntil<T>(private val predicate: PollPredicate<T>,
       logger.info("Call concurrency was " + call.concurrency + ". Setting to 1")
     }
 
-    return Call(call.url, call.urlProvider,
-        1, null, call.headers, call.type, this, call.body, call.onError,
-        call.beforeHooks, call.afterHooks + this)
+    return Call(
+      call.url, call.urlProvider,
+      1, null, null, call.headers, call.type, this, call.body,
+      call.onError, call.beforeHooks, call.afterHooks + this
+    )
   }
 
   override suspend fun getDataForRequest(): RequestData<T>? {

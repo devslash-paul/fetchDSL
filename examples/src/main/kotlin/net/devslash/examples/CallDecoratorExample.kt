@@ -7,7 +7,8 @@ import java.time.Duration
 class HttpDowngrader<T> : CallDecorator<T> {
   override fun accept(call: Call<T>): Call<T> {
     return Call(call.url.replace(Regex("^https"), "http"), call.urlProvider,
-        call.concurrency, call.rateOptions, call.headers, call.type, call.dataSupplier, call.body, call.onError,
+        call.concurrency, call.rateOptions, null, call.headers, call.type, call
+          .dataSupplier, call.body, call.onError,
         call.beforeHooks, call.afterHooks)
   }
 }

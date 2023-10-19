@@ -19,7 +19,8 @@ class KtorClientAdapter(config: Config) : HttpClientAdapter {
   }
 
   override suspend fun request(httpRequest: HttpRequest): HttpResponse {
-    val clientResp = client.request<KtorResponse>(KtorRequestMapper.mapHttpToKtor(httpRequest))
+    val clientResp =
+      client.request<KtorResponse>(KtorRequestMapper.mapHttpToKtor(httpRequest))
     return KtorResponseMapper().mapResponse(clientResp.call.response)
   }
 

@@ -1,5 +1,7 @@
 package net.devslash
 
+import io.opentelemetry.context.Context
+import io.opentelemetry.extension.kotlin.asContextElement
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import java.time.Clock
@@ -11,7 +13,7 @@ typealias Contents<T> = Pair<HttpRequest, RequestData<T>>
 
 class HttpSessionManager(private val engine: Driver) : SessionManager, AutoCloseable {
 
-  var count: Int = 0
+  private var count: Int = 0
   private val jobThreadPool = System.getProperty("HTTP_THREAD_POOL_SIZE")?.toInt()
       ?: (Runtime.getRuntime().availableProcessors() * 2)
   private val httpThreadPool = Executors.newFixedThreadPool(jobThreadPool)
@@ -42,7 +44,9 @@ class HttpSessionManager(private val engine: Driver) : SessionManager, AutoClose
     val channel: Channel<Envelope<Contents<T>>> = Channel(call.lifecycleController?.getRequestQueueDepth()
         ?: (session.concurrency * 2))
     val callRunner = { c: Call<T> -> call(c, session, jar) }
-    launch(Dispatchers.IO) { RequestProducer().produceHttp(callRunner, call, jar, channel) }
+    launch(Dispatchers.IO + Context.current().asContextElement()) {
+      RequestProducer().produceHttp(callRunner, call, jar, channel)
+    }
 
     val afterRequest: MutableList<AfterHook> = mutableListOf(jar)
     afterRequest.addAll(call.afterHooks)
@@ -68,7 +72,7 @@ class HttpSessionManager(private val engine: Driver) : SessionManager, AutoClose
     val storedException = AtomicReference<Exception>(null)
 
     repeat(concurrency) {
-      jobs += launch(dispatcher) {
+      jobs += launch(dispatcher + Context.current().asContextElement()) {
         launchHttpProcessor(
             call,
             session,

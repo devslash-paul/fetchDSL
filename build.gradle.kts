@@ -3,7 +3,7 @@ import java.util.*
 
 buildscript {
   project.extra.apply {
-    set("kotlinVersion", "1.7.21")
+    set("kotlinVersion", "1.9.10")
     set("ktorVersion", "1.6.2")
     set("junitVersion", "4.12")
     set("ktorNettyVersion", "1.6.2")
@@ -17,7 +17,7 @@ buildscript {
 
 plugins {
   base
-  kotlin("jvm") version "1.7.21" apply false
+  kotlin("jvm") version "1.9.10" apply false
   id("org.jetbrains.dokka") version "1.8.10"
   jacoco
   java
@@ -27,7 +27,7 @@ plugins {
 
 allprojects {
   group = "net.devslash.fetchdsl"
-  version = "0.25.0"
+  version = "0.26.1-SNAPSHOT"
 
   repositories {
     mavenCentral()
@@ -94,7 +94,8 @@ subprojects {
     }
     repositories {
       maven {
-        url = uri("https://oss.sonatype.org/service/local/staging/deploy/maven2/")
+        url =
+          uri("https://oss.sonatype.org/service/local/staging/deploy/maven2/")
         credentials {
           username = userName
           password = pw
@@ -130,7 +131,7 @@ subprojects {
       html.isEnabled = false
       xml.isEnabled = true
       xml.destination = file("$buildDir/jacoco.xml")
-      }
+    }
   }
 
   tasks.withType<KotlinCompile>().configureEach {

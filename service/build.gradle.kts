@@ -14,6 +14,8 @@ dependencies {
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinxCoroutinesVersion")
   implementation("com.fasterxml.jackson.core:jackson-core:2.12.3")
   implementation("com.fasterxml.jackson.core:jackson-databind:2.12.3")
+  implementation("io.opentelemetry:opentelemetry-api:1.31.0");
+  implementation("io.opentelemetry:opentelemetry-extension-kotlin:1.31.0")
 
   testImplementation("org.hamcrest:hamcrest:2.2")
   testImplementation("junit:junit:$junitVersion")

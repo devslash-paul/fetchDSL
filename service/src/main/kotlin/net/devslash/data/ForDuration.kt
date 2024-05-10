@@ -18,9 +18,9 @@ class ForDuration<T>(private val duration: Duration, private val supplier: () ->
     return Call(
       call.url,
       call.urlProvider,
-      1,
+      call.concurrency,
       call.rateOptions,
-      null,
+      call.cookieJar,
       call.headers,
       call.type,
       this,

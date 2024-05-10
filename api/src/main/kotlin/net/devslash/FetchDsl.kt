@@ -172,7 +172,7 @@ open class CallBuilder<T>(private val url: String = "") {
   }
 
   fun install(vararg decorators: CallDecorator<T>) {
-    this.decorators = decorators.toList()
+    this.decorators += decorators.toList()
   }
 }
 
